@@ -36,6 +36,10 @@ img{display:block;max-width:100%}
 .hd .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px}
 .brand{font-weight:800;letter-spacing:.22em;font-size:18px;text-decoration:none;color:inherit;padding-left:.22em;white-space:nowrap}
 @media (max-width:480px){.brand{font-size:15px;letter-spacing:.12em;padding-left:.12em}}
+/* el logo DEALER en el encabezado en vez del nombre escrito */
+.brand{display:flex;align-items:center;justify-content:center;padding-left:0}
+.brand img{height:34px;width:auto;display:block}
+@media (max-width:480px){.brand img{height:26px}}
 .ib{all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;position:relative}
 .ib svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .ib:focus-visible{outline:2px solid var(--ink)}
@@ -180,7 +184,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <header class="hd">
   <div class="wrap">
     <div><button class="ib" id="btnMenu" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-    <a class="brand" href="#" id="brand">DEALER SPORTS MX</a>
+    <a class="brand" href="#" id="brand" aria-label="DEALER SPORTS MX"><img src="logo.png" alt="DEALER SPORTS MX"></a>
     <div class="r">
       <button class="ib" id="btnBuscar" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></button>
       <button class="ib" id="btnBolsa" aria-label="Bolsa"><svg viewBox="0 0 24 24"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="badge" id="bolsaN" hidden>0</span></button>
