@@ -328,12 +328,12 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <div class="pn-h"><h2>Menú</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b menu">
     <button data-go="drops">Preventas <small id="mPre"></small></button>
-    <button data-go="rebajas" id="mReb" hidden>Rebajas</button>
     <button data-go="hombre">Hombre</button>
     <button data-go="mujer">Mujer</button>
     <button type="button" class="mdesp" id="mMarcasBtn" aria-expanded="false" aria-controls="mMarcas">Marcas <span class="fl" aria-hidden="true">+</span></button>
     <div id="mMarcas" class="msub" hidden></div>
     <button data-go="acc">Accesorios</button>
+    <button data-go="rebajas" id="mReb" hidden>Rebajas</button>
     <span id="mFavs" hidden></span>
     <div class="mlinks"><button data-go="terminos">Términos y condiciones</button><button data-go="contacto">Contacto</button></div>
   </div>
@@ -433,8 +433,10 @@ const TIENDA={
   whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:80, envioNacional:150,
   // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
   barra:['Preventas abiertas','100% originales','Entregas en Monterrey','Envíos a todo México','Envío gratis desde $5,000'],
-  // marcas del menú, en este orden (Onyx va como colección dentro de Gymshark)
+  // marcas de la fila de logos, en este orden
   marcas:['YoungLA','Gymshark','Breathe Divinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
+  // lista de MARCAS en el menú (siempre se ve, aunque no haya productos). Onyx abre la colección Onyx de Gymshark.
+  menuMarcas:[['YoungLA','m:YoungLA'],['Gymshark','m:Gymshark'],['Onyx','c:Gymshark|Onyx'],['Breathe Divinity','m:Breathe Divinity'],['Darc Sport','m:Darc Sport'],['Civil Régime','m:Civil Régime'],['DFYNE','m:DFYNE'],['Controlled Insanity','m:Controlled Insanity'],['AYBL','m:AYBL']],
   // logos de la fila de marcas (carpeta marcas/)
   logos:{'YoungLA':'youngla','Gymshark':'gymshark','Breathe Divinity':'breathe-divinity','Darc Sport':'darc-sport','Civil Régime':'civil-regime','DFYNE':'dfyne','Controlled Insanity':'controlled-insanity','AYBL':'aybl'},
   // banners del inicio (máximo 3). Para poner foto: img:'banners/archivo.jpg'. ir = a dónde lleva al tocarlo.
@@ -559,7 +561,7 @@ function render(){
     $('#disp').innerHTML=[['','Todas las marcas']].concat(ms.map(m=>[m,m])).map(o=>'<button class="chip'+(fMarca===o[0]?' on':'')+'" data-pmarca="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('');
   } else { $('#disp').hidden=vista==='favs';
     $('#disp').innerHTML=[['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido']].map(o=>'<button class="chip'+(fEstado===o[0]?' on':'')+'" data-disp="'+o[0]+'">'+o[1]+'</button>').join(''); }
-  $('#titulo').hidden=!vista&&!fMarca; $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='drops'?'Preventas'+(fMarca?' · '+fMarca:''):vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca;
+  $('#titulo').hidden=!vista&&!fMarca; $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='drops'?'Preventas'+(fMarca?' · '+fMarca:''):vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca+(fCol?' · '+fCol:'');
   const r=filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
   let html='';
@@ -806,7 +808,7 @@ fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{prod
   P=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // marcas del menú: tu lista fija; Rebajas solo aparece si hay alguna prenda con precio rebajado
-  $('#mMarcas').innerHTML=TIENDA.marcas.map(m=>'<button data-go="m:'+esc(m)+'">'+esc(m)+'</button>').join('');
+  $('#mMarcas').innerHTML=TIENDA.menuMarcas.map(m=>'<button data-go="'+esc(m[1])+'">'+esc(m[0])+'</button>').join('');
   $('#mReb').hidden=!P.some(enRebaja);
   renderInicio(); render(); quitarIntro();
   const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id);
