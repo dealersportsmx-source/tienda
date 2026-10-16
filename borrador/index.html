@@ -134,6 +134,58 @@ img{display:block;max-width:100%}
 .pr .rd{color:var(--red)}
 .empty{text-align:center;color:var(--muted);padding:50px 10px}
 
+/* ---------- inicio ---------- */
+/* banners: se deslizan con el dedo y pasan solos */
+.bn{position:relative}
+.bn-c{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.bn-c::-webkit-scrollbar{display:none}
+.bn-i{all:unset;cursor:pointer;flex:0 0 100%;scroll-snap-align:start;position:relative;aspect-ratio:4/5;max-height:72vh;display:flex;align-items:flex-end;color:#fff;overflow:hidden}
+.bn-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bn-i b{position:relative;padding:22px 20px 40px;font-size:clamp(26px,7vw,46px);line-height:1;text-transform:uppercase;font-weight:800;letter-spacing:-.01em}
+.bn-d{position:absolute;left:0;right:0;bottom:14px;display:flex;gap:6px;justify-content:center}
+.bn-d i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)} .bn-d i.on{width:20px;background:#fff}
+@media (min-width:900px){ .bn-i{aspect-ratio:16/7} }
+/* franja de confianza */
+.conf{display:flex;justify-content:space-around;gap:6px;padding:12px 10px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.conf span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.conf svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:380px){ .conf{font-size:10px} .conf svg{width:15px;height:15px} }
+/* fila de logos */
+.logos{display:flex;gap:10px;overflow-x:auto;padding:14px 16px;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.logos::-webkit-scrollbar{display:none}
+.logos button{all:unset;cursor:pointer;flex:0 0 auto;width:96px;height:44px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;padding:6px 12px;box-sizing:border-box}
+.logos img{max-width:100%;max-height:26px;object-fit:contain;filter:brightness(0)}
+.logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
+/* secciones */
+.sec{max-width:1200px;margin:0 auto;padding:26px 0 6px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px;margin-bottom:12px}
+.sec-h h2{margin:0;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.01em}
+.sec .ver{all:unset;cursor:pointer;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.sec-s{margin:-8px 16px 12px;color:var(--muted);font-size:13px}
+.pre-cd{margin:-6px 16px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.pre-cd b{background:var(--ink);color:#fff;padding:5px 10px;border-radius:6px}
+.fila{display:flex;gap:10px;overflow-x:auto;padding:0 16px 6px;scroll-snap-type:x proximity;scrollbar-width:none}
+.fila::-webkit-scrollbar{display:none}
+.fila .card{flex:0 0 44%;max-width:230px;scroll-snap-align:start}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 16px}
+@media (min-width:900px){ .g2{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.col{all:unset;cursor:pointer;position:relative;aspect-ratio:4/5;border-radius:12px;overflow:hidden;background:var(--soft);display:flex;align-items:flex-end}
+.col img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.col span{position:relative;width:100%;padding:30px 12px 12px;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);color:#fff}
+.col small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.col b{font-size:15px;text-transform:uppercase}
+/* aviso de sección vacía (solo se ve en el borrador) */
+.vacio{margin:0 16px;padding:26px 14px;border:1px dashed #cfcfd4;border-radius:12px;text-align:center;color:var(--muted);font-size:13px}
+/* pie de una línea */
+footer.pie{display:flex;justify-content:center;align-items:center;gap:12px;padding:26px 16px;margin-top:30px;background:#fff;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+footer.pie button,footer.pie a{all:unset;cursor:pointer;color:var(--ink);font-weight:600}
+/* barra fija abajo en celular */
+.tbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tbar button,.tbar a{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+.tbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+@media (min-width:900px){ .tbar{display:none} body{padding-bottom:0} }
+
 /* paneles */
 .ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);display:flex;justify-content:flex-end}
 .ov.left{justify-content:flex-start}
@@ -230,6 +282,22 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 
 <main id="main">
   <section class="hero" id="hero" hidden></section>
+  <!-- INICIO: secciones en el orden de la página -->
+  <div id="inicio">
+    <section class="bn" aria-label="Destacados"><div class="bn-c" id="bn"></div><div class="bn-d" id="bnD"></div></section>
+    <div class="conf">
+      <span><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>100% originales</span>
+      <span><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Preventas</span>
+      <span><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>Envío a todo México</span>
+    </div>
+    <div class="logos" id="logos" aria-label="Marcas"></div>
+    <section class="sec" id="sPre"><div class="sec-h"><h2>Preventa activa</h2><button class="ver" data-ir="drops">Ver todo</button></div><div id="sPreTxt"></div><div class="fila" id="fPre"></div></section>
+    <section class="sec" id="sTop"><div class="sec-h"><h2>Lo más pedido</h2></div><div class="fila" id="fTop"></div></section>
+    <section class="sec" id="sCol"><div class="sec-h"><h2>Colecciones por marca</h2></div><div class="g2" id="gCol"></div></section>
+    <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas Gymshark</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
+    <section class="sec" id="sDisp"><div class="sec-h"><h2>Disponibles</h2><button class="ver" data-ir="disponibles">Ver todo</button></div><p class="sec-s">Entrega inmediata</p><div class="fila" id="fDisp"></div></section>
+  </div>
+  <div id="lista" hidden>
   <nav class="tabs" id="tabs" aria-label="Línea">
     <button data-linea="" class="on">Todo</button><button data-linea="hombre">Hombre</button><button data-linea="mujer">Mujer</button>
   </nav>
@@ -241,20 +309,19 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <div class="bar"><button id="btnFiltrar"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Filtrar y ordenar</button><span id="cuenta"></span></div>
     <div class="grid" id="grid"></div>
   </div>
+  </div>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="cols">
-      <div><h3>Formas de pago</h3><p>Transferencia (BBVA)</p><p>Depósito en OXXO</p></div>
-      <div><h3>Envíos</h3><p>Monterrey: entrega a domicilio, $80.</p><p>Todo México: por paquetería, $150. Zonas alejadas se cotizan.</p></div>
-      <div><h3>Contacto</h3><p><a id="ftWa" target="_blank" rel="noopener">WhatsApp 81 2079 6757</a></p><p><a id="ftIg" target="_blank" rel="noopener">Instagram @dealersportsmx00</a></p></div>
-    </div>
-    <img class="logo" src="logo.png" alt="DEALER SPORTS MX">
-    <p class="c"><a href="#" id="ftTerm" style="color:inherit">Cómo funciona, términos y privacidad</a></p>
-    <p class="c">© DEALER SPORTS MX · Monterrey, N.L.</p>
-  </div>
+<footer class="pie">
+  <button id="ftTerm">Términos</button><span aria-hidden="true">·</span><button id="ftCto">Contacto</button><span aria-hidden="true">·</span><a id="ftIg" target="_blank" rel="noopener">Instagram</a>
 </footer>
+
+<!-- barra fija abajo (solo celular) -->
+<nav class="tbar" aria-label="Accesos rápidos">
+  <button id="tbTienda"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M10 20v-6h4v6"/></svg>Tienda</button>
+  <button id="tbBuscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Buscar</button>
+  <a id="tbDm" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 4L3 11l7 2.5L12.5 21z"/><path d="M10 13.5L21 4"/></svg>DM</a>
+</nav>
 
 <!-- menú -->
 <div class="ov left" id="ovMenu" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Menú">
@@ -368,6 +435,16 @@ const TIENDA={
   barra:['Preventas abiertas','100% originales','Entregas en Monterrey','Envíos a todo México','Envío gratis desde $5,000'],
   // marcas del menú, en este orden (Onyx va como colección dentro de Gymshark)
   marcas:['YoungLA','Gymshark','Breathe Divinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
+  // logos de la fila de marcas (carpeta marcas/)
+  logos:{'YoungLA':'youngla','Gymshark':'gymshark','Breathe Divinity':'breathe-divinity','Darc Sport':'darc-sport','Civil Régime':'civil-regime','DFYNE':'dfyne','Controlled Insanity':'controlled-insanity','AYBL':'aybl'},
+  // banners del inicio (máximo 3). Para poner foto: img:'banners/archivo.jpg'. ir = a dónde lleva al tocarlo.
+  // El 3 sale como "Rebajas" solo si hay rebaja activa; si no, usa "sinRebaja".
+  banners:[
+    {titulo:'Preventa activa', color:'#111111', img:'', ir:'drops'},
+    {titulo:'Lo nuevo de Gymshark', color:'#26262a', img:'', ir:'m:Gymshark'},
+    {titulo:'Rebajas', color:'#3b3b40', img:'', ir:'rebajas', soloRebaja:true,
+     sinRebaja:{titulo:'Así entregamos', color:'#3b3b40', img:'', ir:''}}
+  ],
   anticipo:0.30, // lo que se aparta de las prendas sobre pedido (30 %)
   llega:'15–20 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
@@ -385,13 +462,15 @@ const LS={get(k,d){try{return JSON.parse(localStorage.getItem('fwmx_'+k))??d;}ca
 const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
 const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 
-let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='';
+let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
 // "Civil Régime" y "Civil Regime" cuentan como la misma marca
 function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
 // en rebaja = tiene "precio antes" mayor que el precio actual
 function enRebaja(p){ return +p.precioAntes>+p.precio; }
+// colección de la prenda (ej. Onyx dentro de Gymshark); en preventas es el nombre de la preventa
+function colDe(p){ return p.coleccion||(p.estado==='early'?p.estadoTxt:'')||''; }
 function clavePre(p){ return (p.marca||'')+'|'+(p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
 function preventas(){ const g=new Map();
   P.filter(p=>p.estado==='early').forEach(p=>{ const k=clavePre(p); if(!g.has(k)) g.set(k,{k,marca:p.marca||'',nombre:p.estadoTxt&&!/^(preventa|drop|early access|nuevo drop)$/i.test(p.estadoTxt)?p.estadoTxt:'',fecha:dropDate(p),prods:[]}); g.get(k).prods.push(p); });
@@ -444,6 +523,7 @@ function filtrar(){
   if(linea) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
   if(cat) r=r.filter(p=>p.categoria===cat);
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
+  if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
   if(fTalla) r=r.filter(p=>tallasConStock(p).has(fTalla));
   if(fEstado) r=r.filter(p=>fEstado==='disponible'?p.estado==='disponible':p.estado!=='disponible');
   if(vista==='drops') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
@@ -490,7 +570,6 @@ function render(){
   } else html=r.map(cardHTML).join('');
   $('#grid').innerHTML=html||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':vista==='drops'?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
-  $('#mTodo').textContent=P.length?String(P.length):'';
 }
 /* carrusel: una lámina por cada preventa abierta, va pasando sola */
 let heroI=0, heroT=null;
@@ -521,19 +600,73 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id); });
 setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
 
+/* ---------- inicio ---------- */
+// en el borrador (o en tu compu) las secciones vacías muestran un aviso; en la tienda real se esconden
+const BORRADOR=/\/borrador\/|localhost|127\.0\.0\.1/.test(location.href);
+function modo(ini){ enInicio=ini; $('#inicio').hidden=!ini; $('#lista').hidden=ini; }
+function seccion(id,hay,aviso){ const s=$('#'+id); s.hidden=!hay&&!BORRADOR; return hay?'':'<div class="vacio">'+aviso+'</div>'; }
+let bnT=null;
+function renderBanners(){
+  const hayReb=P.some(enRebaja);
+  const bs=TIENDA.banners.slice(0,3).map(b=>b.soloRebaja&&!hayReb?b.sinRebaja:b).filter(Boolean);
+  $('#bn').innerHTML=bs.map((b,i)=>'<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
+    (b.img?'<img src="'+esc(b.img)+'" alt="'+esc(b.titulo||'')+'"'+(i?' loading="lazy"':' fetchpriority="high"')+'>':'')+
+    (b.img?'':'<b>'+esc(b.titulo||'')+'</b>')+'</button>').join('');
+  $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
+  clearInterval(bnT);
+  if(bs.length>1) bnT=setInterval(()=>{ const c=$('#bn'); if(!enInicio||document.hidden) return; const n=Math.round(c.scrollLeft/c.clientWidth); c.scrollTo({left:((n+1)%bs.length)*c.clientWidth,behavior:'smooth'}); },5000);
+}
+$('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scrollLeft/c.clientWidth); $('#bnD').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===n)); },{passive:true});
+function renderInicio(){
+  renderBanners();
+  $('#logos').innerHTML=TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m];
+    return '<button data-ir="m:'+esc(m)+'" aria-label="'+esc(m)+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join('');
+  // preventa activa: la que cierra primero; la cuenta es al CIERRE de Dealer (fecha de cierre del Catálogo)
+  const g=preventas()[0];
+  $('#sPreTxt').innerHTML=g?'<div class="pre-cd"><span>'+esc(g.marca)+' · '+esc(g.nombre||'')+'</span>'+(g.fecha?'<b data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</b>':'')+'</div>':'';
+  $('#fPre').innerHTML=g?g.prods.map(cardHTML).join(''):seccion('sPre',false,'Aquí sale la preventa abierta, con la cuenta regresiva a su cierre.');
+  if(g) seccion('sPre',true);
+  const top=P.filter(p=>p.masPedido&&p.estado!=='early');
+  $('#fTop').innerHTML=top.map(cardHTML).join('')||seccion('sTop',top.length,'Aquí salen las prendas que marques como "Lo más pedido" en el Catálogo.');
+  if(top.length) seccion('sTop',true);
+  // colecciones: una tarjeta por marca + colección, con la foto de su primera prenda
+  const cols=new Map(); P.forEach(p=>{ const c=colDe(p); if(!c||!p.marca) return; const k=p.marca+'|'+c; if(!cols.has(k)) cols.set(k,{m:p.marca,c,f:foto1(p)}); else if(!cols.get(k).f) cols.get(k).f=foto1(p); });
+  $('#gCol').innerHTML=[...cols.values()].map(x=>'<button class="col" data-ir="c:'+esc(x.m)+'|'+esc(x.c)+'">'+(x.f?'<img src="'+esc(x.f)+'" alt="" loading="lazy">':'')+'<span><small>'+esc(x.m)+'</small><b>'+esc(x.c)+'</b></span></button>').join('')||
+    seccion('sCol',false,'Aquí salen tus colecciones por marca (ej. Gymshark · Onyx), de 2 en 2.');
+  if(cols.size) seccion('sCol',true);
+  const reb=P.filter(enRebaja);
+  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas de Gymshark.');
+  if(reb.length) seccion('sReb',true);
+  const disp=P.filter(p=>p.estado==='disponible');
+  $('#fDisp').innerHTML=disp.map(cardHTML).join('')||seccion('sDisp',false,'Aquí sale lo que tienes en mano para entrega inmediata.');
+  if(disp.length) seccion('sDisp',true);
+}
+// a dónde llevan el menú, los logos, los banners y los "Ver todo"
+function ir(g){
+  if(!g) return;
+  if(g==='terminos'){ abrir('ovTerm'); return; }
+  if(g==='contacto'){ abrir('ovContacto'); return; }
+  if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
+  if(g==='inicio'){ modo(true); window.scrollTo(0,0); return; }
+  fPre=''; fCol=''; fEstado=''; cat='';
+  if(g.startsWith('m:')){ vista=''; fMarca=g.slice(2); linea=''; }
+  else if(g.startsWith('c:')){ const i=g.indexOf('|'); vista=''; fMarca=g.slice(2,i); fCol=g.slice(i+1); linea=''; }
+  else if(g==='disponibles'){ vista=''; fMarca=''; fEstado='disponible'; linea=''; }
+  else if(g==='favs'||g==='drops'||g==='acc'||g==='rebajas'){ vista=g; fMarca=''; linea=''; }
+  else { vista=''; fMarca=''; linea=g; LS.set('linea',linea); }
+  modo(false); render(); window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-ir]'); if(!b||b.closest('.ov')) return; e.preventDefault(); ir(b.dataset.ir); });
+
 /* ---------- menú, búsqueda y filtros ---------- */
 $('#btnMenu').addEventListener('click',()=>abrir('ovMenu'));
 $('#mMarcasBtn').addEventListener('click',()=>{ const b=$('#mMarcasBtn'), ab=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',String(ab)); $('#mMarcas').hidden=!ab; });
-$('#ftTerm').addEventListener('click',e=>{ e.preventDefault(); abrir('ovTerm'); });
-$('#brand').addEventListener('click',e=>{ e.preventDefault(); vista=''; cat=''; render(); window.scrollTo(0,0); });
-$('#ovMenu').addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; const g=b.dataset.go; cerrar('ovMenu');
-  if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
-  if(g==='terminos'){ abrir('ovTerm'); return; }
-  if(g==='contacto'){ abrir('ovContacto'); return; }
-  fPre='';
-  if(g.startsWith('m:')){ vista=''; fMarca=g.slice(2); }
-  else if(g==='favs'||g==='drops'||g==='acc'||g==='rebajas'){ vista=g; fMarca=''; } else { vista=''; fMarca=''; linea=g; LS.set('linea',linea); }
-  cat=''; render(); document.getElementById('tabs').scrollIntoView({behavior:'smooth'}); });
+$('#ftTerm').addEventListener('click',()=>ir('terminos'));
+$('#ftCto').addEventListener('click',()=>ir('contacto'));
+$('#brand').addEventListener('click',e=>{ e.preventDefault(); ir('inicio'); });
+$('#tbTienda').addEventListener('click',()=>ir('inicio'));
+$('#tbBuscar').addEventListener('click',()=>$('#btnBuscar').click());
+$('#ovMenu').addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; cerrar('ovMenu'); ir(b.dataset.go); });
 $('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=''; buscar(); setTimeout(()=>$('#q').focus(),60); });
 function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,p.categoria,(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
   $('#qRes').innerHTML=q?(r.length?'<div class="grid">'+r.map(cardHTML).join('')+'</div>':'<p class="empty">No encontramos “'+esc(q)+'”.</p>'):''; }
@@ -663,7 +796,7 @@ $('#ovBolsa').addEventListener('input',e=>{ if(e.target.id==='bNombre'){ nombre=
 $('#btnBolsa').addEventListener('click',()=>{ pintarBolsa(); abrir('ovBolsa'); });
 
 /* ---------- arranque ---------- */
-$('#ftWa').href=wa('Hola DEALER SPORTS MX 👋'); $('#ftIg').href=ig; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
+$('#ftIg').href=ig; $('#tbDm').href=TIENDA.dm; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
 // barra en movimiento: los textos van dos veces para que el giro no se corte
 $('#annT').innerHTML=[0,1].map(k=>TIENDA.barra.map(t=>'<span'+(k?' aria-hidden="true"':'')+'>'+esc(t)+'</span>').join('')).join('');
 guardarBolsa(); guardarFavs();
@@ -675,7 +808,7 @@ fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{prod
   // marcas del menú: tu lista fija; Rebajas solo aparece si hay alguna prenda con precio rebajado
   $('#mMarcas').innerHTML=TIENDA.marcas.map(m=>'<button data-go="m:'+esc(m)+'">'+esc(m)+'</button>').join('');
   $('#mReb').hidden=!P.some(enRebaja);
-  renderHero(); render(); quitarIntro();
+  renderInicio(); render(); quitarIntro();
   const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id);
 });
 })();
