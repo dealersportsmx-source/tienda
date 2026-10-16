@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="DEALER SPORTS MX · Ropa deportiva y streetwear importada. Pide por WhatsApp.">
+<title>DEALER SPORTS MX</title>
+<link rel="icon" href="icon-180.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta property="og:title" content="DEALER SPORTS MX">
+<meta property="og:description" content="Ropa deportiva y streetwear importada. Pide por WhatsApp.">
+<meta property="og:image" content="logo.png">
+<style>
+:root{--ink:#0b0b0c;--muted:#76767b;--line:#e8e8ea;--soft:#f5f5f6;--wa:#1FAF57;--violet:#6D45C9;--blue:#2F6FE0;--red:#C4402F;--green:#1E9A4A;color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+img{display:block;max-width:100%}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+
+/* intro */
+.splash{position:fixed;inset:0;z-index:100;background:#fff;display:grid;place-items:center;transition:opacity .5s ease,visibility 0s linear .5s}
+.splash img{width:min(70vw,300px);opacity:0;animation:fade 1s ease-out forwards}
+.splash.out{opacity:0;visibility:hidden}
+@keyframes fade{to{opacity:1}}
+
+/* encabezado */
+/* barra de texto en movimiento */
+.ann{background:var(--ink);color:#fff;font-size:11px;font-weight:700;letter-spacing:.14em;padding:9px 0;text-transform:uppercase;overflow:hidden;white-space:nowrap}
+.ann-t{display:inline-flex;animation:corre 32s linear infinite}
+.ann-t span{padding:0 22px}
+.ann-t span::after{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.5;margin-left:44px;vertical-align:middle}
+@keyframes corre{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.ann-t{animation:none}}
+/* menú: Marcas desplegable y ligas chicas abajo */
+.menu .mdesp .fl{font-weight:500;color:var(--muted);transition:transform .2s}
+.menu .mdesp[aria-expanded="true"] .fl{transform:rotate(45deg)}
+.menu .msub{border-bottom:1px solid var(--line);padding-bottom:6px}
+.menu .msub button{border-bottom:0}
+.menu .mlinks{display:flex;gap:18px;margin-top:26px}
+.menu .mlinks button{all:unset;cursor:pointer;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.cto{display:grid;gap:10px}
+.cto small{display:block;color:var(--muted);font-size:13px;margin-top:14px}
+.hd{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.hd .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px}
+.brand{font-weight:800;letter-spacing:.22em;font-size:18px;text-decoration:none;color:inherit;padding-left:.22em;white-space:nowrap}
+@media (max-width:480px){.brand{font-size:15px;letter-spacing:.12em;padding-left:.12em}}
+/* el logo DEALER en el encabezado en vez del nombre escrito */
+.brand{display:flex;align-items:center;justify-content:center;padding-left:0}
+.brand img{height:34px;width:auto;display:block}
+@media (max-width:480px){.brand img{height:26px}}
+.ib{all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;position:relative}
+.ib svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ib:focus-visible{outline:2px solid var(--ink)}
+.hd .r{display:flex;justify-content:flex-end;gap:2px}
+.badge{position:absolute;top:3px;right:2px;min-width:17px;height:17px;border-radius:9px;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* portada */
+.hero{position:relative;height:min(62vh,520px);background:#1b1b1d;color:#fff;overflow:hidden}
+.hero .sl{position:absolute;inset:0;display:flex;align-items:flex-end;opacity:0;transition:opacity .8s ease;pointer-events:none}
+.hero .sl.on{opacity:1;pointer-events:auto}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.82}
+.hero .sl::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0) 60%)}
+.hero .txt{position:relative;z-index:1;padding:24px 20px 34px;max-width:1200px;width:100%;margin:0 auto}
+.hero .cierra{display:inline-block;margin:-6px 0 14px;padding:5px 10px;border-radius:6px;background:#FFD400;color:#0b0b0c;font-weight:800;font-size:14px}
+.hdots{position:absolute;z-index:2;left:0;right:0;bottom:12px;display:flex;gap:6px;justify-content:center}
+.hdots i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)}.hdots i.on{width:20px;background:#fff}
+.pre-h{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0b0b0c;color:#fff;border-radius:12px;padding:12px 14px;margin-top:8px}
+.pre-h small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FFD400;font-weight:800}
+.pre-h b{font-size:17px;text-transform:uppercase}.pre-h .cd{font-size:13px;font-weight:700;white-space:nowrap}
+.mtit{margin:14px 0 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.msub button{font-size:14px!important;padding:11px 0 11px 12px!important}
+.hero small{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
+.hero h1{margin:0 0 16px;font-size:clamp(28px,8vw,52px);line-height:1;letter-spacing:-.01em;text-transform:uppercase;font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:#fff;font-weight:700;font-size:15px;text-decoration:none;white-space:nowrap}
+.btn.w{background:#fff;color:var(--ink);border-color:#fff}
+.btn.o{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.full{width:100%}
+
+/* hombre / mujer */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line);background:#fff}
+.tabs button{all:unset;cursor:pointer;text-align:center;padding:14px 4px;font-weight:700;font-size:14px;color:#9a9aa0;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--ink)}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 6px;scrollbar-width:none;max-width:1200px;margin:0 auto}
+.cats::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-weight:600;font-size:13px;white-space:nowrap}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.drop{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--ink);border-radius:14px;padding:12px 14px;margin:10px 0 4px;cursor:pointer;background:#fff;width:100%;text-align:left}
+.drop small{display:block;font-size:11px;letter-spacing:.12em;color:var(--violet);font-weight:800;text-transform:uppercase}
+.drop b{font-size:14px}
+.cd{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px}
+.bar button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.bar svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.bar span{color:var(--muted);font-size:13px}
+.title{font-size:22px;font-weight:800;margin:6px 0 0;text-transform:uppercase;letter-spacing:.02em}
+
+/* productos */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px;padding-bottom:30px}
+@media (min-width:760px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1050px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.card{all:unset;cursor:pointer;display:block;min-width:0}
+.card:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.ph{position:relative;aspect-ratio:4/5;background:var(--soft);border-radius:6px;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.card:hover .ph img{transform:scale(1.03)}
+.tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:var(--ink);letter-spacing:.02em}
+.tag.t-pre{background:var(--blue);color:#fff}.tag.t-drop{background:var(--violet);color:#fff}.tag.t-cam{background:#3a3a3e;color:#fff}.tag.t-of{background:var(--red);color:#fff}
+.fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
+.fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
+.fav.on svg{fill:var(--ink)}
+.nm{margin:9px 0 0;font-size:14px;font-weight:700;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.br{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.pr{margin:4px 0 0;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.pr s{color:var(--muted);font-weight:500;font-size:13px;margin-left:6px}
+.apt{margin:3px 0 0;font-size:13px;font-weight:700;color:var(--ink)}
+.apt::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFD400;margin-right:6px;vertical-align:1px}
+.apt-box{display:block;margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFD400;color:#0b0b0c}
+.apt-box b{display:block;font-size:16px}.apt-box small{display:block;font-size:13px;font-weight:500;margin-top:2px}
+.apt-tot{margin-top:10px!important;padding:8px 10px;border-radius:8px;background:#FFD400;font-weight:800}
+.terms ol.pasos{list-style:none;padding:0;margin:0 0 18px;counter-reset:p}
+.terms ol.pasos li{counter-increment:p;position:relative;padding:0 0 14px 40px}
+.terms ol.pasos li::before{content:counter(p);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:#0b0b0c;color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
+.terms ol.pasos b{display:block}.terms ol.pasos span{display:block;color:var(--muted);font-size:14px}
+.terms h3{font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 8px}
+.terms ul{margin:0;padding-left:18px}.terms li{font-size:14px;margin:0 0 6px}.terms p{font-size:14px;color:var(--muted)}
+.pr .rd{color:var(--red)}
+.empty{text-align:center;color:var(--muted);padding:50px 10px}
+
+/* paneles */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);display:flex;justify-content:flex-end}
+.ov.left{justify-content:flex-start}
+.pn{background:#fff;width:min(100%,440px);height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);animation:entra .25s ease}
+.ov.left .pn{animation-name:entraL}
+@keyframes entra{from{transform:translateX(40px);opacity:.6}}
+@keyframes entraL{from{transform:translateX(-40px);opacity:.6}}
+.pn-h{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 12px 18px;border-bottom:1px solid var(--line)}
+.pn-h h2{margin:0;font-size:17px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.pn-b{flex:1;overflow:auto;padding:16px 18px;-webkit-overflow-scrolling:touch}
+.pn-f{padding:14px 18px;border-top:1px solid var(--line)}
+.menu a,.menu button{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:100%;box-sizing:border-box;padding:15px 0;border-bottom:1px solid var(--line);font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.menu small{font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0}
+.lbl{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin:18px 0 10px}
+.lbl:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+/* producto */
+.pv{position:fixed;inset:0;z-index:50;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+.pv-top{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top,0px)) 8px 8px;pointer-events:none}
+.pv-top .ib{pointer-events:auto;background:rgba(255,255,255,.92)}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin-top:-56px}
+.gal::-webkit-scrollbar{display:none}
+.gal img{flex:0 0 100%;width:100%;aspect-ratio:4/5;object-fit:cover;scroll-snap-align:start;background:var(--soft)}
+@media (min-width:760px){.pv-in{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;max-width:1100px;margin:0 auto;padding:0 20px}.gal{margin-top:0;border-radius:8px}}
+.dots{display:flex;justify-content:center;gap:6px;padding:10px 0 0}
+.dots i{width:6px;height:6px;border-radius:50%;background:#d4d4d8}
+.dots i.on{background:var(--ink)}
+.pv-d{padding:16px 18px}
+.pv-d .br{font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.pv-d h2{margin:4px 0 6px;font-size:22px;line-height:1.2;font-weight:800}
+.pv-d .pr{font-size:20px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.estado{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.03em}
+.estado.pre{background:#e9f0fd;color:var(--blue)}.estado.drop{background:#f0ebfb;color:var(--violet)}.estado.cam{background:var(--soft);color:#3a3a3e}.estado.disp{background:#e8f6ed;color:var(--green)}
+.sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
+.size{border:1px solid var(--line);background:#fff;border-radius:8px;height:46px;font-weight:700;font-size:14px}
+.size.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.size:disabled{color:#c4c4c8;text-decoration:line-through;cursor:not-allowed;background:var(--soft)}
+.desc{font-size:14px;color:#3a3a3e;margin:16px 0 0;white-space:pre-line}
+.err{color:var(--red);font-size:13px;margin:8px 0 0}
+.sticky-buy{position:fixed;left:0;right:0;bottom:0;z-index:55;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
+.sticky-buy .btn{flex:1}
+
+/* bolsa */
+.it{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.it img{width:72px;height:90px;object-fit:cover;border-radius:6px;background:var(--soft)}
+.it b{display:block;font-size:14px;line-height:1.25}
+.it small{display:block;color:var(--muted);font-size:13px}
+.it .x{all:unset;cursor:pointer;color:var(--muted);font-size:13px;text-decoration:underline;align-self:start}
+.it .p{font-weight:800;font-size:14px;margin-top:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer}
+.opt input{margin-top:3px;accent-color:var(--ink);width:18px;height:18px}
+.opt b{display:block;font-size:14px}
+.opt small{display:block;font-size:13px;color:var(--muted)}
+.opt.on{border-color:var(--ink)}
+.tot{display:flex;justify-content:space-between;font-size:14px;margin:4px 0}
+.tot.big{font-size:18px;font-weight:800;margin-top:8px}
+.pay{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.pay b{display:block;font-size:14px;margin-bottom:4px}
+.pay .row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:#3a3a3e;margin-top:4px}
+.pay .num{font-family:ui-monospace,Menlo,monospace;font-size:14px;color:var(--ink);letter-spacing:.02em;word-break:break-all}
+.copy{all:unset;cursor:pointer;font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.in{display:block;width:100%;min-height:46px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:16px;margin-top:6px}
+
+/* pie */
+footer{background:var(--soft);margin-top:20px;padding:30px 0 calc(30px + env(safe-area-inset-bottom,0px));font-size:14px}
+footer h3{font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 10px}
+footer .cols{display:grid;gap:24px}
+@media (min-width:760px){footer .cols{grid-template-columns:repeat(3,1fr)}}
+footer p{margin:4px 0;color:#3a3a3e}
+footer a{color:inherit}
+footer .logo{width:150px;margin:26px auto 8px;opacity:.9}
+footer .c{text-align:center;color:var(--muted);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;z-index:120;background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}.card:hover .ph img{transform:none}}
+</style>
+</head>
+<body>
+<div class="splash" id="splash" aria-hidden="true"><img src="logo.png" alt=""></div>
+
+<div class="ann" id="ann"><div class="ann-t" id="annT"></div></div>
+<header class="hd">
+  <div class="wrap">
+    <div><button class="ib" id="btnMenu" aria-label="Abrir menú"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+    <a class="brand" href="#" id="brand" aria-label="DEALER SPORTS MX"><img src="logo.png" alt="DEALER SPORTS MX"></a>
+    <div class="r">
+      <button class="ib" id="btnBuscar" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></button>
+      <button class="ib" id="btnBolsa" aria-label="Bolsa"><svg viewBox="0 0 24 24"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="badge" id="bolsaN" hidden>0</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="hero" hidden></section>
+  <nav class="tabs" id="tabs" aria-label="Línea">
+    <button data-linea="" class="on">Todo</button><button data-linea="hombre">Hombre</button><button data-linea="mujer">Mujer</button>
+  </nav>
+  <div class="cats" id="disp" role="group" aria-label="Disponibilidad"></div>
+  <div class="cats" id="cats" role="group" aria-label="Categorías"></div>
+  <div class="wrap">
+    <div id="dropBox"></div>
+    <h2 class="title" id="titulo" hidden></h2>
+    <div class="bar"><button id="btnFiltrar"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Filtrar y ordenar</button><span id="cuenta"></span></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div><h3>Formas de pago</h3><p>Transferencia (BBVA)</p><p>Depósito en OXXO</p></div>
+      <div><h3>Envíos</h3><p>Monterrey: entrega a domicilio, $80.</p><p>Todo México: por paquetería, $150. Zonas alejadas se cotizan.</p></div>
+      <div><h3>Contacto</h3><p><a id="ftWa" target="_blank" rel="noopener">WhatsApp 81 2079 6757</a></p><p><a id="ftIg" target="_blank" rel="noopener">Instagram @dealersportsmx00</a></p></div>
+    </div>
+    <img class="logo" src="logo.png" alt="DEALER SPORTS MX">
+    <p class="c"><a href="#" id="ftTerm" style="color:inherit">Cómo funciona, términos y privacidad</a></p>
+    <p class="c">© DEALER SPORTS MX · Monterrey, N.L.</p>
+  </div>
+</footer>
+
+<!-- menú -->
+<div class="ov left" id="ovMenu" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Menú">
+  <div class="pn-h"><h2>Menú</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b menu">
+    <button data-go="drops">Preventas <small id="mPre"></small></button>
+    <button data-go="rebajas" id="mReb" hidden>Rebajas</button>
+    <button data-go="hombre">Hombre</button>
+    <button data-go="mujer">Mujer</button>
+    <button type="button" class="mdesp" id="mMarcasBtn" aria-expanded="false" aria-controls="mMarcas">Marcas <span class="fl" aria-hidden="true">+</span></button>
+    <div id="mMarcas" class="msub" hidden></div>
+    <button data-go="acc">Accesorios</button>
+    <span id="mFavs" hidden></span>
+    <div class="mlinks"><button data-go="terminos">Términos y condiciones</button><button data-go="contacto">Contacto</button></div>
+  </div>
+</div></div>
+
+<!-- contacto -->
+<div class="ov" id="ovContacto" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Contacto">
+  <div class="pn-h"><h2>Contacto</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b cto">
+    <a class="btn full" id="cDm" target="_blank" rel="noopener">Escríbenos por DM</a>
+    <a class="btn o full" id="cIg" target="_blank" rel="noopener">Instagram @dealersportsmx00</a>
+    <small>También por WhatsApp: <a id="cWa" target="_blank" rel="noopener" style="color:inherit">81 2079 6757</a></small>
+  </div>
+</div></div>
+
+<!-- buscar -->
+<div class="ov" id="ovBuscar" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Buscar">
+  <div class="pn-h"><h2>Buscar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b"><input class="in" id="q" type="search" placeholder="Hoodie, YoungLA, leggings…" aria-label="Buscar productos" autocomplete="off"><div id="qRes" style="margin-top:12px"></div></div>
+</div></div>
+
+<!-- filtrar -->
+<div class="ov" id="ovFiltro" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Filtrar y ordenar">
+  <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b">
+    <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
+    <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
+    <p class="lbl">Marca</p><div class="chips" id="fMarca"></div>
+    <p class="lbl">Disponibilidad</p><div class="chips" id="fEstado"></div>
+  </div>
+  <div class="pn-f" style="display:flex;gap:8px"><button class="btn o" id="fLimpiar" style="flex:1">Limpiar</button><button class="btn" data-close style="flex:1" id="fVer">Ver</button></div>
+</div></div>
+
+<!-- producto -->
+<div class="pv" id="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pvName">
+  <div class="pv-top"><button class="ib" id="pvBack" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="ib" id="pvFav" aria-label="Agregar a favoritos"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
+  <div class="pv-in">
+    <div><div class="gal" id="gal"></div><div class="dots" id="dots"></div></div>
+    <div class="pv-d">
+      <p class="br" id="pvBrand"></p>
+      <h2 id="pvName"></h2>
+      <p class="pr" id="pvPrice"></p>
+      <span class="estado" id="pvEstado" hidden></span>
+      <p class="note" id="pvNote" hidden></p>
+      <div id="pvColorsBox"><p class="lbl">Color: <span id="pvColorName" style="font-weight:500;text-transform:none;letter-spacing:0"></span></p><div class="chips" id="pvColors"></div></div>
+      <p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div>
+      <p class="err" id="pvErr" hidden>Elige tu talla.</p>
+      <p class="desc" id="pvDesc"></p>
+    </div>
+  </div>
+</div>
+<div class="sticky-buy" id="buy" hidden><button class="btn" id="btnAdd">Agregar a la bolsa</button></div>
+
+<!-- bolsa -->
+<div class="ov" id="ovBolsa" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Bolsa">
+  <div class="pn-h"><h2>Tu bolsa</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b" id="bolsaBody"></div>
+  <div class="pn-f" id="bolsaFoot"></div>
+</div></div>
+
+<!-- cómo funciona, términos y privacidad -->
+<div class="ov" id="ovTerm" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Cómo funciona y términos">
+  <div class="pn-h"><h2>Cómo funciona</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b terms">
+    <ol class="pasos">
+      <li><b>Aparta con el 30 %</b><span>Escoge tu prenda, color y talla, y pídela por WhatsApp o Instagram.</span></li>
+      <li><b>Llega en 15–20 días</b><span>La pedimos a la marca y te avisamos cuando llega a Monterrey.</span></li>
+      <li><b>Liquidas y te la enviamos</b><span>Pagas el resto y te la mandamos.</span></li>
+    </ol>
+    <h3>Términos</h3>
+    <ul>
+      <li>Ropa 100 % original, nueva y con etiquetas.</li>
+      <li>Las prendas sobre pedido se apartan con el 30 % de su precio. El resto se paga cuando llega, antes de enviarla.</li>
+      <li>No hay cambios ni devoluciones. Revisa bien tu talla antes de apartar.</li>
+      <li>Si la marca se queda sin tu talla, te avisamos y te regresamos tu anticipo.</li>
+      <li>Los tiempos de llegada son aproximados y pueden variar por la marca o la paquetería.</li>
+      <li>Envíos: Monterrey $80 · resto de México $150 (zonas alejadas se cotizan). Se envía solo con el pedido liquidado.</li>
+    </ul>
+    <h3>Privacidad</h3>
+    <p>Tus datos (nombre, teléfono y dirección) solo se usan para tu pedido y tu envío. No los compartimos con nadie.</p>
+  </div>
+</div></div>
+
+<!-- formas de pago -->
+<div class="ov" id="ovPago" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Formas de pago">
+  <div class="pn-h"><h2>Formas de pago</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b" id="pagoBody"></div>
+</div></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- datos de la tienda (los cambias aquí) ---------- */
+const TIENDA={
+  whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:80, envioNacional:150,
+  // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
+  barra:['Preventas abiertas','100% originales','Entregas en Monterrey','Envíos a todo México','Envío gratis desde $5,000'],
+  // marcas del menú, en este orden (Onyx va como colección dentro de Gymshark)
+  marcas:['YoungLA','Gymshark','Breathe Divinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
+  anticipo:0.30, // lo que se aparta de las prendas sobre pedido (30 %)
+  llega:'15–20 días',
+  beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
+  cuentas:[
+    {banco:'BBVA',clabe:'012580015327177407',tarjeta:'4815 1630 4201 6728'}
+  ]
+};
+const $=(s,el=document)=>el.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=v=>'$'+Math.round(+v||0).toLocaleString('en-US');
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const ORDEN_T=['XS','S','M','L','XL','2XL','3XL'];
+const LS={get(k,d){try{return JSON.parse(localStorage.getItem('fwmx_'+k))??d;}catch(e){return d;}},set(k,v){try{localStorage.setItem('fwmx_'+k,JSON.stringify(v));}catch(e){}}};
+const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
+const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
+
+let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='';
+/* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
+function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
+// "Civil Régime" y "Civil Regime" cuentan como la misma marca
+function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+// en rebaja = tiene "precio antes" mayor que el precio actual
+function enRebaja(p){ return +p.precioAntes>+p.precio; }
+function clavePre(p){ return (p.marca||'')+'|'+(p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
+function preventas(){ const g=new Map();
+  P.filter(p=>p.estado==='early').forEach(p=>{ const k=clavePre(p); if(!g.has(k)) g.set(k,{k,marca:p.marca||'',nombre:p.estadoTxt&&!/^(preventa|drop|early access|nuevo drop)$/i.test(p.estadoTxt)?p.estadoTxt:'',fecha:dropDate(p),prods:[]}); g.get(k).prods.push(p); });
+  return [...g.values()].filter(x=>!x.fecha||x.fecha>new Date()).sort((a,b)=>(a.fecha||8.64e15)-(b.fecha||8.64e15)); }
+let favs=new Set(LS.get('favs',[])), bolsa=LS.get('bolsa',[]);
+let cur=null, curColor=null, curTalla='';
+
+/* ---------- utilidades ---------- */
+function dropDate(p){ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(p.dropFecha||''); return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]):null; }
+function fecha(s){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||''); return m?(+m[3])+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+m[2]-1]:''; }
+function hora(d){ let h=d.getHours(),ap=h<12?'am':'pm'; h=h%12||12; return h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
+function cuenta(d){ const ms=d-new Date(); if(ms<=0) return 'Ya salió'; const D=Math.floor(ms/864e5),H=Math.floor(ms%864e5/36e5),M=Math.floor(ms%36e5/6e4); return (D?D+'d ':'')+String(H).padStart(2,'0')+'h '+String(M).padStart(2,'0')+'m'; }
+function tallasDe(p,c){ const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
+function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0; }
+function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>tallasDe(p,c).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
+function foto1(p){ for(const c of p.colores||[]) if(c.fotos&&c.fotos[0]) return c.fotos[0]; return ''; }
+function esNuevo(p){ return p.estado==='disponible'&&p.creado&&(Date.now()-p.creado<14*864e5); }
+function etiqueta(p){
+  if(p.oferta&&p.precioBase>p.precio) return ['of','Oferta'];
+  if(p.estado==='early') return ['drop',p.estadoTxt||'Drop'];
+  if(p.estado==='preventa') return ['pre',p.estadoTxt||'Preventa'];
+  if(p.estado==='camino') return ['cam',p.estadoTxt||'Llega pronto'];
+  if(p.estadoTxt&&p.estadoTxt!=='Disponible') return ['',p.estadoTxt];
+  if(esNuevo(p)) return ['','Nuevo'];
+  return null;
+}
+let tt=null; function toast(s){ const el=$('#toast'); el.textContent=s; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),2400); }
+function guardarBolsa(){ LS.set('bolsa',bolsa); const n=bolsa.length; $('#bolsaN').hidden=!n; $('#bolsaN').textContent=n; }
+function guardarFavs(){ LS.set('favs',[...favs]); $('#mFavs').textContent=favs.size?String(favs.size):''; }
+
+/* ---------- paneles ---------- */
+let abierto=[];
+function abrir(id){ const o=$('#'+id); o.hidden=false; abierto.push(id); document.body.style.overflow='hidden'; }
+function cerrar(id){ const o=$('#'+id); if(o) o.hidden=true; abierto=abierto.filter(x=>x!==id); if(!abierto.length&&$('#pv').hidden) document.body.style.overflow=''; }
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-close]'); if(c){ cerrar(c.closest('.ov').id); return; }
+  if(e.target.classList&&e.target.classList.contains('ov')) cerrar(e.target.id);
+});
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(abierto.length) cerrar(abierto[abierto.length-1]); else if(!$('#pv').hidden) cerrarProducto(); });
+
+/* ---------- lista ---------- */
+function filtrar(){
+  let r=P.slice();
+  // preventas (drops con fecha de cierre) van en su propia sección; el catálogo normal es entrega inmediata + sobre pedido
+  if(vista==='favs') r=r.filter(p=>favs.has(p.id));
+  else if(vista==='drops') r=r.filter(p=>p.estado==='early'&&(!fPre||clavePre(p)===fPre));
+  else if(vista==='acc') r=r.filter(p=>p.estado!=='early'&&esAcc(p));
+  else if(vista==='rebajas') r=r.filter(enRebaja);
+  else r=r.filter(p=>p.estado!=='early'&&!esAcc(p)); // los accesorios no se revuelven con la ropa
+  if(linea) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
+  if(cat) r=r.filter(p=>p.categoria===cat);
+  if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
+  if(fTalla) r=r.filter(p=>tallasConStock(p).has(fTalla));
+  if(fEstado) r=r.filter(p=>fEstado==='disponible'?p.estado==='disponible':p.estado!=='disponible');
+  if(vista==='drops') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
+  if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
+  else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
+  else r.sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0));
+  return r;
+}
+/* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
+function sobrePedido(p){ return p.estado!=='disponible'; }
+function anticipoDe(precio){ return Math.ceil((+precio||0)*TIENDA.anticipo/10)*10; }
+function cardHTML(p){
+  const t=etiqueta(p), f=foto1(p), of=p.oferta&&p.precioBase>p.precio;
+  const nc=(p.colores||[]).filter(c=>c.nombre).length;
+  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy">':'')+
+    (t?'<span class="tag'+(t[0]?' t-'+t[0]:'')+'">'+esc(t[1])+'</span>':'')+
+    '<button class="fav'+(favs.has(p.id)?' on':'')+'" data-fav="'+esc(p.id)+'" aria-label="Favorito"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>'+
+    '<p class="nm">'+esc(p.nombre)+'</p><p class="br">'+esc([p.marca,nc>1?nc+' colores':''].filter(Boolean).join(' · '))+'</p>'+
+    '<p class="pr">'+(of?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.precioBase)+'</s>':money(p.precio))+'</p>'+
+    (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+'</div>';
+}
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
+  const base=P.filter(p=>!linea||!p.linea||p.linea===linea||p.linea==='unisex');
+  const cats=[...new Set(base.map(p=>p.categoria).filter(Boolean))];
+  if(cat&&!cats.includes(cat)) cat='';
+  $('#cats').innerHTML=cats.length>1?['<button class="chip'+(!cat?' on':'')+'" data-cat="">Todo</button>'].concat(cats.map(c=>'<button class="chip'+(cat===c?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>')).join(''):'';
+  $('#dropBox').innerHTML='';
+  // filtro rápido: entrega inmediata / sobre pedido (no aplica en preventas ni favoritos)
+  // en preventas: filtro por marca; en lo demás: entrega inmediata / sobre pedido
+  if(vista==='drops'){ const ms=[...new Set(preventas().map(g=>g.marca).filter(Boolean))];
+    $('#disp').hidden=ms.length<2;
+    $('#disp').innerHTML=[['','Todas las marcas']].concat(ms.map(m=>[m,m])).map(o=>'<button class="chip'+(fMarca===o[0]?' on':'')+'" data-pmarca="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('');
+  } else { $('#disp').hidden=vista==='favs';
+    $('#disp').innerHTML=[['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido']].map(o=>'<button class="chip'+(fEstado===o[0]?' on':'')+'" data-disp="'+o[0]+'">'+o[1]+'</button>').join(''); }
+  $('#titulo').hidden=!vista&&!fMarca; $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='drops'?'Preventas'+(fMarca?' · '+fMarca:''):vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca;
+  const r=filtrar();
+  $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
+  let html='';
+  if(vista==='drops'){ // preventas agrupadas, cada una con su cierre
+    const grupos=preventas().filter(g=>!fPre||g.k===fPre);
+    html=grupos.map(g=>{ const ps=r.filter(p=>clavePre(p)===g.k); if(!ps.length) return '';
+      return '<div class="pre-h" id="pre-'+esc(encodeURIComponent(g.k))+'"><div><small>Preventa · '+esc(g.marca)+'</small><b>'+esc(g.nombre||g.marca)+'</b></div>'+(g.fecha?'<div class="cd" data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</div>':'')+'</div>'+ps.map(cardHTML).join(''); }).join('');
+  } else html=r.map(cardHTML).join('');
+  $('#grid').innerHTML=html||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':vista==='drops'?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
+  const np=preventas().length; $('#mPre').textContent=np?String(np):'';
+  $('#mTodo').textContent=P.length?String(P.length):'';
+}
+/* carrusel: una lámina por cada preventa abierta, va pasando sola */
+let heroI=0, heroT=null;
+function renderHero(){
+  const gs=preventas().map(g=>({g,f:(g.prods.find(p=>p.destacado&&foto1(p))||g.prods.find(p=>foto1(p))||{})})).filter(x=>x.f.id);
+  clearInterval(heroT);
+  if(!gs.length){ const p=P.find(x=>x.destacado&&foto1(x)); if(!p){ $('#hero').hidden=true; return; }
+    $('#hero').hidden=false; $('#hero').innerHTML='<div class="sl on"><img src="'+esc(foto1(p))+'" alt=""><div class="txt"><small>Destacado</small><h1>'+esc(p.nombre)+'</h1><button class="btn w" data-id="'+esc(p.id)+'">Ver ahora</button></div></div>'; return; }
+  $('#hero').hidden=false; heroI=0;
+  $('#hero').innerHTML=gs.map((x,i)=>'<div class="sl'+(i?'':' on')+'"><img src="'+esc(foto1(x.f))+'" alt=""'+(i?' loading="lazy"':'')+'><div class="txt"><small>Preventa abierta · '+esc(x.g.marca)+'</small><h1>'+esc(x.g.nombre||x.g.marca)+'</h1>'+
+    (x.g.fecha?'<p class="cierra" data-cdt="'+x.g.fecha.getTime()+'">Cierra en '+cuenta(x.g.fecha)+'</p>':'')+
+    '<button class="btn w" data-pre="'+esc(x.g.k)+'">Ver preventa</button></div></div>').join('')+
+    (gs.length>1?'<div class="hdots">'+gs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</div>':'');
+  if(gs.length>1) heroT=setInterval(()=>{ const sl=$('#hero').querySelectorAll('.sl'), ds=$('#hero').querySelectorAll('.hdots i');
+    sl[heroI].classList.remove('on'); ds[heroI].classList.remove('on'); heroI=(heroI+1)%sl.length; sl[heroI].classList.add('on'); ds[heroI].classList.add('on'); },5000);
+}
+$('#hero').addEventListener('click',e=>{ const b=e.target.closest('[data-pre]'); if(!b) return; e.stopPropagation(); vista='drops'; fPre=b.dataset.pre; fMarca=''; render(); document.getElementById('tabs').scrollIntoView({behavior:'smooth'}); });
+$('#disp').addEventListener('click',e=>{ const m=e.target.closest('[data-pmarca]'); if(m){ fMarca=m.dataset.pmarca; fPre=''; render(); return; }
+  const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=b.dataset.disp; render(); });
+setInterval(()=>document.querySelectorAll('[data-cdt]').forEach(el=>{ el.textContent='Cierra en '+cuenta(new Date(+el.dataset.cdt)); }),30000);
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'); if(!b) return; linea=b.dataset.linea; LS.set('linea',linea); vista=''; render(); });
+$('#cats').addEventListener('click',e=>{ const b=e.target.closest('[data-cat]'); if(!b) return; cat=b.dataset.cat; render(); });
+document.addEventListener('click',e=>{
+  const fv=e.target.closest('[data-fav]');
+  if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
+  const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id);
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id); });
+setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
+
+/* ---------- menú, búsqueda y filtros ---------- */
+$('#btnMenu').addEventListener('click',()=>abrir('ovMenu'));
+$('#mMarcasBtn').addEventListener('click',()=>{ const b=$('#mMarcasBtn'), ab=b.getAttribute('aria-expanded')!=='true'; b.setAttribute('aria-expanded',String(ab)); $('#mMarcas').hidden=!ab; });
+$('#ftTerm').addEventListener('click',e=>{ e.preventDefault(); abrir('ovTerm'); });
+$('#brand').addEventListener('click',e=>{ e.preventDefault(); vista=''; cat=''; render(); window.scrollTo(0,0); });
+$('#ovMenu').addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; const g=b.dataset.go; cerrar('ovMenu');
+  if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
+  if(g==='terminos'){ abrir('ovTerm'); return; }
+  if(g==='contacto'){ abrir('ovContacto'); return; }
+  fPre='';
+  if(g.startsWith('m:')){ vista=''; fMarca=g.slice(2); }
+  else if(g==='favs'||g==='drops'||g==='acc'||g==='rebajas'){ vista=g; fMarca=''; } else { vista=''; fMarca=''; linea=g; LS.set('linea',linea); }
+  cat=''; render(); document.getElementById('tabs').scrollIntoView({behavior:'smooth'}); });
+$('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=''; buscar(); setTimeout(()=>$('#q').focus(),60); });
+function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,p.categoria,(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
+  $('#qRes').innerHTML=q?(r.length?'<div class="grid">'+r.map(cardHTML).join('')+'</div>':'<p class="empty">No encontramos “'+esc(q)+'”.</p>'):''; }
+$('#q').addEventListener('input',buscar);
+$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
+function chips(el,opts,val,key){ el.innerHTML=opts.map(o=>'<button class="chip'+(val===o[0]?' on':'')+'" data-'+key+'="'+esc(o[0])+'">'+esc(o[1])+'</button>').join(''); }
+function pintarFiltros(){
+  chips($('#fOrden'),[['nuevo','Lo más nuevo'],['menor','Menor precio'],['mayor','Mayor precio']],orden,'o');
+  const ts=new Set(); P.forEach(p=>tallasConStock(p).forEach(t=>ts.add(t)));
+  chips($('#fTalla'),[['','Todas']].concat([...ts].sort((a,b)=>{const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b);return (i<0?99:i)-(j<0?99:j)||parseFloat(a)-parseFloat(b);}).map(t=>[t,t])),fTalla,'t');
+  chips($('#fMarca'),[['','Todas']].concat([...new Set(P.map(p=>p.marca).filter(Boolean))].sort().map(m=>[m,m])),fMarca,'m');
+  chips($('#fEstado'),[['','Todo'],['disponible','Entrega inmediata'],['proximo','Drops y preventas']],fEstado,'e');
+}
+$('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro'); });
+$('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('m' in b.dataset) fMarca=b.dataset.m; if('e' in b.dataset) fEstado=b.dataset.e;
+  pintarFiltros(); render(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fMarca=''; fEstado=''; pintarFiltros(); render(); });
+
+/* ---------- producto ---------- */
+function abrirProducto(id){
+  const p=P.find(x=>x.id===id); if(!p) return;
+  cur=p; curColor=(p.colores||[])[0]||null; curTalla='';
+  try{ history.pushState({p:id},'','#'+encodeURIComponent(id)); }catch(e){}
+  pintarProducto(); $('#pv').hidden=false; $('#buy').hidden=false; $('#pv').scrollTop=0; document.body.style.overflow='hidden';
+}
+function cerrarProducto(){ $('#pv').hidden=true; $('#buy').hidden=true; cur=null; if(!abierto.length) document.body.style.overflow=''; }
+$('#pvBack').addEventListener('click',()=>{ if(history.state&&history.state.p) history.back(); else cerrarProducto(); });
+window.addEventListener('popstate',()=>{ const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&P.some(p=>p.id===id)) abrirProducto(id); else cerrarProducto(); });
+function pintarProducto(){
+  const p=cur, c=curColor||{fotos:[],tallas:{}}, of=p.oferta&&p.precioBase>p.precio;
+  const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
+  $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
+  $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
+  $('#gal').scrollLeft=0;
+  $('#pvBrand').textContent=[p.marca,p.categoria].filter(Boolean).join(' · ');
+  $('#pvName').textContent=p.nombre;
+  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s>':money(p.precio)+' MXN')+
+    (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>30 % hoy · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
+  const est={early:['drop',p.estadoTxt||'Nuevo drop'],preventa:['pre',p.estadoTxt||'Preventa'],camino:['cam',p.estadoTxt||'En camino'],disponible:['disp','Entrega inmediata']}[p.estado];
+  $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
+  const d=dropDate(p);
+  const nota=p.estado==='early'?(d?(d>new Date()?'Preventa abierta: cierra el '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'. Apártala antes del cierre.':'La preventa ya cerró. Escríbenos y vemos si aún la conseguimos.'):'Preventa abierta. Apártala antes del cierre.')
+    :p.estado==='preventa'?'Se aparta con anticipo. Te avisamos cuando llegue.'
+    :p.estado==='camino'?('Ya viene en camino'+(p.llegaFecha?', llega aprox. el '+fecha(p.llegaFecha):'')+'. Apártala desde ahora.'):'';
+  $('#pvNote').hidden=!nota; $('#pvNote').textContent=nota;
+  const cs=(p.colores||[]).filter(x=>x.nombre);
+  $('#pvColorsBox').hidden=cs.length<1; $('#pvColorName').textContent=c.nombre||'';
+  $('#pvColors').innerHTML=cs.length>1?cs.map(x=>'<button class="chip'+(x===c?' on':'')+'" data-color="'+esc(x.k)+'">'+esc(x.nombre)+'</button>').join(''):'';
+  const ts=tallasDe(p,c);
+  $('#pvSizes').innerHTML=ts.map(t=>'<button class="size'+(curTalla===t?' on':'')+'" data-talla="'+esc(t)+'"'+(hay(p,c,t)?'':' disabled')+'>'+esc(t)+'</button>').join('')||'<p class="note">Pregúntanos por tallas.</p>';
+  $('#pvErr').hidden=true; $('#pvDesc').textContent=p.descripcion||'';
+  $('#pvFav').classList.toggle('on',favs.has(p.id));
+  $('#pvFav').querySelector('svg').style.fill=favs.has(p.id)?'#0b0b0c':'none';
+  const sinStock=p.estado==='disponible'&&!tallasConStock(p).size;
+  $('#btnAdd').textContent=sinStock?'Preguntar por WhatsApp':p.estado==='early'?'Apartar en la bolsa':'Agregar a la bolsa';
+}
+$('#gal').addEventListener('scroll',()=>{ const g=$('#gal'), i=Math.round(g.scrollLeft/g.clientWidth); document.querySelectorAll('#dots i').forEach((d,j)=>d.classList.toggle('on',i===j)); },{passive:true});
+$('#pvColors').addEventListener('click',e=>{ const b=e.target.closest('[data-color]'); if(!b) return; curColor=cur.colores.find(x=>x.k===b.dataset.color); curTalla=''; pintarProducto(); });
+$('#pvSizes').addEventListener('click',e=>{ const b=e.target.closest('[data-talla]'); if(!b||b.disabled) return; curTalla=b.dataset.talla; $('#pvErr').hidden=true; pintarProducto(); });
+$('#pvFav').addEventListener('click',()=>{ if(!cur) return; if(favs.has(cur.id)) favs.delete(cur.id); else { favs.add(cur.id); toast('Guardado en favoritos'); } guardarFavs(); pintarProducto(); render(); });
+$('#btnAdd').addEventListener('click',()=>{
+  const p=cur; if(!p) return;
+  const c=curColor||{};
+  if(p.estado==='disponible'&&!tallasConStock(p).size){ window.open(wa('Hola, ¿me avisas cuando tengas de nuevo '+p.nombre+(p.marca?' de '+p.marca:'')+'?'),'_blank'); return; }
+  const ts=tallasDe(p,c);
+  if(ts.length&&!curTalla){ $('#pvErr').hidden=false; $('#pvSizes').scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  bolsa.push({id:p.id,nombre:p.nombre,marca:p.marca||'',color:c.nombre||'',talla:curTalla,precio:p.precio,foto:(c.fotos&&c.fotos[0])||foto1(p),estado:p.estadoTxt||{early:'Sobre pedido',preventa:'Sobre pedido',camino:'En camino'}[p.estado]||'',sobrePedido:sobrePedido(p)});
+  guardarBolsa(); toast('Agregado a tu bolsa'); curTalla=''; pintarProducto();
+  setTimeout(()=>{ pintarBolsa(); abrir('ovBolsa'); },350);
+});
+
+/* ---------- bolsa y pedido por WhatsApp ---------- */
+let entrega=LS.get('entrega','mty'), pago=LS.get('pago','transferencia'), nombre=LS.get('nombre','');
+if(pago==='efectivo') pago='transferencia'; // ya no se acepta efectivo al recibir
+function pagoHTML(){
+  return TIENDA.cuentas.map(c=>'<div class="pay"><b>'+esc(c.banco)+'</b>'+
+    '<div class="row"><span>CLABE <span class="num">'+esc(c.clabe)+'</span></span><button class="copy" data-copy="'+esc(c.clabe)+'">Copiar</button></div>'+
+    (c.tarjeta?'<div class="row"><span>Tarjeta (depósito OXXO) <span class="num">'+esc(c.tarjeta)+'</span></span><button class="copy" data-copy="'+esc(c.tarjeta.replace(/\s/g,''))+'">Copiar</button></div>':'')+
+    (TIENDA.beneficiario?'<div class="row"><span>'+esc(TIENDA.beneficiario)+'</span></div>':'')+'</div>').join('')+
+    '<p class="note">Después de pagar, envíanos tu comprobante por WhatsApp para confirmar tu pedido.</p>'+
+    '<a class="btn o full" style="margin-top:10px" target="_blank" rel="noopener" href="'+esc(wa('Hola, te envío mi comprobante de pago 🧾'))+'">Enviar comprobante por WhatsApp</a>';
+}
+function pintarPago(){ $('#pagoBody').innerHTML='<p class="lbl">Transferencia o depósito</p>'+pagoHTML(); }
+document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
+  try{ await navigator.clipboard.writeText(b.dataset.copy); toast('Copiado'); }catch(err){ toast(b.dataset.copy); } });
+function totales(){ const sub=bolsa.reduce((a,x)=>a+(+x.precio||0),0); const env=entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional;
+  // anticipo: 30 % de lo que es sobre pedido + lo de entrega inmediata completo
+  const hoy=bolsa.reduce((a,x)=>a+(x.sobrePedido?anticipoDe(x.precio):(+x.precio||0)),0);
+  return {sub,env,tot:sub+env,hoy,resto:sub+env-hoy,hayPedido:bolsa.some(x=>x.sobrePedido)}; }
+function pintarBolsa(){
+  if(!bolsa.length){ $('#bolsaBody').innerHTML='<p class="empty">Tu bolsa está vacía.</p>'; $('#bolsaFoot').innerHTML='<button class="btn full" data-close>Seguir viendo</button>'; return; }
+  const t=totales();
+  $('#bolsaBody').innerHTML=bolsa.map((x,i)=>'<div class="it">'+(x.foto?'<img src="'+esc(x.foto)+'" alt="">':'<img alt="">')+
+      '<div><b>'+esc(x.nombre)+'</b><small>'+esc([x.marca,x.color,x.talla?'Talla '+x.talla:'',x.estado].filter(Boolean).join(' · '))+'</small><p class="p">'+money(x.precio)+'</p></div>'+
+      '<button class="x" data-quitar="'+i+'">Quitar</button></div>').join('')+
+    '<p class="lbl" style="margin-top:20px">Entrega</p>'+
+    [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
+    '<p class="lbl">Forma de pago</p>'+
+    [['transferencia','Transferencia'],['oxxo','Depósito en OXXO']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
+    (pago!=='efectivo'?'<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Ver datos para pagar</summary><div style="margin-top:10px">'+pagoHTML()+'</div></details>':'')+
+    '<label class="lbl" style="display:block">Tu nombre <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(opcional)</span><input class="in" id="bNombre" value="'+esc(nombre)+'" placeholder="Para saber quién pide" autocomplete="name"></label>'+
+    '<div style="margin-top:14px"><div class="tot"><span>Productos ('+bolsa.length+')</span><span>'+money(t.sub)+'</span></div>'+
+    '<div class="tot"><span>Envío</span><span>'+money(t.env)+'</span></div>'+
+    '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
+    (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
+  $('#bolsaFoot').innerHTML='<a class="btn wa full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a><p class="note" style="text-align:center">Te confirmamos disponibilidad por WhatsApp antes de pagar.</p>';
+  actualizarPedido();
+}
+function mensaje(){
+  const t=totales(), n=($('#bNombre')||{}).value||nombre;
+  const lineas=bolsa.map((x,i)=>(i+1)+'. '+x.nombre+(x.marca?' ('+x.marca+')':'')+(x.color?' · '+x.color:'')+(x.talla?' · Talla '+x.talla:'')+(x.estado?' · '+x.estado:'')+' — '+money(x.precio));
+  return 'Hola DEALER SPORTS MX 👋'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
+    '\n\nProductos: '+money(t.sub)+
+    '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio ('+money(t.env)+')':'Envío a otra ciudad ('+money(t.env)+')')+
+    '\nTotal: '+money(t.tot)+
+    (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
+    '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en OXXO',efectivo:'Efectivo al recibir'}[pago];
+}
+function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(mensaje()); }
+$('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
+$('#ovBolsa').addEventListener('change',e=>{
+  if(e.target.name==='ent'){ entrega=e.target.value; if(entrega!=='mty'&&pago==='efectivo') pago='transferencia'; LS.set('entrega',entrega); LS.set('pago',pago); pintarBolsa(); }
+  if(e.target.name==='pag'){ pago=e.target.value; LS.set('pago',pago); pintarBolsa(); }
+});
+$('#ovBolsa').addEventListener('input',e=>{ if(e.target.id==='bNombre'){ nombre=e.target.value; LS.set('nombre',nombre); actualizarPedido(); } });
+$('#btnBolsa').addEventListener('click',()=>{ pintarBolsa(); abrir('ovBolsa'); });
+
+/* ---------- arranque ---------- */
+$('#ftWa').href=wa('Hola DEALER SPORTS MX 👋'); $('#ftIg').href=ig; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
+// barra en movimiento: los textos van dos veces para que el giro no se corte
+$('#annT').innerHTML=[0,1].map(k=>TIENDA.barra.map(t=>'<span'+(k?' aria-hidden="true"':'')+'>'+esc(t)+'</span>').join('')).join('');
+guardarBolsa(); guardarFavs();
+const t0=Date.now();
+function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
+fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
+  P=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
+  // marcas del menú: tu lista fija; Rebajas solo aparece si hay alguna prenda con precio rebajado
+  $('#mMarcas').innerHTML=TIENDA.marcas.map(m=>'<button data-go="m:'+esc(m)+'">'+esc(m)+'</button>').join('');
+  $('#mReb').hidden=!P.some(enRebaja);
+  renderHero(); render(); quitarIntro();
+  const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id);
+});
+})();
+</script>
+</body>
+</html>
