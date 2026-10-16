@@ -434,11 +434,12 @@ const TIENDA={
   // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
   barra:['Preventas abiertas','100% originales','Entregas en Monterrey','Envíos a todo México','Envío gratis desde $5,000'],
   // marcas de la fila de logos, en este orden
-  marcas:['YoungLA','Gymshark','Breathe Divinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
-  // lista de MARCAS en el menú (siempre se ve, aunque no haya productos). Onyx abre la colección Onyx de Gymshark.
-  menuMarcas:[['YoungLA','m:YoungLA'],['Gymshark','m:Gymshark'],['Onyx','c:Gymshark|Onyx'],['Breathe Divinity','m:Breathe Divinity'],['Darc Sport','m:Darc Sport'],['Civil Régime','m:Civil Régime'],['DFYNE','m:DFYNE'],['Controlled Insanity','m:Controlled Insanity'],['AYBL','m:AYBL']],
+  marcas:['YoungLA','Gymshark','Breathedivinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
+  // lista de MARCAS en el menú (siempre se ve, aunque no haya productos).
+  // Para una colección dentro de una marca: ['Nombre','c:Marca|Colección']
+  menuMarcas:[['YoungLA','m:YoungLA'],['Gymshark','m:Gymshark'],['Breathedivinity','m:Breathedivinity'],['Darc Sport','m:Darc Sport'],['Civil Régime','m:Civil Régime'],['DFYNE','m:DFYNE'],['Controlled Insanity','m:Controlled Insanity'],['AYBL','m:AYBL']],
   // logos de la fila de marcas (carpeta marcas/)
-  logos:{'YoungLA':'youngla','Gymshark':'gymshark','Breathe Divinity':'breathe-divinity','Darc Sport':'darc-sport','Civil Régime':'civil-regime','DFYNE':'dfyne','Controlled Insanity':'controlled-insanity','AYBL':'aybl'},
+  logos:{'YoungLA':'youngla','Gymshark':'gymshark','Breathedivinity':'breathe-divinity','Darc Sport':'darc-sport','Civil Régime':'civil-regime','DFYNE':'dfyne','Controlled Insanity':'controlled-insanity','AYBL':'aybl'},
   // banners del inicio (máximo 3). Para poner foto: img:'banners/archivo.jpg'. ir = a dónde lleva al tocarlo.
   // El 3 sale como "Rebajas" solo si hay rebaja activa; si no, usa "sinRebaja".
   banners:[
@@ -467,8 +468,8 @@ const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
-// "Civil Régime" y "Civil Regime" cuentan como la misma marca
-function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+// "Civil Régime" = "Civil Regime" y "Breathedivinity" = "Breathe Divinity": sin acentos ni espacios
+function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').toLowerCase(); }
 // en rebaja = tiene "precio antes" mayor que el precio actual
 function enRebaja(p){ return +p.precioAntes>+p.precio; }
 // colección de la prenda (ej. Onyx dentro de Gymshark); en preventas es el nombre de la preventa
