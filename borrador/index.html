@@ -112,7 +112,14 @@ img{display:block;max-width:100%}
 .ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
 .card:hover .ph img{transform:scale(1.03)}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:var(--ink);letter-spacing:.02em}
-.tag.t-pre{background:var(--blue);color:#fff}.tag.t-drop{background:var(--violet);color:#fff}.tag.t-cam{background:#3a3a3e;color:#fff}.tag.t-of{background:var(--red);color:#fff}
+/* etiquetas de estado: Preventa (amarillo), Sobre pedido (negro), Entrega inmediata (blanco) */
+.tag.t-drop{background:#FFD400;color:#0b0b0c}.tag.t-ped{background:#0b0b0c;color:#fff}.tag.t-ya{background:#fff;color:#0b0b0c;box-shadow:0 0 0 1px var(--line)}
+.nm .cod{color:var(--muted);font-weight:600}
+.aho{margin:2px 0 0;font-size:12px;font-weight:700}
+.tl{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.dots{display:flex;align-items:center;gap:5px;margin:7px 0 0}
+.dots i{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.dots small{font-size:11px;color:var(--muted)}
 .fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
 .fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
 .fav.on svg{fill:var(--ink)}
@@ -376,7 +383,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 
 <!-- producto -->
 <div class="pv" id="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pvName">
-  <div class="pv-top"><button class="ib" id="pvBack" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="ib" id="pvFav" aria-label="Agregar a favoritos"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
+  <div class="pv-top"><button class="ib" id="pvBack" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="ib" id="pvFav" aria-label="Agregar a favoritos" hidden><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
   <div class="pv-in">
     <div><div class="gal" id="gal"></div><div class="dots" id="dots"></div></div>
     <div class="pv-d">
@@ -455,7 +462,8 @@ const TIENDA={
     {titulo:'Rebajas', color:'#3b3b40', img:'', ir:'rebajas', soloRebaja:true,
      sinRebaja:{titulo:'Así entregamos', color:'#3b3b40', img:'', ir:''}}
   ],
-  anticipo:0.30, // lo que se aparta de las prendas sobre pedido (30 %)
+  // con cuánto se aparta lo que es sobre pedido o preventa: [menos de este total, aparta con]
+  apartado:[[1000,300],[2000,600],[Infinity,900]],
   llega:'15–20 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
   cuentas:[
@@ -478,7 +486,9 @@ function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
 // "Civil Régime" = "Civil Regime" y "Breathedivinity" = "Breathe Divinity": sin acentos ni espacios
 function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').toLowerCase(); }
 // en rebaja = tiene "precio antes" mayor que el precio actual
-function enRebaja(p){ return +p.precioAntes>+p.precio; }
+function enRebaja(p){ return precioAntes(p)>+p.precio; }
+// precio de antes: el Catálogo lo manda como precioBase cuando pones una oferta
+function precioAntes(p){ return +p.precioAntes||(p.oferta?+p.precioBase:0)||0; }
 // colección de la prenda (ej. Onyx dentro de Gymshark); en preventas es el nombre de la preventa
 function colDe(p){ return p.coleccion||(p.estado==='early'?p.estadoTxt:'')||''; }
 function clavePre(p){ return (p.marca||'')+'|'+(p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
@@ -498,14 +508,11 @@ function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0
 function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>tallasDe(p,c).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
 function foto1(p){ for(const c of p.colores||[]) if(c.fotos&&c.fotos[0]) return c.fotos[0]; return ''; }
 function esNuevo(p){ return p.estado==='disponible'&&p.creado&&(Date.now()-p.creado<14*864e5); }
+// solo 3 etiquetas: Preventa (con fecha de cierre), Sobre pedido y Entrega inmediata
 function etiqueta(p){
-  if(p.oferta&&p.precioBase>p.precio) return ['of','Oferta'];
-  if(p.estado==='early') return ['drop',p.estadoTxt||'Drop'];
-  if(p.estado==='preventa') return ['pre',p.estadoTxt||'Preventa'];
-  if(p.estado==='camino') return ['cam',p.estadoTxt||'Llega pronto'];
-  if(p.estadoTxt&&p.estadoTxt!=='Disponible') return ['',p.estadoTxt];
-  if(esNuevo(p)) return ['','Nuevo'];
-  return null;
+  if(p.estado==='early') return ['drop','Preventa'];
+  if(p.estado==='disponible') return ['ya','Entrega inmediata'];
+  return ['ped','Sobre pedido'];
 }
 let tt=null; function toast(s){ const el=$('#toast'); el.textContent=s; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),2400); }
 function guardarBolsa(){ LS.set('bolsa',bolsa); const n=bolsa.length; $('#bolsaN').hidden=!n; $('#bolsaN').textContent=n; }
@@ -544,17 +551,29 @@ function filtrar(){
 }
 /* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
 function sobrePedido(p){ return p.estado!=='disponible'; }
-function anticipoDe(precio){ return Math.ceil((+precio||0)*TIENDA.anticipo/10)*10; }
+// apartado por tabulador (TIENDA.apartado); nunca más que el precio
+function anticipoDe(total){ total=+total||0; for(const [hasta,m] of TIENDA.apartado) if(total<hasta) return Math.min(m,total); return 0; }
+/* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
-  const t=etiqueta(p), f=foto1(p), of=p.oferta&&p.precioBase>p.precio;
-  const nc=(p.colores||[]).filter(c=>c.nombre).length;
-  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy">':'')+
-    (t?'<span class="tag'+(t[0]?' t-'+t[0]:'')+'">'+esc(t[1])+'</span>':'')+
-    '<button class="fav'+(favs.has(p.id)?' on':'')+'" data-fav="'+esc(p.id)+'" aria-label="Favorito"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>'+
-    '<p class="nm">'+esc(p.nombre)+'</p><p class="br">'+esc([p.marca,nc>1?nc+' colores':''].filter(Boolean).join(' · '))+'</p>'+
-    '<p class="pr">'+(of?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.precioBase)+'</s>':money(p.precio))+'</p>'+
-    (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+'</div>';
+  const t=etiqueta(p), f=foto1(p), reb=enRebaja(p), antes=precioAntes(p);
+  const cols=(p.colores||[]).filter(c=>c.nombre);
+  const tl=reb?[...tallasConStock(p)]:[];
+  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy" decoding="async">':'')+
+    '<span class="tag t-'+t[0]+'">'+esc(t[1])+'</span></div>'+
+    '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
+    '<p class="br">'+esc(p.marca||'')+'</p>'+
+    '<p class="pr">'+money(p.precio)+(reb?'<s>'+money(antes)+'</s>':'')+'</p>'+
+    (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
+    (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+
+    (cols.length?'<p class="dots" aria-label="'+esc(cols.map(c=>c.nombre).join(', '))+'">'+cols.slice(0,5).map(c=>'<i style="background:'+colorDe(c.nombre)+'" title="'+esc(c.nombre)+'"></i>').join('')+(cols.length>5?'<small>+'+(cols.length-5)+'</small>':'')+'</p>':'')+
+  '</div>';
 }
+// bolitas: el color sale del nombre (Black, Negro, Heather Grey…); si no se reconoce, gris claro
+const COLORES=[['charcoal|carbon|carbón|graphite|grafito','#3d3d40'],['navy|marino','#1f2a44'],['light blue|sky|cielo|baby blue|celeste','#9cc3e6'],['olive|oliva|khaki|caqui','#6b6b3a'],['burgundy|maroon|vino|wine|guinda','#6d1f2b'],
+  ['black|negro|onyx|jet','#111111'],['white|blanco|ivory','#ffffff'],['grey|gray|gris|heather|silver|plata','#9a9aa0'],['red|rojo','#c62828'],['blue|azul|cobalt|royal','#2f5fd0'],['green|verde|forest|sage','#3f6b3a'],
+  ['beige|sand|arena|cream|crema|bone|hueso|oat|stone|taupe','#e5dccb'],['brown|cafe|café|chocolate|mocha|coffee|tan','#6b4a2f'],['pink|rosa|blush','#f1a7c1'],['purple|morado|lila|lilac|lavender|lavanda|violet','#7d5ba6'],
+  ['yellow|amarillo|mustard','#f2d23c'],['orange|naranja|rust|óxido','#f08a24'],['gold|dorado','#c9a227'],['teal|turquesa|aqua','#2a9d8f']];
+function colorDe(n){ const s=String(n||'').toLowerCase(); for(const [k,c] of COLORES) if(new RegExp(k).test(s)) return c; return '#c9c9cc'; }
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   const base=P.filter(p=>!linea||!p.linea||p.linea===linea||p.linea==='unisex');
@@ -714,8 +733,8 @@ function pintarProducto(){
   $('#gal').scrollLeft=0;
   $('#pvBrand').textContent=[p.marca,p.categoria].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
-  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s>':money(p.precio)+' MXN')+
-    (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>30 % hoy · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
+  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
+    (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Hoy apartas · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
   const est={early:['drop',p.estadoTxt||'Nuevo drop'],preventa:['pre',p.estadoTxt||'Preventa'],camino:['cam',p.estadoTxt||'En camino'],disponible:['disp','Entrega inmediata']}[p.estado];
   $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
   const d=dropDate(p);
@@ -764,8 +783,9 @@ function pintarPago(){ $('#pagoBody').innerHTML='<p class="lbl">Transferencia o 
 document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
   try{ await navigator.clipboard.writeText(b.dataset.copy); toast('Copiado'); }catch(err){ toast(b.dataset.copy); } });
 function totales(){ const sub=bolsa.reduce((a,x)=>a+(+x.precio||0),0); const env=entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional;
-  // anticipo: 30 % de lo que es sobre pedido + lo de entrega inmediata completo
-  const hoy=bolsa.reduce((a,x)=>a+(x.sobrePedido?anticipoDe(x.precio):(+x.precio||0)),0);
+  // hoy se paga: el apartado del tabulador sobre el total de lo que es sobre pedido + lo de entrega inmediata completo
+  const ped=bolsa.filter(x=>x.sobrePedido).reduce((a,x)=>a+(+x.precio||0),0);
+  const hoy=anticipoDe(ped)+bolsa.filter(x=>!x.sobrePedido).reduce((a,x)=>a+(+x.precio||0),0);
   return {sub,env,tot:sub+env,hoy,resto:sub+env-hoy,hayPedido:bolsa.some(x=>x.sobrePedido)}; }
 function pintarBolsa(){
   if(!bolsa.length){ $('#bolsaBody').innerHTML='<p class="empty">Tu bolsa está vacía.</p>'; $('#bolsaFoot').innerHTML='<button class="btn full" data-close>Seguir viendo</button>'; return; }
