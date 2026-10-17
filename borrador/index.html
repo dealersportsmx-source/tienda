@@ -32,10 +32,10 @@ img{display:block;max-width:100%}
 
 /* encabezado */
 /* barra de texto en movimiento */
-.ann{background:var(--ink);color:#fff;font-size:11px;font-weight:700;letter-spacing:.14em;padding:9px 0;text-transform:uppercase;overflow:hidden;white-space:nowrap}
+.ann{background:#FFD400;color:#111111;font-size:11px;font-weight:700;letter-spacing:.14em;padding:9px 0;text-transform:uppercase;overflow:hidden;white-space:nowrap}
 .ann-t{display:inline-flex;animation:corre 32s linear infinite}
 .ann-t span{padding:0 22px}
-.ann-t span::after{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.5;margin-left:44px;vertical-align:middle}
+.ann-t span::after{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:#111111;opacity:.5;margin-left:44px;vertical-align:middle}
 @keyframes corre{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.ann-t{animation:none}}
 /* menú: Marcas desplegable y ligas chicas abajo */
@@ -68,11 +68,11 @@ img{display:block;max-width:100%}
 .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.82}
 .hero .sl::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0) 60%)}
 .hero .txt{position:relative;z-index:1;padding:24px 20px 34px;max-width:1200px;width:100%;margin:0 auto}
-.hero .cierra{display:inline-block;margin:-6px 0 14px;padding:5px 10px;border-radius:6px;background:#FFD400;color:#0b0b0c;font-weight:800;font-size:14px}
+.hero .cierra{display:inline-block;margin:-6px 0 14px;padding:5px 10px;border-radius:6px;background:#fff;color:#0b0b0c;font-weight:800;font-size:14px}
 .hdots{position:absolute;z-index:2;left:0;right:0;bottom:12px;display:flex;gap:6px;justify-content:center}
 .hdots i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)}.hdots i.on{width:20px;background:#fff}
 .pre-h{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0b0b0c;color:#fff;border-radius:12px;padding:12px 14px;margin-top:8px}
-.pre-h small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FFD400;font-weight:800}
+.pre-h small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:800}
 .pre-h b{font-size:17px;text-transform:uppercase}.pre-h .cd{font-size:13px;font-weight:700;white-space:nowrap}
 .mtit{margin:14px 0 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .msub button{font-size:14px!important;padding:11px 0 11px 12px!important}
@@ -112,8 +112,8 @@ img{display:block;max-width:100%}
 .ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
 .card:hover .ph img{transform:scale(1.03)}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:var(--ink);letter-spacing:.02em}
-/* etiquetas de estado: Preventa (amarillo), Sobre pedido (negro), Entrega inmediata (blanco) */
-.tag.t-drop{background:#FFD400;color:#0b0b0c}.tag.t-ped{background:#0b0b0c;color:#fff}.tag.t-ya{background:#fff;color:#0b0b0c;box-shadow:0 0 0 1px var(--line)}
+/* etiquetas de estado en blanco y negro: Preventa (negro), Sobre pedido (gris oscuro), Entrega inmediata (blanco) */
+.tag.t-drop{background:#0b0b0c;color:#fff}.tag.t-ped{background:#55555a;color:#fff}.tag.t-ya{background:#fff;color:#0b0b0c;box-shadow:0 0 0 1px var(--line)}
 .nm .cod{color:var(--muted);font-weight:600}
 .aho{margin:2px 0 0;font-size:12px;font-weight:700}
 .tl{margin:2px 0 0;font-size:12px;color:var(--muted)}
@@ -128,10 +128,10 @@ img{display:block;max-width:100%}
 .pr{margin:4px 0 0;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 .pr s{color:var(--muted);font-weight:500;font-size:13px;margin-left:6px}
 .apt{margin:3px 0 0;font-size:13px;font-weight:700;color:var(--ink)}
-.apt::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFD400;margin-right:6px;vertical-align:1px}
-.apt-box{display:block;margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFD400;color:#0b0b0c}
+.apt::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#0b0b0c;margin-right:6px;vertical-align:1px}
+.apt-box{display:block;margin-top:10px;padding:10px 12px;border-radius:10px;background:#0b0b0c;color:#fff}
 .apt-box b{display:block;font-size:16px}.apt-box small{display:block;font-size:13px;font-weight:500;margin-top:2px}
-.apt-tot{margin-top:10px!important;padding:8px 10px;border-radius:8px;background:#FFD400;font-weight:800}
+.apt-tot{margin-top:10px!important;padding:8px 10px;border-radius:8px;background:#0b0b0c;color:#fff;font-weight:800}
 .terms ol.pasos{list-style:none;padding:0;margin:0 0 18px;counter-reset:p}
 .terms ol.pasos li{counter-increment:p;position:relative;padding:0 0 14px 40px}
 .terms ol.pasos li::before{content:counter(p);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:#0b0b0c;color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
@@ -446,7 +446,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 const TIENDA={
   whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:80, envioNacional:150,
   // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
-  barra:['Preventas abiertas','100% originales','Entregas en Monterrey','Envíos a todo México','Envío gratis desde $5,000'],
+  barra:['Preventas abiertas','100% originales','Envíos a todo México','Envío gratis en compras mayores a $3,000'],
   // marcas de la fila de logos, en este orden
   marcas:['YoungLA','Gymshark','Breathedivinity','Darc Sport','Civil Régime','DFYNE','Controlled Insanity','AYBL'],
   // lista de MARCAS en el menú (siempre se ve, aunque no haya productos).
