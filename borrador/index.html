@@ -155,6 +155,13 @@ img{display:block;max-width:100%}
 .logos::-webkit-scrollbar{display:none}
 .logos button{all:unset;cursor:pointer;flex:0 0 auto;width:96px;height:44px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;padding:6px 12px;box-sizing:border-box}
 .logos img{max-width:100%;max-height:26px;object-fit:contain;filter:brightness(0)}
+/* centrada: si no caben, se desliza sin cortar la primera */
+.logos button:first-child{margin-left:auto} .logos button:last-child{margin-right:auto}
+/* logos que necesitan más tamaño para leerse igual que los demás */
+.logos button.lg-breathe-divinity,.logos button.lg-darc-sport{padding:3px 6px}
+.logos button.lg-breathe-divinity{width:120px}
+.logos .lg-breathe-divinity img{max-height:38px}
+.logos .lg-darc-sport img{max-height:40px}
 .logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
 /* secciones */
 .sec{max-width:1200px;margin:0 auto;padding:26px 0 6px}
@@ -623,7 +630,7 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
 function renderInicio(){
   renderBanners();
   $('#logos').innerHTML=TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m];
-    return '<button data-ir="m:'+esc(m)+'" aria-label="'+esc(m)+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join('');
+    return '<button data-ir="m:'+esc(m)+'" aria-label="'+esc(m)+'"'+(f?' class="lg-'+f+'"':'')+'>'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join('');
   // preventa activa: la que cierra primero; la cuenta es al CIERRE de Dealer (fecha de cierre del Catálogo)
   const g=preventas()[0];
   $('#sPreTxt').innerHTML=g?'<div class="pre-cd"><span>'+esc(g.marca)+' · '+esc(g.nombre||'')+'</span>'+(g.fecha?'<b data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</b>':'')+'</div>':'';
