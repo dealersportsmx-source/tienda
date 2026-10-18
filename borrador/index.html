@@ -795,7 +795,8 @@ function pintarProducto(){
   $('#pvName').textContent=p.nombre;
   $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
     (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Hoy apartas · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
-  const est={early:['drop',p.estadoTxt||'Nuevo drop'],preventa:['pre',p.estadoTxt||'Preventa'],camino:['cam',p.estadoTxt||'En camino'],disponible:['disp','Entrega inmediata']}[p.estado];
+  // mismas 3 etiquetas que la tarjeta: Preventa / Sobre pedido / Entrega inmediata
+  const est={early:['drop','Preventa'],preventa:['pre','Sobre pedido'],camino:['cam','Sobre pedido'],disponible:['disp','Entrega inmediata']}[p.estado];
   $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
   const d=dropDate(p);
   const nota=p.estado==='early'?(d?(d>new Date()?'Preventa abierta: cierra el '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'. Apártala antes del cierre.':'La preventa ya cerró. Escríbenos y vemos si aún la conseguimos.'):'Preventa abierta. Apártala antes del cierre.')
