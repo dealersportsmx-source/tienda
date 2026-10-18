@@ -371,6 +371,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <li>En el chat, <b>mantén presionado</b> el cuadro de mensaje y toca <b>Pegar</b>.</li>
       <li>Envía el mensaje. Te respondemos para confirmar.</li>
     </ol>
+    <p class="note" style="margin:0 0 8px">Si al pegar no sale nada, mantén presionado el texto de abajo, cópialo y pégalo en el chat.</p>
     <pre class="dmtxt" id="dmTxt"></pre>
     <a class="btn full" id="dmAbrir" target="_blank" rel="noopener">Abrir Instagram</a>
     <button type="button" class="linkimg" id="dmCopiar" style="margin-top:12px">Copiar otra vez</button>
@@ -921,7 +922,8 @@ const baseURL=()=>location.origin+location.pathname;
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
   return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
 function msgLink(){ const t=totales(); return 'Hola, este es mi pedido '+folioPedido()+'\nSe aparta con: '+money(t.hoy)+' · Total: '+money(t.tot)+'\n'+linkPedido(); }
-function copiar(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
+function copiar(t){ if(!(navigator.clipboard&&navigator.clipboard.writeText)){ copiarViejo(t); return; }
+  try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
 
 // al abrir un link de pedido: se ve el pedido armado con fotos
@@ -989,7 +991,10 @@ document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return; e
   const t=msgLink(); copiar(t); $('#dmTxt').textContent=t; $('#dmAbrir').href=TIENDA.dm; abrir('ovDm'); });
 $('#dmCopiar').addEventListener('click',()=>copiar($('#dmTxt').textContent));
 $('#dmAbrir').addEventListener('click',()=>{ copiar($('#dmTxt').textContent); setTimeout(()=>cerrar('ovDm'),300); });
-function copiarViejo(t){ try{ const x=document.createElement('textarea'); x.value=t; x.style.position='fixed'; x.style.opacity='0'; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast('Pedido copiado: pégalo en el chat de Instagram'); }catch(e){} }
+// copiado "a la antigua" (sirve en iPhone y en navegadores donde el otro no funciona)
+function copiarViejo(t){ let ok=false; try{ const x=document.createElement('textarea'); x.value=t; x.setAttribute('readonly',''); x.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';
+  document.body.appendChild(x); x.focus(); x.select(); x.setSelectionRange(0,t.length); ok=document.execCommand('copy'); x.remove(); }catch(e){}
+  toast(ok?'Pedido copiado: pégalo en el chat de Instagram':'Mantén presionado el texto del pedido para copiarlo'); }
 $('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
 $('#ovBolsa').addEventListener('change',e=>{
   if(e.target.name==='ent'){ entrega=e.target.value; if(entrega!=='mty'&&pago==='efectivo') pago='transferencia'; LS.set('entrega',entrega); LS.set('pago',pago); pintarBolsa(); }
