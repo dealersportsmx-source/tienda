@@ -442,7 +442,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <li>El resto lo liquidas en un plazo máximo de <b data-t="plazoLiquidar">3 semanas</b> desde tu compra. Si no liquidas en ese plazo, se pierde el anticipo y la prenda se libera para venta.</li>
       <li>Si cancelas tu pedido, pierdes tu anticipo.</li>
       <li>El precio que apartaste se respeta, aunque cambie el tipo de cambio.</li>
-      <li>Pagas por transferencia o depósito en OXXO. Envía tu comprobante por DM o WhatsApp.</li>
+      <li>Pagas por transferencia o depósito en efectivo. Envía tu comprobante por DM o WhatsApp.</li>
     </ul>
     <h3>Envíos</h3>
     <ul>
@@ -843,7 +843,7 @@ if(pago==='efectivo') pago='transferencia'; // ya no se acepta efectivo al recib
 function pagoHTML(){
   return TIENDA.cuentas.map(c=>'<div class="pay"><b>'+esc(c.banco)+'</b>'+
     '<div class="row"><span>CLABE <span class="num">'+esc(c.clabe)+'</span></span><button class="copy" data-copy="'+esc(c.clabe)+'">Copiar</button></div>'+
-    (c.tarjeta?'<div class="row"><span>Tarjeta (depósito OXXO) <span class="num">'+esc(c.tarjeta)+'</span></span><button class="copy" data-copy="'+esc(c.tarjeta.replace(/\s/g,''))+'">Copiar</button></div>':'')+
+    (c.tarjeta?'<div class="row"><span>Tarjeta (depósito en efectivo) <span class="num">'+esc(c.tarjeta)+'</span></span><button class="copy" data-copy="'+esc(c.tarjeta.replace(/\s/g,''))+'">Copiar</button></div>':'')+
     (TIENDA.beneficiario?'<div class="row"><span>'+esc(TIENDA.beneficiario)+'</span></div>':'')+'</div>').join('')+
     '<p class="note">Después de pagar, envíanos tu comprobante por WhatsApp para confirmar tu pedido.</p>'+
     '<a class="btn o full" style="margin-top:10px" target="_blank" rel="noopener" href="'+esc(wa('Hola, te envío mi comprobante de pago 🧾'))+'">Enviar comprobante por WhatsApp</a>';
@@ -865,7 +865,7 @@ function pintarBolsa(){
     (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Tu envío es gratis (compra mayor a '+money(TIENDA.gratisMas)+').</p>':'')+
     [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · desde $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
     '<p class="lbl">Forma de pago</p>'+
-    [['transferencia','Transferencia'],['oxxo','Depósito en OXXO']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
+    [['transferencia','Transferencia'],['oxxo','Depósito en efectivo']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
     (pago!=='efectivo'?'<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Ver datos para pagar</summary><div style="margin-top:10px">'+pagoHTML()+'</div></details>':'')+
     '<label class="lbl" style="display:block">Tu nombre <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(opcional)</span><input class="in" id="bNombre" value="'+esc(nombre)+'" placeholder="Para saber quién pide" autocomplete="name"></label>'+
     '<div style="margin-top:14px"><div class="tot"><span>Productos ('+bolsa.length+')</span><span>'+money(t.sub)+'</span></div>'+
@@ -887,7 +887,7 @@ function mensaje(){
     '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
     '\nTotal: '+money(t.tot)+
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
-    '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en OXXO',efectivo:'Efectivo al recibir'}[pago];
+    '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en efectivo',efectivo:'Efectivo al recibir'}[pago];
 }
 function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(msgLink()); }
 
@@ -900,7 +900,7 @@ const baseURL=()=>location.origin+location.pathname;
 // (el precio va en el link para ver siempre el que vio el cliente)
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
   return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
-function msgLink(){ return 'Hola, este es mi pedido '+folioPedido()+':\n'+linkPedido(); }
+function msgLink(){ const t=totales(); return 'Hola, este es mi pedido '+folioPedido()+'\nAparto con: '+money(t.hoy)+' · Total: '+money(t.tot)+'\n'+linkPedido(); }
 function copiar(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
 
@@ -919,7 +919,7 @@ function verPedido(h){
     '<div class="tot"><span>Envío '+(ent==='n'?'a otra ciudad':'Monterrey')+'</span><span>'+(env?money(env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(sub+env)+'</span></div>'+
     '<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(hoy)+'</span></div><div class="tot"><span>Liquida al llegar</span><span>'+money(sub+env-hoy)+'</span></div></div>'+
-    '<p class="note">Pago: '+(pag==='o'?'Depósito en OXXO':'Transferencia')+' · Precios del momento del pedido.</p>';
+    '<p class="note">Pago: '+(pag==='o'?'Depósito en efectivo':'Transferencia')+' · Precios del momento del pedido.</p>';
   abrir('ovPedido');
 }
 
