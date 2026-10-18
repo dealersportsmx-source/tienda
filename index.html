@@ -894,9 +894,10 @@ function pintarBolsa(){
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
   // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
-  $('#bolsaFoot').innerHTML='<a class="btn full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">Pedir por DM de Instagram</a>'+
-    '<a class="btn o full" id="btnPedir" target="_blank" rel="noopener" style="margin-top:8px">Pedir por WhatsApp</a>'+
-    '<p class="note" style="text-align:center">Tu pedido se manda como link con su número. Por DM: lo copiamos, solo pégalo en el chat y envía.</p>'+
+  // WhatsApp primero: ahí el mensaje llega ya escrito; en Instagram hay que pegarlo
+  $('#bolsaFoot').innerHTML='<a class="btn full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>'+
+    '<a class="btn o full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener" style="margin-top:8px">Pedir por DM de Instagram</a>'+
+    '<p class="note" style="text-align:center">Tu pedido se manda como link con su número. Por WhatsApp va ya escrito; por DM lo copiamos y solo lo pegas.</p>'+
     '<button type="button" class="linkimg" data-env="2">Guardar imagen del pedido</button>';
   actualizarPedido();
 }
