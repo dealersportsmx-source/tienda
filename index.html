@@ -922,7 +922,13 @@ const baseURL=()=>location.origin+location.pathname;
 // (el precio va en el link para ver siempre el que vio el cliente)
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
   return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
-function msgLink(){ const t=totales(); return 'Hola, este es mi pedido '+folioPedido()+'\nSe aparta con: '+money(t.hoy)+' · Total: '+money(t.tot)+'\n'+linkPedido(); }
+// el mensaje: número de pedido, una línea por prenda, total, anticipo (en negritas en WhatsApp) y el link con fotos al final
+function msgLink(){ const t=totales();
+  return 'Hola, quiero hacer mi pedido *'+folioPedido()+'*\n\n'+
+    bolsa.map(x=>'• '+[x.nombre,x.color,x.talla?'Talla '+x.talla:'',money(x.precio)].filter(Boolean).join(' · ')).join('\n')+
+    '\n\nTotal: '+money(t.tot)+(t.env?' (con envío)':' (envío gratis)')+
+    '\n*Se aparta con: '+money(t.hoy)+'*'+
+    '\n\nVer pedido con fotos:\n'+linkPedido(); }
 function copiar(t){ if(!(navigator.clipboard&&navigator.clipboard.writeText)){ copiarViejo(t); return; }
   try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
