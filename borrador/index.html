@@ -900,7 +900,7 @@ const baseURL=()=>location.origin+location.pathname;
 // (el precio va en el link para ver siempre el que vio el cliente)
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
   return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
-function msgLink(){ const t=totales(); return 'Hola, este es mi pedido '+folioPedido()+'\nAparto con: '+money(t.hoy)+' · Total: '+money(t.tot)+'\n'+linkPedido(); }
+function msgLink(){ const t=totales(); return 'Hola, este es mi pedido '+folioPedido()+'\nSe aparta con: '+money(t.hoy)+' · Total: '+money(t.tot)+'\n'+linkPedido(); }
 function copiar(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
 
@@ -951,7 +951,7 @@ async function imagenPedido(){
   const fila=(a,b,col)=>{ T(a,M,y,'500 30px '+F,col||'#9a9aa0'); T(b,W-M,y,'700 30px '+F,col||'#ffffff','right'); y+=52; };
   fila('Productos',money(t.sub)); fila('Envío '+(entrega==='mty'?'Monterrey':'a otra ciudad'),t.env?money(t.env):'Gratis'); fila('Total',money(t.tot),'#ffffff');
   y+=14; rr(M,y,W-2*M,110,18); d.fillStyle='#ffffff'; d.fill();
-  T('APARTO HOY',M+34,y+34,'800 38px '+F,'#0b0b0c'); T(money(t.hoy),W-M-34,y+28,'800 52px '+F,'#0b0b0c','right'); y+=140;
+  T('SE APARTA CON',M+34,y+34,'800 38px '+F,'#0b0b0c'); T(money(t.hoy),W-M-34,y+28,'800 52px '+F,'#0b0b0c','right'); y+=140;
   fila('Resto al llegar',money(t.resto));
   T('Instagram @'+TIENDA.instagram+'  ·  WhatsApp 81 2079 6757',W/2,H-70,'600 26px '+F,'#6e6e74','center');
   return c;
