@@ -48,6 +48,11 @@ img{display:block;max-width:100%}
 .menu .mlinks{display:flex;gap:18px;margin-top:26px}
 .menu .mlinks button{all:unset;cursor:pointer;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 .cto{display:grid;gap:10px}
+/* ventanita de "pedido copiado" (DM) */
+.ov.centro{justify-content:center;align-items:center;padding:16px;z-index:70}
+.pn.dm{height:auto;max-height:90vh;border-radius:16px;border:1px solid var(--line);animation:none}
+.dmpasos{margin:0 0 12px;padding-left:20px;font-size:15px}.dmpasos li{margin:0 0 8px}
+.dmtxt{white-space:pre-wrap;word-break:break-all;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);margin:0 0 14px;max-height:120px;overflow:auto;user-select:all;-webkit-user-select:all}
 /* botón chico para guardar la imagen del pedido */
 .linkimg{all:unset;cursor:pointer;display:block;margin:2px auto 0;font-size:13px;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .cto small{display:block;color:var(--muted);font-size:13px;margin-top:14px}
@@ -354,6 +359,21 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <button data-go="rebajas" id="mReb" hidden>Rebajas</button>
     <span id="mFavs" hidden></span>
     <div class="mlinks"><button data-go="terminos">Términos y condiciones</button><button data-go="contacto">Contacto</button></div>
+  </div>
+</div></div>
+
+<!-- pedir por DM: Instagram no deja escribir el mensaje, así que se copia y se explica cómo pegarlo -->
+<div class="ov centro" id="ovDm" hidden><div class="pn dm" role="dialog" aria-modal="true" aria-labelledby="dmTit">
+  <div class="pn-h"><h2 id="dmTit">Tu pedido ya está copiado</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b">
+    <ol class="dmpasos">
+      <li>Toca <b>Abrir Instagram</b>.</li>
+      <li>En el chat, <b>mantén presionado</b> el cuadro de mensaje y toca <b>Pegar</b>.</li>
+      <li>Envía el mensaje. Te respondemos para confirmar.</li>
+    </ol>
+    <pre class="dmtxt" id="dmTxt"></pre>
+    <a class="btn full" id="dmAbrir" target="_blank" rel="noopener">Abrir Instagram</a>
+    <button type="button" class="linkimg" id="dmCopiar" style="margin-top:12px">Copiar otra vez</button>
   </div>
 </div></div>
 
@@ -964,7 +984,11 @@ async function compartirImagen(){
   toast('Imagen guardada: mándala por DM o WhatsApp');
 }
 // DM: Instagram no deja escribir el mensaje por el cliente, así que lo copiamos antes de abrir el chat
-document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return; copiar(msgLink()); });
+// DM: se copia el pedido y sale la ventanita que explica cómo pegarlo; Instagram se abre desde ahí
+document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return; e.preventDefault();
+  const t=msgLink(); copiar(t); $('#dmTxt').textContent=t; $('#dmAbrir').href=TIENDA.dm; abrir('ovDm'); });
+$('#dmCopiar').addEventListener('click',()=>copiar($('#dmTxt').textContent));
+$('#dmAbrir').addEventListener('click',()=>{ copiar($('#dmTxt').textContent); setTimeout(()=>cerrar('ovDm'),300); });
 function copiarViejo(t){ try{ const x=document.createElement('textarea'); x.value=t; x.style.position='fixed'; x.style.opacity='0'; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast('Pedido copiado: pégalo en el chat de Instagram'); }catch(e){} }
 $('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
 $('#ovBolsa').addEventListener('change',e=>{
