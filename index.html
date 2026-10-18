@@ -48,6 +48,8 @@ img{display:block;max-width:100%}
 .menu .mlinks{display:flex;gap:18px;margin-top:26px}
 .menu .mlinks button{all:unset;cursor:pointer;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 .cto{display:grid;gap:10px}
+/* botón chico para guardar la imagen del pedido */
+.linkimg{all:unset;cursor:pointer;display:block;margin:2px auto 0;font-size:13px;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .cto small{display:block;color:var(--muted);font-size:13px;margin-top:14px}
 .hd{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
 .hd .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px}
@@ -355,6 +357,12 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   </div>
 </div></div>
 
+<!-- pedido que llega por link -->
+<div class="ov" id="ovPedido" hidden><div class="pn" role="dialog" aria-modal="true" aria-labelledby="pdTit">
+  <div class="pn-h"><h2 id="pdTit">Pedido</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="pn-b" id="pdBody"></div>
+</div></div>
+
 <!-- contacto -->
 <div class="ov" id="ovContacto" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Contacto">
   <div class="pn-h"><h2>Contacto</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -560,7 +568,7 @@ function etiqueta(p){
   return ['ped','Sobre pedido'];
 }
 let tt=null; function toast(s){ const el=$('#toast'); el.textContent=s; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),2400); }
-function guardarBolsa(){ LS.set('bolsa',bolsa); const n=bolsa.length; $('#bolsaN').hidden=!n; $('#bolsaN').textContent=n; }
+function guardarBolsa(){ folio=null; LS.set('bolsa',bolsa); const n=bolsa.length; $('#bolsaN').hidden=!n; $('#bolsaN').textContent=n; }
 function guardarFavs(){ LS.set('favs',[...favs]); $('#mFavs').textContent=favs.size?String(favs.size):''; }
 
 /* ---------- paneles ---------- */
@@ -864,27 +872,99 @@ function pintarBolsa(){
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
-  // dos formas de pedir: DM de Instagram (copia el pedido y abre el chat) o WhatsApp (el mensaje ya va escrito)
+  // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
   $('#bolsaFoot').innerHTML='<a class="btn full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">Pedir por DM de Instagram</a>'+
     '<a class="btn o full" id="btnPedir" target="_blank" rel="noopener" style="margin-top:8px">Pedir por WhatsApp</a>'+
-    '<p class="note" style="text-align:center">Por DM: copiamos tu pedido, solo pégalo en el chat y envía. Te confirmamos disponibilidad antes de pagar.</p>';
+    '<p class="note" style="text-align:center">Tu pedido se manda como link con su número. Por DM: lo copiamos, solo pégalo en el chat y envía.</p>'+
+    '<button type="button" class="linkimg" data-env="2">Guardar imagen del pedido</button>';
   actualizarPedido();
 }
 function mensaje(){
   const t=totales(), n=($('#bNombre')||{}).value||nombre;
   const lineas=bolsa.map((x,i)=>(i+1)+'. '+x.nombre+(x.marca?' ('+x.marca+')':'')+(x.color?' · '+x.color:'')+(x.talla?' · Talla '+x.talla:'')+(x.estado?' · '+x.estado:'')+' — '+money(x.precio));
-  return 'Hola DEALER SPORTS MX 👋'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
+  return 'Hola DEALER SPORTS MX.'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
     '\n\nProductos: '+money(t.sub)+
     '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
     '\nTotal: '+money(t.tot)+
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
     '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en OXXO',efectivo:'Efectivo al recibir'}[pago];
 }
-function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(mensaje()); }
+function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(msgLink()); }
+
+/* ---------- el pedido como link (y como imagen) ---------- */
+let folio=null; // número de pedido; cambia cuando cambia la bolsa
+function folioPedido(){ if(!folio){ const d=new Date(); folio='DSM-'+String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+'-'+Math.floor(1000+Math.random()*9000); } return folio; }
+const enc=encodeURIComponent, dec=s=>{ try{ return decodeURIComponent(s); }catch(e){ return s; } };
+const baseURL=()=>location.origin+location.pathname;
+// el pedido completo cabe en un link: #pedido=folio~entrega~pago~nombre!prenda~color~talla~precio,...
+// (el precio va en el link para ver siempre el que vio el cliente)
+function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
+  return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
+function msgLink(){ return 'Hola, este es mi pedido '+folioPedido()+':\n'+linkPedido(); }
+function copiar(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
+
+// al abrir un link de pedido: se ve el pedido armado con fotos
+function verPedido(h){
+  const [cab,its]=h.split('!'); const [fol,ent,pag,nom]=(cab||'').split('~');
+  const items=(its||'').split(',').filter(Boolean).map(s=>{ const [id,col,tal,pre]=s.split('~'); const p=P.find(x=>x.id===id); const color=dec(col||''), talla=dec(tal||'');
+    const c=p?((p.colores||[]).find(x=>x.nombre===color)||(p.colores||[])[0]||{}):{};
+    // el precio que vio el cliente (si el link es viejo y no lo trae, el de hoy)
+    return {p,id,color,talla,foto:p?((c.fotos&&c.fotos[0])||foto1(p)):'',precio:pre!=null&&pre!==''?+pre||0:(p?+p.precio||0:0)}; });
+  const sub=items.reduce((a,x)=>a+x.precio,0), env=sub>(+TIENDA.gratisMas||Infinity)?0:ent==='n'?TIENDA.envioNacional:TIENDA.envioMty, hoy=anticipoDe(sub);
+  $('#pdTit').textContent='Pedido '+(fol||'');
+  $('#pdBody').innerHTML=(nom?'<p class="lbl" style="margin:0 0 6px">Cliente: <span style="text-transform:none;letter-spacing:0;font-weight:600">'+esc(dec(nom))+'</span></p>':'')+
+    items.map(x=>'<div class="it">'+(x.foto?'<img src="'+esc(x.foto)+'" alt="">':'<img alt="">')+'<div><b>'+esc(x.p?(x.p.codigo?x.p.codigo+' · ':'')+x.p.nombre:'Prenda que ya no está en la tienda')+'</b><small>'+esc([x.p&&x.p.marca,x.color,x.talla?'Talla '+x.talla:'',x.p&&etiqueta(x.p)[1]].filter(Boolean).join(' · '))+'</small><p class="p">'+money(x.precio)+'</p></div><span></span></div>').join('')+
+    '<div style="margin-top:14px"><div class="tot"><span>Productos ('+items.length+')</span><span>'+money(sub)+'</span></div>'+
+    '<div class="tot"><span>Envío '+(ent==='n'?'a otra ciudad':'Monterrey')+'</span><span>'+(env?money(env):'Gratis')+'</span></div>'+
+    '<div class="tot big"><span>Total</span><span>'+money(sub+env)+'</span></div>'+
+    '<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(hoy)+'</span></div><div class="tot"><span>Liquida al llegar</span><span>'+money(sub+env-hoy)+'</span></div></div>'+
+    '<p class="note">Pago: '+(pag==='o'?'Depósito en OXXO':'Transferencia')+' · Precios del momento del pedido.</p>';
+  abrir('ovPedido');
+}
+
+// 2 · imagen tipo ticket del pedido, en el estilo de la tienda
+function cargarImg(src){ return new Promise(r=>{ const i=new Image(); i.onload=()=>r(i); i.onerror=()=>r(null); i.src=src; }); }
+async function imagenPedido(){
+  const t=totales(), W=1080, M=64, ROW=240, H=430+ROW*bolsa.length+400;
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const d=c.getContext('2d');
+  const T=(s,x,y,f,col,al)=>{ d.font=f; d.fillStyle=col; d.textAlign=al||'left'; d.textBaseline='top'; d.fillText(s,x,y); };
+  const F='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
+  const rr=(x,y,w,h,r)=>{ d.beginPath(); d.moveTo(x+r,y); d.arcTo(x+w,y,x+w,y+h,r); d.arcTo(x+w,y+h,x,y+h,r); d.arcTo(x,y+h,x,y,r); d.arcTo(x,y,x+w,y,r); d.closePath(); };
+  d.fillStyle='#0b0b0c'; d.fillRect(0,0,W,H); d.fillStyle='#FFD400'; d.fillRect(0,0,W,16);
+  const logo=await cargarImg('logo.png');
+  if(logo){ const lc=document.createElement('canvas'); lc.width=logo.naturalWidth; lc.height=logo.naturalHeight; const x=lc.getContext('2d'); x.drawImage(logo,0,0); x.globalCompositeOperation='source-in'; x.fillStyle='#fff'; x.fillRect(0,0,lc.width,lc.height); d.drawImage(lc,M,70,96*lc.width/lc.height,96); }
+  T('PEDIDO',W-M,76,'800 26px '+F,'#9a9aa0','right'); T(folioPedido(),W-M,110,'800 44px '+F,'#ffffff','right');
+  const n=(($('#bNombre')||{}).value||nombre||'').trim(); if(n) T(n,W-M,166,'600 26px '+F,'#c9c9cc','right');
+  d.fillStyle='#2a2a2e'; d.fillRect(M,230,W-2*M,2);
+  let y=270;
+  const fotos=await Promise.all(bolsa.map(x=>x.foto?cargarImg(x.foto):null));
+  bolsa.forEach((x,i)=>{ const im=fotos[i];
+    d.save(); rr(M,y,160,200,16); d.clip(); d.fillStyle='#17171a'; d.fillRect(M,y,160,200);
+    if(im){ const s=Math.max(160/im.width,200/im.height); d.drawImage(im,M+(160-im.width*s)/2,y+(200-im.height*s)/2,im.width*s,im.height*s); } d.restore();
+    T(x.nombre.length>26?x.nombre.slice(0,25)+'…':x.nombre,M+190,y+20,'800 36px '+F,'#ffffff');
+    T([x.marca,x.color].filter(Boolean).join(' · '),M+190,y+72,'500 28px '+F,'#9a9aa0');
+    T([x.talla?'Talla '+x.talla:'',x.sobrePedido?'Sobre pedido':'Entrega inmediata'].filter(Boolean).join(' · '),M+190,y+112,'500 28px '+F,'#9a9aa0');
+    T(money(x.precio),W-M,y+20,'800 36px '+F,'#ffffff','right');
+    y+=ROW; });
+  d.fillStyle='#2a2a2e'; d.fillRect(M,y-14,W-2*M,2); y+=20;
+  const fila=(a,b,col)=>{ T(a,M,y,'500 30px '+F,col||'#9a9aa0'); T(b,W-M,y,'700 30px '+F,col||'#ffffff','right'); y+=52; };
+  fila('Productos',money(t.sub)); fila('Envío '+(entrega==='mty'?'Monterrey':'a otra ciudad'),t.env?money(t.env):'Gratis'); fila('Total',money(t.tot),'#ffffff');
+  y+=14; rr(M,y,W-2*M,110,18); d.fillStyle='#ffffff'; d.fill();
+  T('APARTO HOY',M+34,y+34,'800 38px '+F,'#0b0b0c'); T(money(t.hoy),W-M-34,y+28,'800 52px '+F,'#0b0b0c','right'); y+=140;
+  fila('Resto al llegar',money(t.resto));
+  T('Instagram @'+TIENDA.instagram+'  ·  WhatsApp 81 2079 6757',W/2,H-70,'600 26px '+F,'#6e6e74','center');
+  return c;
+}
+async function compartirImagen(){
+  const c=await imagenPedido(); const blob=await new Promise(r=>c.toBlob(r,'image/png')); if(!blob){ toast('No se pudo crear la imagen'); return; }
+  const file=new File([blob],'Pedido-'+folioPedido()+'.png',{type:'image/png'});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:'Mi pedido '+folioPedido()}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  const u=URL.createObjectURL(blob), a=document.createElement('a'); a.href=u; a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+  toast('Imagen guardada: mándala por DM o WhatsApp');
+}
 // DM: Instagram no deja escribir el mensaje por el cliente, así que lo copiamos antes de abrir el chat
-document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return;
-  const t=mensaje();
-  try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } });
+document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return; copiar(msgLink()); });
 function copiarViejo(t){ try{ const x=document.createElement('textarea'); x.value=t; x.style.position='fixed'; x.style.opacity='0'; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast('Pedido copiado: pégalo en el chat de Instagram'); }catch(e){} }
 $('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
 $('#ovBolsa').addEventListener('change',e=>{
@@ -911,7 +991,8 @@ fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{prod
   $('#mMarcas').innerHTML=TIENDA.menuMarcas.map(m=>'<button data-go="'+esc(m[1])+'">'+esc(m[0])+'</button>').join('');
   $('#mReb').hidden=!P.some(enRebaja);
   renderInicio(); render(); quitarIntro();
-  const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id);
+  if((location.hash||'').startsWith('#pedido=')) verPedido(location.hash.slice(8));
+  else { const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id); }
 });
 })();
 </script>

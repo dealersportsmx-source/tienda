@@ -48,9 +48,8 @@ img{display:block;max-width:100%}
 .menu .mlinks{display:flex;gap:18px;margin-top:26px}
 .menu .mlinks button{all:unset;cursor:pointer;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 .cto{display:grid;gap:10px}
-/* opciones de mandar el pedido (borrador) */
-.opc{margin:12px 0 6px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* botón chico para guardar la imagen del pedido */
+.linkimg{all:unset;cursor:pointer;display:block;margin:2px auto 0;font-size:13px;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .cto small{display:block;color:var(--muted);font-size:13px;margin-top:14px}
 .hd{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
 .hd .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px}
@@ -873,16 +872,11 @@ function pintarBolsa(){
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
-  // EN EL BORRADOR: 3 formas de mandar el pedido para compararlas (la tienda real sigue con la de abajo)
-  if(BORRADOR){ $('#bolsaFoot').innerHTML='<p class="lbl" style="margin:0 0 4px">Prueba: 3 formas de mandar el pedido</p>'+
-    '<p class="opc">1 · Link del pedido</p><div class="dos"><a class="btn full" data-env="1dm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">DM</a><a class="btn o full" data-env="1wa" target="_blank" rel="noopener">WhatsApp</a></div>'+
-    '<p class="opc">2 · Imagen del pedido</p><button class="btn full" data-env="2" type="button">Compartir imagen</button>'+
-    '<p class="opc">3 · Link de cada prenda</p><div class="dos"><a class="btn full" data-env="3dm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">DM</a><a class="btn o full" data-env="3wa" target="_blank" rel="noopener">WhatsApp</a></div>';
-    actualizarPedido(); return; }
-  // dos formas de pedir: DM de Instagram (copia el pedido y abre el chat) o WhatsApp (el mensaje ya va escrito)
+  // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
   $('#bolsaFoot').innerHTML='<a class="btn full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">Pedir por DM de Instagram</a>'+
     '<a class="btn o full" id="btnPedir" target="_blank" rel="noopener" style="margin-top:8px">Pedir por WhatsApp</a>'+
-    '<p class="note" style="text-align:center">Por DM: copiamos tu pedido, solo pégalo en el chat y envía. Te confirmamos disponibilidad antes de pagar.</p>';
+    '<p class="note" style="text-align:center">Tu pedido se manda como link con su número. Por DM: lo copiamos, solo pégalo en el chat y envía.</p>'+
+    '<button type="button" class="linkimg" data-env="2">Guardar imagen del pedido</button>';
   actualizarPedido();
 }
 function mensaje(){
@@ -895,36 +889,28 @@ function mensaje(){
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
     '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en OXXO',efectivo:'Efectivo al recibir'}[pago];
 }
-function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(mensaje());
-  const a1=$('[data-env="1wa"]'); if(a1) a1.href=wa(msgLink());
-  const a3=$('[data-env="3wa"]'); if(a3) a3.href=wa(msgPrendas()); }
+function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(msgLink()); }
 
-/* ---------- formas de mandar el pedido (prueba en el borrador) ---------- */
+/* ---------- el pedido como link (y como imagen) ---------- */
 let folio=null; // número de pedido; cambia cuando cambia la bolsa
 function folioPedido(){ if(!folio){ const d=new Date(); folio='DSM-'+String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+'-'+Math.floor(1000+Math.random()*9000); } return folio; }
 const enc=encodeURIComponent, dec=s=>{ try{ return decodeURIComponent(s); }catch(e){ return s; } };
 const baseURL=()=>location.origin+location.pathname;
-// 1 · el pedido completo cabe en un link: #pedido=folio~entrega~pago~nombre!prenda~color~talla,...
+// el pedido completo cabe en un link: #pedido=folio~entrega~pago~nombre!prenda~color~talla~precio,...
+// (el precio va en el link para ver siempre el que vio el cliente)
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
-  return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||'')].join('~')).join(','); }
+  return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
 function msgLink(){ return 'Hola, este es mi pedido '+folioPedido()+':\n'+linkPedido(); }
-// 3 · cada prenda con su link
-function msgPrendas(){ const t=totales();
-  return 'Hola, quiero hacer este pedido ('+folioPedido()+'):\n\n'+bolsa.map(x=>'*'+x.nombre+'*\n'+[x.color,x.talla?'Talla '+x.talla:'',money(x.precio)].filter(Boolean).join(' · ')+'\n'+baseURL()+'#'+x.id).join('\n\n')+
-    '\n\nEnvío '+(entrega==='mty'?'Monterrey':'a otra ciudad')+': '+(t.env?money(t.env):'gratis')+'\n*Aparto hoy: '+money(t.hoy)+'*\nResto al llegar: '+money(t.resto); }
 function copiar(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-env]'); if(!b) return;
-  const k=b.dataset.env;
-  if(k==='1dm') copiar(msgLink());
-  else if(k==='3dm') copiar(msgPrendas());
-  else if(k==='2'){ e.preventDefault(); compartirImagen(); } });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'); if(!b) return; e.preventDefault(); compartirImagen(); });
 
 // al abrir un link de pedido: se ve el pedido armado con fotos
 function verPedido(h){
   const [cab,its]=h.split('!'); const [fol,ent,pag,nom]=(cab||'').split('~');
-  const items=(its||'').split(',').filter(Boolean).map(s=>{ const [id,col,tal]=s.split('~'); const p=P.find(x=>x.id===id); const color=dec(col||''), talla=dec(tal||'');
+  const items=(its||'').split(',').filter(Boolean).map(s=>{ const [id,col,tal,pre]=s.split('~'); const p=P.find(x=>x.id===id); const color=dec(col||''), talla=dec(tal||'');
     const c=p?((p.colores||[]).find(x=>x.nombre===color)||(p.colores||[])[0]||{}):{};
-    return {p,id,color,talla,foto:p?((c.fotos&&c.fotos[0])||foto1(p)):'',precio:p?+p.precio||0:0}; });
+    // el precio que vio el cliente (si el link es viejo y no lo trae, el de hoy)
+    return {p,id,color,talla,foto:p?((c.fotos&&c.fotos[0])||foto1(p)):'',precio:pre!=null&&pre!==''?+pre||0:(p?+p.precio||0:0)}; });
   const sub=items.reduce((a,x)=>a+x.precio,0), env=sub>(+TIENDA.gratisMas||Infinity)?0:ent==='n'?TIENDA.envioNacional:TIENDA.envioMty, hoy=anticipoDe(sub);
   $('#pdTit').textContent='Pedido '+(fol||'');
   $('#pdBody').innerHTML=(nom?'<p class="lbl" style="margin:0 0 6px">Cliente: <span style="text-transform:none;letter-spacing:0;font-weight:600">'+esc(dec(nom))+'</span></p>':'')+
@@ -933,7 +919,7 @@ function verPedido(h){
     '<div class="tot"><span>Envío '+(ent==='n'?'a otra ciudad':'Monterrey')+'</span><span>'+(env?money(env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(sub+env)+'</span></div>'+
     '<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(hoy)+'</span></div><div class="tot"><span>Liquida al llegar</span><span>'+money(sub+env-hoy)+'</span></div></div>'+
-    '<p class="note">Pago: '+(pag==='o'?'Depósito en OXXO':'Transferencia')+' · Precios de hoy en la tienda.</p>';
+    '<p class="note">Pago: '+(pag==='o'?'Depósito en OXXO':'Transferencia')+' · Precios del momento del pedido.</p>';
   abrir('ovPedido');
 }
 
@@ -978,9 +964,7 @@ async function compartirImagen(){
   toast('Imagen guardada: mándala por DM o WhatsApp');
 }
 // DM: Instagram no deja escribir el mensaje por el cliente, así que lo copiamos antes de abrir el chat
-document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return;
-  const t=mensaje();
-  try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } });
+document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return; copiar(msgLink()); });
 function copiarViejo(t){ try{ const x=document.createElement('textarea'); x.value=t; x.style.position='fixed'; x.style.opacity='0'; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast('Pedido copiado: pégalo en el chat de Instagram'); }catch(e){} }
 $('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
 $('#ovBolsa').addEventListener('change',e=>{
