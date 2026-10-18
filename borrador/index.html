@@ -135,7 +135,7 @@ img{display:block;max-width:100%}
 .terms ol.pasos{list-style:none;padding:0;margin:0 0 18px;counter-reset:p}
 .terms ol.pasos li{counter-increment:p;position:relative;padding:0 0 14px 40px}
 .terms ol.pasos li::before{content:counter(p);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:#0b0b0c;color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
-.terms ol.pasos b{display:block}.terms ol.pasos span{display:block;color:var(--muted);font-size:14px}
+.terms ol.pasos b{display:block}.terms ol.pasos li>span{display:block;color:var(--muted);font-size:14px}
 .terms h3{font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 8px}
 .terms ul{margin:0;padding-left:18px}.terms li{font-size:14px;margin:0 0 6px}.terms p{font-size:14px;color:var(--muted)}
 .pr .rd{color:var(--red)}
@@ -410,22 +410,41 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 </div></div>
 
 <!-- cómo funciona, términos y privacidad -->
-<div class="ov" id="ovTerm" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Cómo funciona y términos">
-  <div class="pn-h"><h2>Cómo funciona</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div class="ov" id="ovTerm" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Términos y condiciones">
+  <div class="pn-h"><h2>Términos y condiciones</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b terms">
+    <!-- los números (anticipo, envíos, envío gratis, días) se llenan solos con TIENDA -->
+    <h3>Cómo funciona</h3>
     <ol class="pasos">
-      <li><b>Aparta con el 30 %</b><span>Escoge tu prenda, color y talla, y pídela por WhatsApp o Instagram.</span></li>
-      <li><b>Llega en 15–20 días</b><span>La pedimos a la marca y te avisamos cuando llega a Monterrey.</span></li>
-      <li><b>Liquidas y te la enviamos</b><span>Pagas el resto y te la mandamos.</span></li>
+      <li><b>Pide por DM o WhatsApp</b><span>Escoge tu prenda, color y talla y mándanos tu pedido. Te confirmamos disponibilidad antes de pagar.</span></li>
+      <li><b>Aparta con el <span data-t="anticipo">30</span> %</b><span>Pagas el <span data-t="anticipo">30</span> % del precio de tus prendas. El envío va aparte.</span></li>
+      <li><b>Llega en <span data-t="llega">15–20 días</span></b><span>La pedimos a la marca y te avisamos cuando llega a Monterrey.</span></li>
+      <li><b>Liquidas y te la enviamos</b><span>Pagas el resto de tus prendas más el envío, y te la mandamos.</span></li>
     </ol>
+    <h3>Preventas</h3>
+    <ul>
+      <li>Cada preventa tiene una fecha de cierre. Aparta antes de que cierre; después ya no se toman pedidos de esa colección.</li>
+      <li>El tiempo de llegada cuenta desde que la marca envía la colección.</li>
+    </ul>
+    <h3>Pagos y anticipo</h3>
+    <ul>
+      <li>El anticipo es el <span data-t="anticipo">30</span> % del precio de las prendas, redondeado al múltiplo de $<span data-t="red">50</span> más cercano. El envío no entra en el anticipo.</li>
+      <li>El resto se paga cuando tu pedido llega, antes de entregarlo o enviarlo.</li>
+      <li>Pagas por transferencia o depósito en OXXO. Envía tu comprobante por DM o WhatsApp.</li>
+    </ul>
+    <h3>Envíos</h3>
+    <ul>
+      <li>Monterrey: entrega a domicilio, $<span data-t="envioMty">80</span>.</li>
+      <li>Resto de México: por paquetería, desde $<span data-t="envioNacional">150</span>. Zonas alejadas se cotizan.</li>
+      <li>Envío gratis en compras mayores a $<span data-t="gratisMas">3,000</span>.</li>
+      <li>Solo se envía con el pedido liquidado.</li>
+    </ul>
     <h3>Términos</h3>
     <ul>
       <li>Ropa 100 % original, nueva y con etiquetas.</li>
-      <li>Las prendas sobre pedido se apartan con el 30 % de su precio. El resto se paga cuando llega, antes de enviarla.</li>
       <li>No hay cambios ni devoluciones. Revisa bien tu talla antes de apartar.</li>
       <li>Si la marca se queda sin tu talla, te avisamos y te regresamos tu anticipo.</li>
       <li>Los tiempos de llegada son aproximados y pueden variar por la marca o la paquetería.</li>
-      <li>Envíos: Monterrey $80 · resto de México $150 (zonas alejadas se cotizan). Se envía solo con el pedido liquidado.</li>
     </ul>
     <h3>Privacidad</h3>
     <p>Tus datos (nombre, teléfono y dirección) solo se usan para tu pedido y tu envío. No los compartimos con nadie.</p>
@@ -572,6 +591,8 @@ function sobrePedido(p){ return p.estado!=='disponible'; }
 function redondear(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100; return Math.floor(v/r+0.5+1e-9)*r; }
 // anticipo: % de las prendas, redondeado (el envío va aparte)
 function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||0)/100); }
+// llena los números de Términos con los de TIENDA (los que mandan tus Ajustes)
+function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach(el=>{ const v=TIENDA[el.dataset.t]; if(v!=null) el.textContent=typeof v==='number'?v.toLocaleString('en-US'):v; }); }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
@@ -869,6 +890,7 @@ fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{prod
   P=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
+  pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // marcas del menú: tu lista fija; Rebajas solo aparece si hay alguna prenda con precio rebajado
   $('#mMarcas').innerHTML=TIENDA.menuMarcas.map(m=>'<button data-go="'+esc(m[1])+'">'+esc(m[0])+'</button>').join('');
