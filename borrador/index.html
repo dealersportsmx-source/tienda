@@ -472,8 +472,9 @@ const TIENDA={
     {titulo:'Rebajas', color:'#3b3b40', img:'', ir:'rebajas', soloRebaja:true,
      sinRebaja:{titulo:'Así entregamos', color:'#3b3b40', img:'', ir:''}}
   ],
-  // con cuánto se aparta lo que es sobre pedido o preventa: [menos de este total, aparta con]
-  apartado:[[1000,300],[2000,600],[Infinity,900]],
+  // anticipo = % de las prendas (el envío va aparte), redondeado al múltiplo de $50 más cercano.
+  // Estos números llegan solos desde Cotizador › Ajustes cuando das "Publicar tienda" en el Catálogo.
+  anticipo:30, red:50, gratisMas:3000, // envío gratis en compras MAYORES a esto
   llega:'15–20 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
   cuentas:[
@@ -567,8 +568,11 @@ function filtrar(){
 }
 /* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
 function sobrePedido(p){ return p.estado!=='disponible'; }
-// apartado por tabulador (TIENDA.apartado); nunca más que el precio
-function anticipoDe(total){ total=+total||0; for(const [hasta,m] of TIENDA.apartado) if(total<hasta) return Math.min(m,total); return 0; }
+// al múltiplo de $50 más cercano; si queda justo a la mitad, hacia arriba
+function redondear(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100; return Math.floor(v/r+0.5+1e-9)*r; }
+// anticipo: % de las prendas, redondeado (el envío va aparte)
+function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||0)/100); }
+function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
   const t=etiqueta(p), f=foto1(p), reb=enRebaja(p), antes=precioAntes(p);
@@ -803,11 +807,10 @@ function pagoHTML(){
 function pintarPago(){ $('#pagoBody').innerHTML='<p class="lbl">Transferencia o depósito</p>'+pagoHTML(); }
 document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
   try{ await navigator.clipboard.writeText(b.dataset.copy); toast('Copiado'); }catch(err){ toast(b.dataset.copy); } });
-function totales(){ const sub=bolsa.reduce((a,x)=>a+(+x.precio||0),0); const env=entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional;
-  // hoy se paga: el apartado del tabulador sobre el total de lo que es sobre pedido + lo de entrega inmediata completo
-  const ped=bolsa.filter(x=>x.sobrePedido).reduce((a,x)=>a+(+x.precio||0),0);
-  const hoy=anticipoDe(ped)+bolsa.filter(x=>!x.sobrePedido).reduce((a,x)=>a+(+x.precio||0),0);
-  return {sub,env,tot:sub+env,hoy,resto:sub+env-hoy,hayPedido:bolsa.some(x=>x.sobrePedido)}; }
+function totales(){ const sub=bolsa.reduce((a,x)=>a+(+x.precio||0),0); const env=envioDe(sub);
+  // hoy se aparta con el % de las prendas (redondeado); al llegar: el resto de las prendas + el envío
+  const hoy=anticipoDe(sub);
+  return {sub,env,tot:sub+env,hoy,resto:sub+env-hoy,hayPedido:bolsa.length>0}; }
 function pintarBolsa(){
   if(!bolsa.length){ $('#bolsaBody').innerHTML='<p class="empty">Tu bolsa está vacía.</p>'; $('#bolsaFoot').innerHTML='<button class="btn full" data-close>Seguir viendo</button>'; return; }
   const t=totales();
@@ -815,13 +818,14 @@ function pintarBolsa(){
       '<div><b>'+esc(x.nombre)+'</b><small>'+esc([x.marca,x.color,x.talla?'Talla '+x.talla:'',x.estado].filter(Boolean).join(' · '))+'</small><p class="p">'+money(x.precio)+'</p></div>'+
       '<button class="x" data-quitar="'+i+'">Quitar</button></div>').join('')+
     '<p class="lbl" style="margin-top:20px">Entrega</p>'+
-    [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
+    (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Tu envío es gratis (compra mayor a '+money(TIENDA.gratisMas)+').</p>':'')+
+    [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · desde $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
     '<p class="lbl">Forma de pago</p>'+
     [['transferencia','Transferencia'],['oxxo','Depósito en OXXO']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
     (pago!=='efectivo'?'<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Ver datos para pagar</summary><div style="margin-top:10px">'+pagoHTML()+'</div></details>':'')+
     '<label class="lbl" style="display:block">Tu nombre <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(opcional)</span><input class="in" id="bNombre" value="'+esc(nombre)+'" placeholder="Para saber quién pide" autocomplete="name"></label>'+
     '<div style="margin-top:14px"><div class="tot"><span>Productos ('+bolsa.length+')</span><span>'+money(t.sub)+'</span></div>'+
-    '<div class="tot"><span>Envío</span><span>'+money(t.env)+'</span></div>'+
+    '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
   $('#bolsaFoot').innerHTML='<a class="btn wa full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a><p class="note" style="text-align:center">Te confirmamos disponibilidad por WhatsApp antes de pagar.</p>';
@@ -855,6 +859,8 @@ const t0=Date.now();
 function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
 fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
   P=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
+  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // marcas del menú: tu lista fija; Rebajas solo aparece si hay alguna prenda con precio rebajado
   $('#mMarcas').innerHTML=TIENDA.menuMarcas.map(m=>'<button data-go="'+esc(m[1])+'">'+esc(m[0])+'</button>').join('');
