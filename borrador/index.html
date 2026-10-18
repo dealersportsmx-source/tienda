@@ -828,7 +828,10 @@ function pintarBolsa(){
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
-  $('#bolsaFoot').innerHTML='<a class="btn wa full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a><p class="note" style="text-align:center">Te confirmamos disponibilidad por WhatsApp antes de pagar.</p>';
+  // dos formas de pedir: DM de Instagram (copia el pedido y abre el chat) o WhatsApp (el mensaje ya va escrito)
+  $('#bolsaFoot').innerHTML='<a class="btn full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener">Pedir por DM de Instagram</a>'+
+    '<a class="btn o full" id="btnPedir" target="_blank" rel="noopener" style="margin-top:8px">Pedir por WhatsApp</a>'+
+    '<p class="note" style="text-align:center">Por DM: copiamos tu pedido, solo pégalo en el chat y envía. Te confirmamos disponibilidad antes de pagar.</p>';
   actualizarPedido();
 }
 function mensaje(){
@@ -836,12 +839,17 @@ function mensaje(){
   const lineas=bolsa.map((x,i)=>(i+1)+'. '+x.nombre+(x.marca?' ('+x.marca+')':'')+(x.color?' · '+x.color:'')+(x.talla?' · Talla '+x.talla:'')+(x.estado?' · '+x.estado:'')+' — '+money(x.precio));
   return 'Hola DEALER SPORTS MX 👋'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
     '\n\nProductos: '+money(t.sub)+
-    '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio ('+money(t.env)+')':'Envío a otra ciudad ('+money(t.env)+')')+
+    '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
     '\nTotal: '+money(t.tot)+
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
     '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en OXXO',efectivo:'Efectivo al recibir'}[pago];
 }
 function actualizarPedido(){ const a=$('#btnPedir'); if(a) a.href=wa(mensaje()); }
+// DM: Instagram no deja escribir el mensaje por el cliente, así que lo copiamos antes de abrir el chat
+document.addEventListener('click',e=>{ if(!e.target.closest('#btnDm')) return;
+  const t=mensaje();
+  try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } });
+function copiarViejo(t){ try{ const x=document.createElement('textarea'); x.value=t; x.style.position='fixed'; x.style.opacity='0'; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast('Pedido copiado: pégalo en el chat de Instagram'); }catch(e){} }
 $('#ovBolsa').addEventListener('click',e=>{ const q=e.target.closest('[data-quitar]'); if(q){ bolsa.splice(+q.dataset.quitar,1); guardarBolsa(); pintarBolsa(); } });
 $('#ovBolsa').addEventListener('change',e=>{
   if(e.target.name==='ent'){ entrega=e.target.value; if(entrega!=='mty'&&pago==='efectivo') pago='transferencia'; LS.set('entrega',entrega); LS.set('pago',pago); pintarBolsa(); }
