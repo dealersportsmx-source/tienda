@@ -430,6 +430,9 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <ul>
       <li>El anticipo es el <span data-t="anticipo">30</span> % del precio de las prendas, redondeado al múltiplo de $<span data-t="red">50</span> más cercano. El envío no entra en el anticipo.</li>
       <li>El resto se paga cuando tu pedido llega, antes de entregarlo o enviarlo.</li>
+      <li>Cuando tu pedido llega tienes un plazo máximo de <b data-t="plazoLiquidar">3 semanas</b> para liquidar. Si no liquidas en ese plazo, se pierde el anticipo y la prenda se libera para venta.</li>
+      <li>Si cancelas tu pedido, pierdes tu anticipo.</li>
+      <li>El precio que apartaste se respeta, aunque cambie el tipo de cambio.</li>
       <li>Pagas por transferencia o depósito en OXXO. Envía tu comprobante por DM o WhatsApp.</li>
     </ul>
     <h3>Envíos</h3>
@@ -437,14 +440,22 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <li>Monterrey: entrega a domicilio, $<span data-t="envioMty">80</span>.</li>
       <li>Resto de México: por paquetería, desde $<span data-t="envioNacional">150</span>. Zonas alejadas se cotizan.</li>
       <li>Envío gratis en compras mayores a $<span data-t="gratisMas">3,000</span>.</li>
-      <li>Solo se envía con el pedido liquidado.</li>
+      <li>Solo se envía con el pedido liquidado. Te damos tu número de guía; una vez entregado a la paquetería, los tiempos dependen de ella.</li>
+      <li>Si la dirección de envío está mal o incompleta, el reenvío corre por tu cuenta.</li>
+    </ul>
+    <h3>Tallas, colores y defectos</h3>
+    <ul>
+      <li>Revisa la guía de tallas de la marca antes de apartar; la talla la eliges tú.</li>
+      <li>Los colores pueden variar un poco por las fotos o tu pantalla.</li>
+      <li>No hay cambios ni devoluciones.</li>
+      <li>Si tu prenda llega con defecto de fábrica, repórtalo en las primeras <span data-t="reporteDefecto">48 horas</span> con fotos o video y lo vemos con la marca.</li>
     </ul>
     <h3>Términos</h3>
     <ul>
       <li>Ropa 100 % original, nueva y con etiquetas.</li>
-      <li>No hay cambios ni devoluciones. Revisa bien tu talla antes de apartar.</li>
-      <li>Si la marca se queda sin tu talla, te avisamos y te regresamos tu anticipo.</li>
-      <li>Los tiempos de llegada son aproximados y pueden variar por la marca o la paquetería.</li>
+      <li>Si la marca se queda sin tu talla o cancela tu pedido, te avisamos y te regresamos tu anticipo completo.</li>
+      <li>Los tiempos de llegada son aproximados. Los retrasos de la marca, la aduana o la paquetería no son motivo de cancelación; te avisamos de cualquier cambio.</li>
+      <li>DEALER SPORTS MX es una tienda independiente: no somos distribuidores oficiales. Las marcas y logos pertenecen a sus dueños.</li>
     </ul>
     <h3>Privacidad</h3>
     <p>Tus datos (nombre, teléfono y dirección) solo se usan para tu pedido y tu envío. No los compartimos con nadie.</p>
@@ -494,6 +505,8 @@ const TIENDA={
   // anticipo = % de las prendas (el envío va aparte), redondeado al múltiplo de $50 más cercano.
   // Estos números llegan solos desde Cotizador › Ajustes cuando das "Publicar tienda" en el Catálogo.
   anticipo:30, red:50, gratisMas:3000, // envío gratis en compras MAYORES a esto
+  // plazos que salen en Términos y condiciones
+  plazoLiquidar:'3 semanas', reporteDefecto:'48 horas',
   llega:'15–20 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
   cuentas:[
