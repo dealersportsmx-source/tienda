@@ -374,9 +374,10 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b">
     <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
-    <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
+    <p class="lbl">Estado</p><div class="chips" id="fEstado"></div>
     <p class="lbl">Marca</p><div class="chips" id="fMarca"></div>
-    <p class="lbl">Disponibilidad</p><div class="chips" id="fEstado"></div>
+    <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
+    <p class="lbl">Precio</p><div class="chips" id="fPrecio"></div>
   </div>
   <div class="pn-f" style="display:flex;gap:8px"><button class="btn o" id="fLimpiar" style="flex:1">Limpiar</button><button class="btn" data-close style="flex:1" id="fVer">Ver</button></div>
 </div></div>
@@ -452,6 +453,13 @@ const TIENDA={
   // lista de MARCAS en el menú (siempre se ve, aunque no haya productos).
   // Para una colección dentro de una marca: ['Nombre','c:Marca|Colección']
   menuMarcas:[['YoungLA','m:YoungLA'],['Gymshark','m:Gymshark'],['Breathedivinity','m:Breathedivinity'],['Darc Sport','m:Darc Sport'],['Civil Régime','m:Civil Régime'],['DFYNE','m:DFYNE'],['Controlled Insanity','m:Controlled Insanity'],['AYBL','m:AYBL']],
+  // botones de tipo de prenda en HOMBRE y MUJER (deben llamarse igual que la categoría en el Catálogo)
+  chips:{
+    hombre:['Playeras','Tank tops','Compresión','Shorts','Pants','Hoodies'],
+    mujer:['Leggings','Tops deportivos','Crop tops','Playeras','Shorts','Pants','Hoodies','Conjuntos','Bodysuits']
+  },
+  // categorías viejas que cuentan dentro de un botón
+  alias:{'Tops deportivos':['Sports bras','Tops']},
   // logos de la fila de marcas (carpeta marcas/)
   logos:{'YoungLA':'youngla','Gymshark':'gymshark','Breathedivinity':'breathe-divinity','Darc Sport':'darc-sport','Civil Régime':'civil-regime','DFYNE':'dfyne','Controlled Insanity':'controlled-insanity','AYBL':'aybl'},
   // banners del inicio (máximo 3). Para poner foto: img:'banners/archivo.jpg'. ir = a dónde lleva al tocarlo.
@@ -480,7 +488,7 @@ const LS={get(k,d){try{return JSON.parse(localStorage.getItem('fwmx_'+k))??d;}ca
 const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
 const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 
-let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', enInicio=true;
+let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
 // "Civil Régime" = "Civil Regime" y "Breathedivinity" = "Breathe Divinity": sin acentos ni espacios
@@ -489,6 +497,8 @@ function sinAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,
 function enRebaja(p){ return precioAntes(p)>+p.precio; }
 // precio de antes: el Catálogo lo manda como precioBase cuando pones una oferta
 function precioAntes(p){ return +p.precioAntes||(p.oferta?+p.precioBase:0)||0; }
+// ¿la prenda es de este tipo? (sin importar acentos/mayúsculas; incluye los alias)
+function enCat(p,c){ const s=sinAcento(p.categoria); return [c].concat(TIENDA.alias[c]||[]).some(x=>sinAcento(x)===s); }
 // colección de la prenda (ej. Onyx dentro de Gymshark); en preventas es el nombre de la preventa
 function colDe(p){ return p.coleccion||(p.estado==='early'?p.estadoTxt:'')||''; }
 function clavePre(p){ return (p.marca||'')+'|'+(p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
@@ -536,13 +546,17 @@ function filtrar(){
   else if(vista==='drops') r=r.filter(p=>p.estado==='early'&&(!fPre||clavePre(p)===fPre));
   else if(vista==='acc') r=r.filter(p=>p.estado!=='early'&&esAcc(p));
   else if(vista==='rebajas') r=r.filter(enRebaja);
-  else r=r.filter(p=>p.estado!=='early'&&!esAcc(p)); // los accesorios no se revuelven con la ropa
+  // las preventas solo se mezclan si eliges Estado: Preventa; los accesorios no se revuelven con la ropa
+  else r=r.filter(p=>(p.estado!=='early'||fEstado==='preventa')&&!esAcc(p));
   if(linea) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
-  if(cat) r=r.filter(p=>p.categoria===cat);
+  if(cat) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
   if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
   if(fTalla) r=r.filter(p=>tallasConStock(p).has(fTalla));
-  if(fEstado) r=r.filter(p=>fEstado==='disponible'?p.estado==='disponible':p.estado!=='disponible');
+  if(fEstado==='disponible') r=r.filter(p=>p.estado==='disponible');
+  else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
+  else if(fEstado==='preventa') r=r.filter(p=>p.estado==='early');
+  if(fPrecio) r=r.filter(p=>{ const v=+p.precio||0; return fPrecio==='a'?v<1000:fPrecio==='b'?v>=1000&&v<2000:v>=2000; });
   if(vista==='drops') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
@@ -577,17 +591,18 @@ function colorDe(n){ const s=String(n||'').toLowerCase(); for(const [k,c] of COL
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   const base=P.filter(p=>!linea||!p.linea||p.linea===linea||p.linea==='unisex');
-  const cats=[...new Set(base.map(p=>p.categoria).filter(Boolean))];
+  // en HOMBRE y MUJER los botones son fijos (TIENDA.chips); en lo demás salen los tipos que haya
+  const fijos=!vista&&!fMarca&&TIENDA.chips[linea];
+  const cats=fijos||[...new Set(base.map(p=>p.categoria).filter(Boolean))];
   if(cat&&!cats.includes(cat)) cat='';
-  $('#cats').innerHTML=cats.length>1?['<button class="chip'+(!cat?' on':'')+'" data-cat="">Todo</button>'].concat(cats.map(c=>'<button class="chip'+(cat===c?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>')).join(''):'';
+  $('#cats').innerHTML=(fijos||cats.length>1)?['<button class="chip'+(!cat?' on':'')+'" data-cat="">Todo</button>'].concat(cats.map(c=>'<button class="chip'+(cat===c?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>')).join(''):'';
   $('#dropBox').innerHTML='';
   // filtro rápido: entrega inmediata / sobre pedido (no aplica en preventas ni favoritos)
   // en preventas: filtro por marca; en lo demás: entrega inmediata / sobre pedido
   if(vista==='drops'){ const ms=[...new Set(preventas().map(g=>g.marca).filter(Boolean))];
     $('#disp').hidden=ms.length<2;
     $('#disp').innerHTML=[['','Todas las marcas']].concat(ms.map(m=>[m,m])).map(o=>'<button class="chip'+(fMarca===o[0]?' on':'')+'" data-pmarca="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('');
-  } else { $('#disp').hidden=vista==='favs';
-    $('#disp').innerHTML=[['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido']].map(o=>'<button class="chip'+(fEstado===o[0]?' on':'')+'" data-disp="'+o[0]+'">'+o[1]+'</button>').join(''); }
+  } else { $('#disp').hidden=true; $('#disp').innerHTML=''; } // el estado ahora va en "Filtrar y ordenar"
   $('#titulo').hidden=!vista&&!fMarca; $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='drops'?'Preventas'+(fMarca?' · '+fMarca:''):vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca+(fCol?' · '+fCol:'');
   const r=filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
@@ -677,7 +692,7 @@ function ir(g){
   if(g==='contacto'){ abrir('ovContacto'); return; }
   if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
   if(g==='inicio'){ modo(true); window.scrollTo(0,0); return; }
-  fPre=''; fCol=''; fEstado=''; cat='';
+  fPre=''; fCol=''; fEstado=''; fPrecio=''; cat='';
   if(g.startsWith('m:')){ vista=''; fMarca=g.slice(2); linea=''; }
   else if(g.startsWith('c:')){ const i=g.indexOf('|'); vista=''; fMarca=g.slice(2,i); fCol=g.slice(i+1); linea=''; }
   else if(g==='disponibles'){ vista=''; fMarca=''; fEstado='disponible'; linea=''; }
@@ -707,13 +722,14 @@ function pintarFiltros(){
   const ts=new Set(); P.forEach(p=>tallasConStock(p).forEach(t=>ts.add(t)));
   chips($('#fTalla'),[['','Todas']].concat([...ts].sort((a,b)=>{const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b);return (i<0?99:i)-(j<0?99:j)||parseFloat(a)-parseFloat(b);}).map(t=>[t,t])),fTalla,'t');
   chips($('#fMarca'),[['','Todas']].concat([...new Set(P.map(p=>p.marca).filter(Boolean))].sort().map(m=>[m,m])),fMarca,'m');
-  chips($('#fEstado'),[['','Todo'],['disponible','Entrega inmediata'],['proximo','Drops y preventas']],fEstado,'e');
+  chips($('#fEstado'),[['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido'],['preventa','Preventa']],fEstado,'e');
+  chips($('#fPrecio'),[['','Todos'],['a','Menos de $1,000'],['b','$1,000 a $1,999'],['c','$2,000 o más']],fPrecio,'p');
 }
 $('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro'); });
 $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
-  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('m' in b.dataset) fMarca=b.dataset.m; if('e' in b.dataset) fEstado=b.dataset.e;
+  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('m' in b.dataset) fMarca=b.dataset.m; if('e' in b.dataset) fEstado=b.dataset.e; if('p' in b.dataset) fPrecio=b.dataset.p;
   pintarFiltros(); render(); });
-$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fMarca=''; fEstado=''; pintarFiltros(); render(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fMarca=''; fEstado=''; fPrecio=''; pintarFiltros(); render(); });
 
 /* ---------- producto ---------- */
 function abrirProducto(id){
