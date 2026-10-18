@@ -1,0 +1,6 @@
+{"actualizado":"2026-10-17T00:00:00Z","ajustes":{"red":50,"anticipo":30,"envioMty":80,"envioNac":150,"gratisMas":3000},"productos":[
+{"id":"prueba1","codigo":"0001","nombre":"Hoodie de prueba","marca":"Gymshark","categoria":"Hoodies","linea":"hombre","descripcion":"Producto de prueba para ver cómo se compra. No está a la venta.","estado":"preventa","estadoTxt":"","precio":1200,"precioBase":1200,"oferta":false,"masPedido":true,"destacado":true,"creado":1792280000000,
+ "colores":[{"k":"n","nombre":"Black","tallas":{"S":0,"M":0,"L":0,"XL":0},"fotos":["fotos/prueba-1.svg"]},{"k":"g","nombre":"Heather Grey","tallas":{"S":0,"M":0,"L":0},"fotos":["fotos/prueba-1.svg"]}]},
+{"id":"prueba2","codigo":"0002","nombre":"Playera de prueba","marca":"Darc Sport","categoria":"Playeras","linea":"hombre","descripcion":"Producto de prueba para ver cómo se compra. No está a la venta.","estado":"disponible","estadoTxt":"","precio":750,"precioBase":750,"oferta":false,"creado":1792280000001,
+ "colores":[{"k":"b","nombre":"White","tallas":{"M":2,"L":1},"fotos":["fotos/prueba-2.svg"]}]}
+]}
