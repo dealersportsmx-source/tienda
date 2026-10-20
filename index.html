@@ -169,6 +169,7 @@ img{display:block;max-width:100%}
 /* texto y botón: abajo a la izquierda */
 .bn-t{position:absolute;left:0;bottom:0;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:22px 20px 38px}
 .bn-t b{padding:0}
+.bn-cd{background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.7);font-weight:800;font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border-radius:6px;font-variant-numeric:tabular-nums}
 .bn-btn{background:#fff;color:#0b0b0c;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:11px 20px;border-radius:999px}
 .bn-d{position:absolute;left:0;right:0;bottom:14px;display:flex;gap:6px;justify-content:center}
 .bn-d i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)} .bn-d i.on{width:20px;background:#fff}
@@ -821,14 +822,16 @@ function renderBanners(){
   // Si escribiste texto o botón, van abajo a la izquierda con sombra para que se lean.
   // (sin "lazy": son máximo 3 y la que sigue tiene que estar lista cuando le toque)
   const pc=ES_PC();
-  $('#bn').innerHTML=bs.map((b,i)=>{ const txt=b.titulo||b.boton, lazy=i?'':' fetchpriority="high"', vid=pc?b.videoPc:b.video;
+  // cuenta regresiva: la fecha que pusiste en el banner; si no pusiste y lleva a Preventas, el cierre de tu preventa abierta
+  const cierreDe=b=>{ const d=b.cierre?dropDate({dropFecha:b.cierre}):(b.ir==='drops'&&preventas()[0]?preventas()[0].fecha:null); return d&&d>new Date()?d:null; };
+  $('#bn').innerHTML=bs.map((b,i)=>{ const cd=cierreDe(b), txt=b.titulo||b.boton||cd, lazy=i?'':' fetchpriority="high"', vid=pc?b.videoPc:b.video;
     if(!b.img&&!vid) return '<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>';
     const sinpc=!vid&&!b.imgPc, poster=pc?(b.imgPc||b.img):b.img;
     return '<button class="bn-i im'+(sinpc?' sinpc':'')+(txt?' ft':'')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
       (sinpc?'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true">':'')+
       (vid?'<video class="fg" src="'+esc(vid)+'"'+(poster?' poster="'+esc(poster)+'"':'')+' muted loop playsinline preload="'+(i?'metadata':'auto')+'"'+(i?'':' autoplay')+' aria-label="'+esc(b.titulo||'Video')+'"></video>'
         :'<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+'></picture>')+
-      (txt?'<span class="bn-t">'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+(b.boton?'<span class="bn-btn">'+esc(b.boton)+'</span>':'')+'</span>':'')+'</button>'; }).join('');
+      (txt?'<span class="bn-t">'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+(cd?'<span class="bn-cd" data-bncd="'+cd.getTime()+'">Cierra en '+cuenta(cd)+'</span>':'')+(b.boton?'<span class="bn-btn">'+esc(b.boton)+'</span>':'')+'</span>':'')+'</button>'; }).join('');
   $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   // pasan solos: 5 segundos cada banner; si tiene video, lo que dura el video
   clearTimeout(bnT); bnN=0;
@@ -838,6 +841,8 @@ function renderBanners(){
   const paso=()=>{ bnT=setTimeout(()=>{ const c=$('#bn'); if(enInicio&&!document.hidden&&Date.now()-bnDesde>=espera()){ bnN=(bnN+1)%bs.length; bnDesde=Date.now(); bnAuto=true; c.scrollTo({left:bnN*c.clientWidth,behavior:'smooth'}); } paso(); },500); };
   if(bs.length>1) paso();
 }
+// la cuenta regresiva del banner se actualiza sola; cuando llega la hora, desaparece
+setInterval(()=>document.querySelectorAll('[data-bncd]').forEach(el=>{ const d=new Date(+el.dataset.bncd); if(d<=new Date()) el.remove(); else el.textContent='Cierra en '+cuenta(d); }),15000);
 // al cambiar de banner: puntitos, y solo se reproduce el video del banner que se ve (desde el principio)
 $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scrollLeft/c.clientWidth); $('#bnD').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===n));
   const quieto=Math.abs(c.scrollLeft-n*c.clientWidth)<4;
@@ -1150,7 +1155,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
-  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
+  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',cierre:b.cierre||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   pintarTerminos();
