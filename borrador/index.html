@@ -742,6 +742,9 @@ function render(){
   } else html=r.map(cardHTML).join('');
   $('#grid').innerHTML=html||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
+  // si lo elegido quedó fuera de la pantalla (ej. Hoodies al final), la fila se recorre para que se vea
+  document.querySelectorAll('#lLogos .on,#cats .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
+    if(d<0||d+b.offsetWidth>c.clientWidth) c.scrollLeft+=d-16; });
 }
 /* carrusel: una lámina por cada preventa abierta, va pasando sola */
 let heroI=0, heroT=null;
