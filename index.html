@@ -720,11 +720,12 @@ function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   // 1) marcas
   $('#lLogos').innerHTML=logosHTML(true);
-  // 2) estado: Sobre pedido, Preventa, Entrega inmediata, Todo (en MUJER no hay stock: sin Entrega inmediata)
+  // 2) estado: Sobre pedido, Preventa, Entrega inmediata (en MUJER no hay stock: sin Entrega inmediata).
+  //    Sin ninguno marcado se ve todo; tocar el marcado otra vez lo quita.
   const sin=TIENDA.soloPedido.includes(linea)&&!fMarca;
   if(sin&&fEstado==='disponible') fEstado='';
   $('#disp').hidden=vista==='favs';
-  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']]).concat([['','Todo']])
+  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
@@ -761,7 +762,7 @@ function renderHero(){
     sl[heroI].classList.remove('on'); ds[heroI].classList.remove('on'); heroI=(heroI+1)%sl.length; sl[heroI].classList.add('on'); ds[heroI].classList.add('on'); },5000);
 }
 $('#hero').addEventListener('click',e=>{ const b=e.target.closest('[data-pre]'); if(!b) return; e.stopPropagation(); ir('drops'); fPre=b.dataset.pre; render(); });
-$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=b.dataset.disp; fPre=''; render(); });
+$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=fEstado===b.dataset.disp?'':b.dataset.disp; fPre=''; render(); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
 $('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol=''; render(); });
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
