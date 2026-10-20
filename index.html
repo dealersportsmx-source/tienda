@@ -810,26 +810,40 @@ const ADMIN=(()=>{ try{ const q=new URLSearchParams(location.search).get('admin'
   if(q!==null) localStorage.setItem('fwmx_admin',q==='0'?'':'1'); return !!localStorage.getItem('fwmx_admin'); }catch(e){ return false; } })();
 function modo(ini){ enInicio=ini; $('#inicio').hidden=!ini; $('#lista').hidden=ini; }
 function seccion(id,hay,aviso){ const s=$('#'+id); s.hidden=!hay&&!BORRADOR; return hay?'':'<div class="vacio">'+aviso+'</div>'; }
-let bnT=null;
+let bnT=null, bnN=0, bnDesde=0, bnAuto=false;
+const ES_PC=()=>matchMedia('(min-width:900px)').matches;
 function renderBanners(){
   const hayReb=P.some(enRebaja);
   const bs=TIENDA.banners.slice(0,3).map(b=>b.soloRebaja&&!hayReb?b.sinRebaja:b).filter(Boolean);
   // con foto: se ve completa, sin recortes (el banner toma la forma de tu imagen).
   // Teléfono: la foto para teléfono. PC: la foto para PC; si no hay, la del teléfono al centro con la misma foto difuminada de fondo.
+  // Video (opcional): el del teléfono en teléfono y el de PC en PC; se reproduce solo y sin sonido; mientras carga se ve la foto.
   // Si escribiste texto o botón, van abajo a la izquierda con sombra para que se lean.
   // (sin "lazy": son máximo 3 y la que sigue tiene que estar lista cuando le toque)
-  $('#bn').innerHTML=bs.map((b,i)=>{ const txt=b.titulo||b.boton, lazy=i?'':' fetchpriority="high"';
-    if(!b.img) return '<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>';
-    return '<button class="bn-i im'+(b.imgPc?'':' sinpc')+(txt?' ft':'')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
-      (b.imgPc?'':'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true" loading="lazy">')+
-      '<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+'></picture>'+
+  const pc=ES_PC();
+  $('#bn').innerHTML=bs.map((b,i)=>{ const txt=b.titulo||b.boton, lazy=i?'':' fetchpriority="high"', vid=pc?b.videoPc:b.video;
+    if(!b.img&&!vid) return '<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>';
+    const sinpc=!vid&&!b.imgPc, poster=pc?(b.imgPc||b.img):b.img;
+    return '<button class="bn-i im'+(sinpc?' sinpc':'')+(txt?' ft':'')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
+      (sinpc?'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true">':'')+
+      (vid?'<video class="fg" src="'+esc(vid)+'"'+(poster?' poster="'+esc(poster)+'"':'')+' muted loop playsinline preload="'+(i?'metadata':'auto')+'"'+(i?'':' autoplay')+' aria-label="'+esc(b.titulo||'Video')+'"></video>'
+        :'<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+'></picture>')+
       (txt?'<span class="bn-t">'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+(b.boton?'<span class="bn-btn">'+esc(b.boton)+'</span>':'')+'</span>':'')+'</button>'; }).join('');
   $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
-  clearInterval(bnT);
-  if(bs.length>1) bnT=setInterval(()=>{ const c=$('#bn'); if(!enInicio||document.hidden) return; const n=Math.round(c.scrollLeft/c.clientWidth); c.scrollTo({left:((n+1)%bs.length)*c.clientWidth,behavior:'smooth'}); },5000);
+  // pasan solos: 5 segundos cada banner; si tiene video, lo que dura el video
+  clearTimeout(bnT); bnN=0;
+  const espera=()=>{ const v=$('#bn').children[bnN]&&$('#bn').children[bnN].querySelector('video'); return v&&v.duration>0?Math.max(5000,v.duration*1000):5000; };
+  // se revisa cada medio segundo (así espera bien aunque el video todavía no diga cuánto dura)
+  bnDesde=Date.now();
+  const paso=()=>{ bnT=setTimeout(()=>{ const c=$('#bn'); if(enInicio&&!document.hidden&&Date.now()-bnDesde>=espera()){ bnN=(bnN+1)%bs.length; bnDesde=Date.now(); bnAuto=true; c.scrollTo({left:bnN*c.clientWidth,behavior:'smooth'}); } paso(); },500); };
+  if(bs.length>1) paso();
 }
-$('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scrollLeft/c.clientWidth); $('#bnD').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===n)); },{passive:true});
-function renderInicio(){
+// al cambiar de banner: puntitos, y solo se reproduce el video del banner que se ve (desde el principio)
+$('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scrollLeft/c.clientWidth); $('#bnD').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===n));
+  const quieto=Math.abs(c.scrollLeft-n*c.clientWidth)<4;
+  if(bnAuto){ if(quieto&&n===bnN) bnAuto=false; } // lo movió el carrusel solo
+  else if(quieto&&n!==bnN){ bnN=n; bnDesde=Date.now(); } // lo moviste con el dedo: empieza a contar de nuevo
+  [...c.children].forEach((s,i)=>{ const v=s.querySelector('video'); if(!v) return; if(i===n){ if(v.paused){ v.currentTime=0; v.play().catch(()=>{}); } } else v.pause(); }); },{passive:true});function renderInicio(){
   renderBanners();
   $('#logos').innerHTML=logosHTML(false);
   // preventa activa: la que cierra primero; la cuenta es al CIERRE de Dealer (fecha de cierre del Catálogo)
@@ -1126,7 +1140,7 @@ const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'.
 fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
-    ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); }); }
+    ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
@@ -1136,7 +1150,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
-  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',img:b.img||'',imgPc:b.imgPc||'',ir:b.ir||'',color:'#1c1c1f'}));
+  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   pintarTerminos();
