@@ -438,7 +438,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <span class="estado" id="pvEstado" hidden></span>
       <p class="note" id="pvNote" hidden></p>
       <div id="pvColorsBox"><p class="lbl">Color: <span id="pvColorName" style="font-weight:500;text-transform:none;letter-spacing:0"></span></p><div class="chips" id="pvColors"></div></div>
-      <p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div>
+      <div id="pvTallaBox"><p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div></div>
       <p class="err" id="pvErr" hidden>Elige tu talla.</p>
       <p class="desc" id="pvDesc"></p>
     </div>
@@ -612,9 +612,12 @@ function dropDate(p){ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(p.
 function fecha(s){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||''); return m?(+m[3])+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+m[2]-1]:''; }
 function hora(d){ let h=d.getHours(),ap=h<12?'am':'pm'; h=h%12||12; return h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
 function cuenta(d){ const ms=d-new Date(); if(ms<=0) return 'Ya salió'; const D=Math.floor(ms/864e5),H=Math.floor(ms%864e5/36e5),M=Math.floor(ms%36e5/6e4); return (D?D+'d ':'')+String(H).padStart(2,'0')+'h '+String(M).padStart(2,'0')+'m'; }
-function tallasDe(p,c){ const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
+// accesorios sin talla (mochilas, termos, gorras…): si solo traen las tallas de ropa de siempre o "Única", no se pide talla, solo color
+const TALLAS_ROPA=['XS','S','M','L','XL','2XL','3XL'];
+function sinTalla(p,c){ if(!esAcc(p)) return false; const k=Object.keys((c||{}).tallas||{}); return !k.length||k.every(t=>TALLAS_ROPA.includes(t)||/^(única|unica|one size|os)$/i.test(t)); }
+function tallasDe(p,c){ if(sinTalla(p,c)) return []; const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
 function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0; }
-function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>tallasDe(p,c).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
+function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>Object.keys(c.tallas||{}).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
 function foto1(p){ for(const c of p.colores||[]) if(c.fotos&&c.fotos[0]) return c.fotos[0]; return ''; }
 function esNuevo(p){ return p.estado==='disponible'&&p.creado&&(Date.now()-p.creado<14*864e5); }
 // solo 3 etiquetas: Preventa (con fecha de cierre), Sobre pedido y Entrega inmediata
@@ -837,7 +840,8 @@ function ir(g){
   fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
   else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1); }
-  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); } // Hombre › Hoodies
+  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); // Hombre › Hoodies
+    if(linea==='hombre'&&!cat) fEstado='pedido'; } // Hombre › Ver todo abre en Sobre pedido
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
   else if(g==='favs'||g==='acc'||g==='rebajas') vista=g;
@@ -896,7 +900,7 @@ function pintarProducto(){
   $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
   $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   $('#gal').scrollLeft=0;
-  $('#pvBrand').textContent=[p.marca,p.categoria].filter(Boolean).join(' · ');
+  $('#pvBrand').textContent=[p.marca,catDe(p)].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
   $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
     (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Hoy apartas · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
@@ -912,6 +916,7 @@ function pintarProducto(){
   $('#pvColorsBox').hidden=cs.length<1; $('#pvColorName').textContent=c.nombre||'';
   $('#pvColors').innerHTML=cs.length>1?cs.map(x=>'<button class="chip'+(x===c?' on':'')+'" data-color="'+esc(x.k)+'">'+esc(x.nombre)+'</button>').join(''):'';
   const ts=tallasDe(p,c);
+  $('#pvTallaBox').hidden=sinTalla(p,c); // mochilas, termos, gorras…: solo se elige el color
   $('#pvSizes').innerHTML=ts.map(t=>'<button class="size'+(curTalla===t?' on':'')+'" data-talla="'+esc(t)+'"'+(hay(p,c,t)?'':' disabled')+'>'+esc(t)+'</button>').join('')||'<p class="note">Pregúntanos por tallas.</p>';
   $('#pvErr').hidden=true; $('#pvDesc').textContent=p.descripcion||'';
   $('#pvFav').classList.toggle('on',favs.has(p.id));
