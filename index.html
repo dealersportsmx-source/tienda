@@ -648,9 +648,10 @@ function filtrar(sinTipo){
   if(vista==='favs') r=r.filter(p=>favs.has(p.id));
   else if(vista==='acc') r=r.filter(esAcc);
   else if(vista==='rebajas') r=r.filter(enRebaja);
-  // los accesorios solo salen en ACCESORIOS (no en Hombre, Mujer ni revueltos con la ropa)
-  if(vista!=='acc'&&vista!=='favs') r=r.filter(p=>!esAcc(p));
-  if(linea&&vista!=='acc') r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
+  // los accesorios solo salen en ACCESORIOS o si los eliges en "Filtrar y ordenar" (no revueltos con la ropa)
+  const soloAcc=vista==='acc'||cat==='Accesorios';
+  if(!soloAcc&&vista!=='favs') r=r.filter(p=>!esAcc(p));
+  if(linea&&!soloAcc) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
   if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
@@ -703,7 +704,7 @@ const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 function logosHTML(lista){ return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
-function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]; }
+function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
 // pastillas con × solo para los filtros extra (tipo de prenda, marca, talla, precio);
 // Hombre/Mujer y el estado ya se ven arriba en sus botones
 function pintarActivos(){
