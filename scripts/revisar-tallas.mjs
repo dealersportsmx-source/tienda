@@ -38,12 +38,35 @@ async function leerPrenda(origin, handle) {
   return p;
 }
 
+// Gymshark: su página no tiene el archivo de la prenda como las demás tiendas, pero la página de cada color
+// trae sus tallas dentro (__NEXT_DATA__). Cada color de Gymshark es una prenda aparte, así que basta su link.
+async function tallasGymshark(link, handle) {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const r = await fetch(link, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
+      if (r.status === 404) return null;
+      if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
+      const html = await r.text();
+      const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(html); if (!m) return null;
+      let prenda = null;
+      (function walk(o) { if (prenda || !o || typeof o !== 'object') return; if (Array.isArray(o)) return o.forEach(walk);
+        if (o.handle === handle && Array.isArray(o.availableSizes)) { prenda = o; return; } Object.values(o).forEach(walk); })(JSON.parse(m[1]));
+      await dormir(1500);
+      if (!prenda) return null;
+      const t = new Map(); prenda.availableSizes.forEach(s => { if (/default/i.test(s.size)) return; const k = corta(s.size); t.set(k, t.get(k) || !!s.inStock); });
+      return t.size ? [...t].map(([t, ok]) => ({ t, ok })) : null;
+    } catch (e) { await dormir(5000 * (i + 1)); }
+  }
+  return null;
+}
+
 // Pregunta a la marca (tiendas Shopify: YoungLA, Gymshark, Darc Sport…) qué tallas tiene de un color.
 // Regresa [{t, ok}] o null si no se pudo leer.
 async function tallasDeLink(link, color) {
   let u; try { u = new URL(link); } catch (e) { return null; }
   const h = /\/products\/([^/?#]+)/.exec(u.pathname);
   if (!h) return null;
+  if (/gymshark\.com$/.test(u.hostname)) return tallasGymshark(link, h[1]);
   try {
     const p = await leerPrenda(u.origin, h[1]);
     if (!p) return null;
