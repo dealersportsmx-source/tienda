@@ -18,6 +18,26 @@ function corta(t) {
   return m[x] || String(t).trim().toUpperCase();
 }
 
+// Lee la prenda en la marca UNA sola vez (todos sus colores vienen juntos).
+// Si la marca frena por ir muy rápido (429) o falla, espera y vuelve a intentar.
+const yaLeidas = new Map();
+async function leerPrenda(origin, handle) {
+  const k = origin + '/' + handle;
+  if (yaLeidas.has(k)) return yaLeidas.get(k);
+  let p = null;
+  for (let i = 0; i < 5 && !p; i++) {
+    try {
+      const r = await fetch(`${origin}/products/${handle}.js`, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
+      if (r.ok) p = await r.json();
+      else if (r.status === 404) break; // la marca ya no tiene esa prenda
+      else await dormir(5000 * (i + 1));
+    } catch (e) { await dormir(5000 * (i + 1)); }
+  }
+  await dormir(1500); // sin prisa, para no molestar a la marca
+  yaLeidas.set(k, p);
+  return p;
+}
+
 // Pregunta a la marca (tiendas Shopify: YoungLA, Gymshark, Darc Sport…) qué tallas tiene de un color.
 // Regresa [{t, ok}] o null si no se pudo leer.
 async function tallasDeLink(link, color) {
@@ -25,9 +45,8 @@ async function tallasDeLink(link, color) {
   const h = /\/products\/([^/?#]+)/.exec(u.pathname);
   if (!h) return null;
   try {
-    const r = await fetch(`${u.origin}/products/${h[1]}.js`, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
-    if (!r.ok) return null;
-    const p = await r.json();
+    const p = await leerPrenda(u.origin, h[1]);
+    if (!p) return null;
     const opts = (p.options || []).map(o => typeof o === 'string' ? o : o.name);
     const ci = opts.findIndex(n => /colou?r/i.test(n)), si = opts.findIndex(n => /size|talla/i.test(n));
     if (si < 0) return null;
@@ -54,7 +73,6 @@ for (const f of ARCHIVOS) {
       if (!c.link) continue;
       const quien = `${p.nombre}${c.nombre ? ' (' + c.nombre + ')' : ''}`;
       const t = await tallasDeLink(c.link, c.nombre);
-      await dormir(700); // sin prisa, para no molestar a la marca
       if (!t) { console.log(`· ${f} · ${quien}: no pude leer la página de la marca`); continue; }
       const hay = t.filter(x => x.ok).map(x => x.t);
       const antes = Object.keys(c.tallas || {});
