@@ -317,7 +317,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <section class="sec" id="sPre"><div class="sec-h"><h2>Preventa activa</h2><button class="ver" data-ir="drops">Ver todo</button></div><div id="sPreTxt"></div><div class="fila" id="fPre"></div></section>
     <section class="sec" id="sTop"><div class="sec-h"><h2>Lo más pedido</h2></div><div class="fila" id="fTop"></div></section>
     <section class="sec" id="sCol"><div class="sec-h"><h2>Colecciones por marca</h2></div><div class="g2" id="gCol"></div></section>
-    <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas Gymshark</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
+    <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
     <section class="sec" id="sDisp"><div class="sec-h"><h2>Disponibles</h2><button class="ver" data-ir="disponibles">Ver todo</button></div><p class="sec-s">Entrega inmediata</p><div class="fila" id="fDisp"></div></section>
   </div>
   <div id="lista" hidden>
@@ -752,7 +752,7 @@ function renderInicio(){
     seccion('sCol',false,'Aquí salen tus colecciones por marca (ej. Gymshark · Onyx), de 2 en 2.');
   if(cols.size) seccion('sCol',true);
   const reb=P.filter(enRebaja);
-  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas de Gymshark.');
+  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas.');
   if(reb.length) seccion('sReb',true);
   const disp=P.filter(p=>p.estado==='disponible');
   $('#fDisp').innerHTML=disp.map(cardHTML).join('')||seccion('sDisp',false,'Aquí sale lo que tienes en mano para entrega inmediata.');

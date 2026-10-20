@@ -317,7 +317,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <section class="sec" id="sPre"><div class="sec-h"><h2>Preventa activa</h2><button class="ver" data-ir="drops">Ver todo</button></div><div id="sPreTxt"></div><div class="fila" id="fPre"></div></section>
     <section class="sec" id="sTop"><div class="sec-h"><h2>Lo más pedido</h2></div><div class="fila" id="fTop"></div></section>
     <section class="sec" id="sCol"><div class="sec-h"><h2>Colecciones por marca</h2></div><div class="g2" id="gCol"></div></section>
-    <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas Gymshark</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
+    <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
     <section class="sec" id="sDisp"><div class="sec-h"><h2>Disponibles</h2><button class="ver" data-ir="disponibles">Ver todo</button></div><p class="sec-s">Entrega inmediata</p><div class="fila" id="fDisp"></div></section>
   </div>
   <div id="lista" hidden>
@@ -552,7 +552,7 @@ const LS={get(k,d){try{return JSON.parse(localStorage.getItem('fwmx_'+k))??d;}ca
 const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
 const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 
-let P=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
+let P=[], PT=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 function esAcc(p){ return /^accesorio/i.test(p.categoria||''); }
 // "Civil Régime" = "Civil Regime" y "Breathedivinity" = "Breathe Divinity": sin acentos ni espacios
@@ -752,7 +752,7 @@ function renderInicio(){
     seccion('sCol',false,'Aquí salen tus colecciones por marca (ej. Gymshark · Onyx), de 2 en 2.');
   if(cols.size) seccion('sCol',true);
   const reb=P.filter(enRebaja);
-  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas de Gymshark.');
+  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas.');
   if(reb.length) seccion('sReb',true);
   const disp=P.filter(p=>p.estado==='disponible');
   $('#fDisp').innerHTML=disp.map(cardHTML).join('')||seccion('sDisp',false,'Aquí sale lo que tienes en mano para entrega inmediata.');
@@ -883,7 +883,7 @@ function pintarBolsa(){
       '<div><b>'+esc(x.nombre)+'</b><small>'+esc([x.marca,x.color,x.talla?'Talla '+x.talla:'',x.estado].filter(Boolean).join(' · '))+'</small><p class="p">'+money(x.precio)+'</p></div>'+
       '<button class="x" data-quitar="'+i+'">Quitar</button></div>').join('')+
     '<p class="lbl" style="margin-top:20px">Entrega</p>'+
-    (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Tu envío es gratis (compra mayor a '+money(TIENDA.gratisMas)+').</p>':'')+
+    (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Envío gratis en compras mayores a '+money(TIENDA.gratisMas)+'.</p>':'')+
     [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · desde $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
     '<p class="lbl">Forma de pago</p>'+
     [['transferencia','Transferencia'],['oxxo','Depósito en efectivo']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
@@ -897,7 +897,7 @@ function pintarBolsa(){
   // WhatsApp primero: ahí el mensaje llega ya escrito; en Instagram hay que pegarlo
   $('#bolsaFoot').innerHTML='<a class="btn full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>'+
     '<a class="btn o full" id="btnDm" href="'+esc(TIENDA.dm)+'" target="_blank" rel="noopener" style="margin-top:8px">Pedir por DM de Instagram</a>'+
-    '<p class="note" style="text-align:center">Tu pedido se manda como link con su número. Por WhatsApp va ya escrito; por DM lo copiamos y solo lo pegas.</p>'+
+    '<p class="note" style="text-align:center">Se abre el chat con tu pedido listo. Te confirmamos disponibilidad antes de pagar.</p>'+
     '<button type="button" class="linkimg" data-env="2">Guardar imagen del pedido</button>';
   actualizarPedido();
 }
@@ -936,7 +936,7 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-env="2"]'
 // al abrir un link de pedido: se ve el pedido armado con fotos
 function verPedido(h){
   const [cab,its]=h.split('!'); const [fol,ent,pag,nom]=(cab||'').split('~');
-  const items=(its||'').split(',').filter(Boolean).map(s=>{ const [id,col,tal,pre]=s.split('~'); const p=P.find(x=>x.id===id); const color=dec(col||''), talla=dec(tal||'');
+  const items=(its||'').split(',').filter(Boolean).map(s=>{ const [id,col,tal,pre]=s.split('~'); const p=PT.find(x=>x.id===id); const color=dec(col||''), talla=dec(tal||'');
     const c=p?((p.colores||[]).find(x=>x.nombre===color)||(p.colores||[])[0]||{}):{};
     // el precio que vio el cliente (si el link es viejo y no lo trae, el de hoy)
     return {p,id,color,talla,foto:p?((c.fotos&&c.fotos[0])||foto1(p)):'',precio:pre!=null&&pre!==''?+pre||0:(p?+p.precio||0:0)}; });
@@ -1018,7 +1018,12 @@ guardarBolsa(); guardarFavs();
 const t0=Date.now();
 function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
 fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
-  P=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
+  // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
+  PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
+    if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else p.colores=cs.filter(c=>!c.agotado); });
+  P=PT.filter(p=>!p.agotadoTodo);
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   pintarTerminos();
