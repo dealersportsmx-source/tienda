@@ -167,7 +167,9 @@ img{display:block;max-width:100%}
 .bn-i img.bg{display:none}
 @media (min-width:900px){ .bn-i{aspect-ratio:16/7}
   .bn-i img.bg{display:block;filter:blur(28px) brightness(.45);transform:scale(1.15)}
-  .bn-i img.fg{object-fit:contain} }
+  .bn-i img.fg{object-fit:contain}
+  /* el texto va a la izquierda, en la parte difuminada, con margen y sin tapar la foto */
+  .bn-i b{max-width:30%;padding:0 0 56px 56px;font-size:clamp(28px,3vw,52px);overflow-wrap:break-word} }
 /* franja de confianza */
 .conf{display:flex;justify-content:space-around;gap:6px;padding:12px 10px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .conf span{display:flex;align-items:center;gap:6px;white-space:nowrap}
