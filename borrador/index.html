@@ -336,10 +336,9 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <nav class="tabs" id="tabs" aria-label="Línea">
     <button data-linea="" class="on">Todo</button><button data-linea="hombre">Hombre</button><button data-linea="mujer">Mujer</button>
   </nav>
-  <!-- de arriba hacia abajo: marcas (logos), estado, tipo de prenda, filtros activos, Filtrar y ordenar -->
+  <!-- de arriba hacia abajo: marcas (logos), estado, filtros activos, Filtrar y ordenar (tipo de prenda, talla, precio, orden) -->
   <div class="logos lf" id="lLogos" aria-label="Filtrar por marca"></div>
   <div class="cats" id="disp" role="group" aria-label="Estado"></div>
-  <div class="cats" id="cats" role="group" aria-label="Tipo de prenda"></div>
   <div class="wrap">
     <h2 class="title" id="titulo" hidden></h2>
     <div class="activos" id="activos"></div>
@@ -419,9 +418,10 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovFiltro" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Filtrar y ordenar">
   <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b">
-    <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
+    <div id="fTipoBox"><p class="lbl">Tipo de prenda</p><div class="chips" id="fTipo"></div></div>
     <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
     <p class="lbl">Precio</p><div class="chips" id="fPrecio"></div>
+    <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
   </div>
   <div class="pn-f" style="display:flex;gap:8px"><button class="btn o" id="fLimpiar" style="flex:1">Limpiar</button><button class="btn" data-close style="flex:1" id="fVer">Ver</button></div>
 </div></div>
@@ -569,11 +569,12 @@ const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 let P=[], PT=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 /* Tipo de prenda según el nombre (para no clasificar a mano; igual que en el Catálogo).
-   '' = no se reconoce: se usa la categoría del Catálogo y en el borrador sale "Revisar tipo". Si la eliges a mano en el Catálogo, esa manda. */
+   '' = no se reconoce: se usa la categoría del Catálogo y en modo administrador sale "Revisar tipo". Si la eliges a mano en el Catálogo, esa manda.
+   La ropa interior (briefs, boxers) va en Accesorios. */
 function tipoPorNombre(nombre,linea){
   const s=String(nombre||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/cap sleeves?/g,'sleeve');
   const t=re=>re.test(s), mujer=linea!=='hombre';
-  if(t(/\b(jugs?|bottles?|botellas?|termos?|tumblers?|shakers?|hats?|caps?|gorras?|snapbacks?|beanies?|socks?|calcetas?|calcetines|bags?|backpacks?|mochilas?|duffles?|straps?|keychains?|llaveros?|necklaces?|bracelets?|chains?|belts?|gloves?|guantes|towels?|toallas?|wallets?)\b/)) return 'Accesorios';
+  if(t(/\b(jugs?|bottles?|botellas?|termos?|tumblers?|shakers?|hats?|caps?|gorras?|snapbacks?|beanies?|socks?|calcetas?|calcetines|bags?|backpacks?|mochilas?|duffles?|straps?|keychains?|llaveros?|necklaces?|bracelets?|chains?|belts?|gloves?|guantes|towels?|toallas?|wallets?|briefs?|boxers?|underwear|calzones?|trusas?)\b/)) return 'Accesorios';
   if(t(/compression|compresion/)) return 'Compresión';
   if(t(/\b(tanks?|sleeveless|stringers?|cut-?offs?)\b/)) return 'Tank tops';
   if(t(/hoodies?|zip-?ups?|\bzips?\b|quarter-?zips?|sweatshirts?|crewnecks?|sudaderas?/)) return 'Hoodies';
@@ -677,7 +678,7 @@ function cardHTML(p){
   const tl=reb?[...tallasConStock(p)]:[];
   return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy" decoding="async">':'')+
     '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(reb?'<span class="tag t-reb">Rebaja</span>':'')+
-    (BORRADOR&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en el borrador
+    (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en modo administrador
     '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
     '<p class="br">'+esc(p.marca||'')+'</p>'+
     '<p class="pr">'+money(p.precio)+(reb?'<s>'+money(antes)+'</s>':'')+'</p>'+
@@ -698,15 +699,15 @@ const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 // logos de marcas: en el inicio llevan a la marca; en la página de productos filtran (y se resalta la elegida)
 function logosHTML(lista){ return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
-// filtros activos con × para quitarlos
+// tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
+function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]; }
+// pastillas con × solo para los filtros extra (tipo de prenda, marca, talla, precio);
+// Hombre/Mujer y el estado ya se ven arriba en sus botones
 function pintarActivos(){
   const a=[];
-  if(vista) a.push(['vista',{acc:'Accesorios',favs:'Favoritos',rebajas:'Rebajas'}[vista]||vista]);
-  if(linea) a.push(['linea',linea==='hombre'?'Hombre':'Mujer']);
   if(cat) a.push(['cat',cat]);
   if(fMarca) a.push(['marca',fMarca]);
   if(fCol) a.push(['col',fCol]);
-  if(fEstado) a.push(['estado',ESTADO_TXT[fEstado]||fEstado]);
   if(fPre){ const g=preventas().find(g=>g.k===fPre); a.push(['pre',g?g.nombre||g.marca:'Preventa']); }
   if(fTalla) a.push(['talla','Talla '+fTalla]);
   if(fPrecio) a.push(['precio',PRECIO_TXT[fPrecio]]);
@@ -722,13 +723,8 @@ function render(){
   $('#disp').hidden=vista==='favs';
   $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']]).concat([['','Todo']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
-  // 3) tipo de prenda: en HOMBRE y MUJER los de siempre; en lo demás, los que haya con los filtros de ahora
-  let cats=[];
-  if(linea&&vista!=='acc') cats=TIENDA.chips[linea]||[];
-  else if(!vista){ const base=filtrar(true); cats=[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))].filter(c=>base.some(p=>enCat(p,c))); }
-  if(cat&&!cats.includes(cat)) cat='';
-  $('#cats').hidden=!cats.length;
-  $('#cats').innerHTML=cats.length?[['','Todo']].concat(cats.map(c=>[c,c])).map(o=>chipHTML(o[0],o[1],cat===o[0],'data-cat')).join(''):'';
+  // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
+  if(cat&&!tiposDe().includes(cat)) cat='';
   $('#titulo').hidden=!vista&&!fMarca&&fEstado!=='preventa';
   $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca?fMarca+(fCol?' · '+fCol:''):'Preventas';
   pintarActivos();
@@ -778,7 +774,6 @@ $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quit
   render(); });
 setInterval(()=>document.querySelectorAll('[data-cdt]').forEach(el=>{ el.textContent='Cierra en '+cuenta(new Date(+el.dataset.cdt)); }),30000);
 $('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'); if(!b) return; linea=b.dataset.linea; LS.set('linea',linea); vista=''; if(TIENDA.soloPedido.includes(linea)&&fEstado==='disponible') fEstado=''; render(); });
-$('#cats').addEventListener('click',e=>{ const b=e.target.closest('[data-cat]'); if(!b) return; cat=b.dataset.cat; render(); });
 document.addEventListener('click',e=>{
   const fv=e.target.closest('[data-fav]');
   if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
@@ -790,6 +785,10 @@ setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dr
 /* ---------- inicio ---------- */
 // en el borrador (o en tu compu) las secciones vacías muestran un aviso; en la tienda real se esconden
 const BORRADOR=/\/borrador\/|localhost|127\.0\.0\.1/.test(location.href);
+// modo administrador (solo tú): se prende abriendo la tienda con ?admin y se apaga con ?admin=0; se queda en ese celular.
+// Muestra "Revisar tipo" en las prendas que no se pudieron clasificar. El cliente nunca lo ve.
+const ADMIN=(()=>{ try{ const q=new URLSearchParams(location.search).get('admin');
+  if(q!==null) localStorage.setItem('fwmx_admin',q==='0'?'':'1'); return !!localStorage.getItem('fwmx_admin'); }catch(e){ return false; } })();
 function modo(ini){ enInicio=ini; $('#inicio').hidden=!ini; $('#lista').hidden=ini; }
 function seccion(id,hay,aviso){ const s=$('#'+id); s.hidden=!hay&&!BORRADOR; return hay?'':'<div class="vacio">'+aviso+'</div>'; }
 let bnT=null;
@@ -871,13 +870,15 @@ function pintarFiltros(){
   const ts=new Set(); P.forEach(p=>tallasConStock(p).forEach(t=>ts.add(t)));
   chips($('#fTalla'),[['','Todas']].concat([...ts].sort((a,b)=>{const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b);return (i<0?99:i)-(j<0?99:j)||parseFloat(a)-parseFloat(b);}).map(t=>[t,t])),fTalla,'t');
   chips($('#fPrecio'),[['','Todos']].concat(Object.entries(PRECIO_TXT)),fPrecio,'p');
+  const tipos=tiposDe(); $('#fTipoBox').hidden=!tipos.length;
+  chips($('#fTipo'),[['','Todos']].concat(tipos.map(c=>[c,c])),cat,'c');
 }
 // Filtrar y ordenar: talla, precio y orden (marca, estado y tipo están a la vista en la página)
 $('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro'); });
 $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
-  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('p' in b.dataset) fPrecio=b.dataset.p;
+  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('p' in b.dataset) fPrecio=b.dataset.p; if('c' in b.dataset) cat=b.dataset.c;
   pintarFiltros(); render(); });
-$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; cat=''; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
 
 /* ---------- producto ---------- */
 function abrirProducto(id){
