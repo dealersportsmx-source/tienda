@@ -1,0 +1,31 @@
+# Robot que revisa las tallas en la página de cada marca y actualiza la tienda (cada 3 horas).
+# También se puede correr a mano: pestaña "Actions" → "Revisar tallas" → "Run workflow".
+name: Revisar tallas
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: revisar-tallas
+  cancel-in-progress: false
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Revisar tallas en las marcas
+        run: node scripts/revisar-tallas.mjs
+      - name: Guardar cambios en la tienda
+        run: |
+          if git diff --quiet; then echo "Sin cambios"; exit 0; fi
+          git config user.name "robot-tallas"
+          git config user.email "dealersportsmx-source@users.noreply.github.com"
+          git add -u
+          git commit -m "Robot: tallas actualizadas"
+          git pull --rebase
+          git push
