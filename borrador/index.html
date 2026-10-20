@@ -155,21 +155,32 @@ img{display:block;max-width:100%}
 /* ---------- inicio ---------- */
 /* banners: se deslizan con el dedo y pasan solos */
 .bn{position:relative}
-.bn-c{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.bn-c{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .bn-c::-webkit-scrollbar{display:none}
+/* banner sin foto (solo color y texto) */
 .bn-i{all:unset;cursor:pointer;flex:0 0 100%;scroll-snap-align:start;position:relative;aspect-ratio:4/5;max-height:72vh;display:flex;align-items:flex-end;color:#fff;overflow:hidden}
-.bn-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.bn-i b{position:relative;padding:22px 20px 40px;font-size:clamp(26px,7vw,46px);line-height:1;text-transform:uppercase;font-weight:800;letter-spacing:-.01em}
-.bn-i.ft::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0) 55%)}
-.bn-i.ft b{z-index:1}
+.bn-i b{position:relative;padding:22px 20px 40px;font-size:clamp(26px,7vw,46px);line-height:1;text-transform:uppercase;font-weight:800;letter-spacing:-.01em;overflow-wrap:break-word}
+/* banner con foto: se ve completa, sin recortes (toma la forma de tu imagen) */
+.bn-i.im{display:block;aspect-ratio:auto;max-height:none;background:#0b0b0c}
+.bn-i.im picture{display:block}
+.bn-i.im .fg{display:block;width:100%;height:auto}
+.bn-i.im .bg{display:none}
+.bn-i.ft::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0) 55%);pointer-events:none}
+/* texto y botón: abajo a la izquierda */
+.bn-t{position:absolute;left:0;bottom:0;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:22px 20px 38px}
+.bn-t b{padding:0}
+.bn-btn{background:#fff;color:#0b0b0c;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:11px 20px;border-radius:999px}
 .bn-d{position:absolute;left:0;right:0;bottom:14px;display:flex;gap:6px;justify-content:center}
 .bn-d i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)} .bn-d i.on{width:20px;background:#fff}
-.bn-i img.bg{display:none}
 @media (min-width:900px){ .bn-i{aspect-ratio:16/7}
-  .bn-i img.bg{display:block;filter:blur(28px) brightness(.45);transform:scale(1.15)}
-  .bn-i img.fg{object-fit:contain}
-  /* el texto va a la izquierda, en la parte difuminada, con margen y sin tapar la foto */
-  .bn-i b{max-width:30%;padding:0 0 56px 56px;font-size:clamp(28px,3vw,52px);overflow-wrap:break-word} }
+  .bn-i b{font-size:clamp(28px,3vw,52px)}
+  .bn-t{padding:0 0 56px 56px;max-width:45%}
+  /* sin foto para PC: la del teléfono completa al centro y la misma difuminada de fondo; el texto en la parte difuminada */
+  .bn-i.im.sinpc{aspect-ratio:16/7;max-height:72vh}
+  .bn-i.im.sinpc .bg{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(28px) brightness(.45);transform:scale(1.15)}
+  .bn-i.im.sinpc picture{position:absolute;inset:0}
+  .bn-i.im.sinpc .fg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .bn-i.im.sinpc .bn-t{max-width:30%} }
 /* franja de confianza */
 .conf{display:flex;justify-content:space-around;gap:6px;padding:12px 10px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .conf span{display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -803,11 +814,16 @@ let bnT=null;
 function renderBanners(){
   const hayReb=P.some(enRebaja);
   const bs=TIENDA.banners.slice(0,3).map(b=>b.soloRebaja&&!hayReb?b.sinRebaja:b).filter(Boolean);
-  // con foto: la foto y, si escribiste texto, encima con sombra para que se lea
-  $('#bn').innerHTML=bs.map((b,i)=>'<button class="bn-i'+(b.img&&b.titulo?' ft':'')+'" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
-    // en compu: la foto completa al centro (sin estirarla) y la misma foto difuminada de fondo
-    (b.img?'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true" loading="lazy"><img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'')+'"'+(i?' loading="lazy"':' fetchpriority="high"')+'>':'')+
-    (b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>').join('');
+  // con foto: se ve completa, sin recortes (el banner toma la forma de tu imagen).
+  // Teléfono: la foto para teléfono. PC: la foto para PC; si no hay, la del teléfono al centro con la misma foto difuminada de fondo.
+  // Si escribiste texto o botón, van abajo a la izquierda con sombra para que se lean.
+  // (sin "lazy": son máximo 3 y la que sigue tiene que estar lista cuando le toque)
+  $('#bn').innerHTML=bs.map((b,i)=>{ const txt=b.titulo||b.boton, lazy=i?'':' fetchpriority="high"';
+    if(!b.img) return '<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>';
+    return '<button class="bn-i im'+(b.imgPc?'':' sinpc')+(txt?' ft':'')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
+      (b.imgPc?'':'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true" loading="lazy">')+
+      '<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+'></picture>'+
+      (txt?'<span class="bn-t">'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+(b.boton?'<span class="bn-btn">'+esc(b.boton)+'</span>':'')+'</span>':'')+'</button>'; }).join('');
   $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   clearInterval(bnT);
   if(bs.length>1) bnT=setInterval(()=>{ const c=$('#bn'); if(!enInicio||document.hidden) return; const n=Math.round(c.scrollLeft/c.clientWidth); c.scrollTo({left:((n+1)%bs.length)*c.clientWidth,behavior:'smooth'}); },5000);
@@ -1110,7 +1126,7 @@ const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'.
 fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
-    ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); }); }
+    ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
@@ -1120,7 +1136,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
-  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',img:b.img||'',ir:b.ir||'',color:'#1c1c1f'}));
+  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',img:b.img||'',imgPc:b.imgPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   pintarTerminos();
