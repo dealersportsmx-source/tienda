@@ -622,6 +622,7 @@ function filtrar(){
   if(fEstado==='disponible') r=r.filter(p=>p.estado==='disponible');
   else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
   else if(fEstado==='preventa') r=r.filter(p=>p.estado==='early');
+  else if(fEstado==='rebaja') r=r.filter(enRebaja);
   if(fPrecio) r=r.filter(p=>{ const v=+p.precio||0; return fPrecio==='a'?v<1000:fPrecio==='b'?v>=1000&&v<2000:v>=2000; });
   if(vista==='drops') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
@@ -675,9 +676,12 @@ function render(){
     $('#disp').innerHTML=[['','Todas las marcas']].concat(ms.map(m=>[m,m])).map(o=>'<button class="chip'+(fMarca===o[0]?' on':'')+'" data-pmarca="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('');
   } else { // Entrega inmediata / Sobre pedido a la vista; en MUJER solo "Sobre pedido" (no hay stock)
     const sin=TIENDA.soloPedido.includes(linea)&&!fMarca;
+    // "Rebajas" sale a un lado de Sobre pedido solo si hay prendas rebajadas en esta sección
+    const hayReb=base.some(enRebaja);
+    if(fEstado==='rebaja'&&!hayReb) fEstado='';
     $('#disp').hidden=vista==='favs'||vista==='rebajas';
-    $('#disp').innerHTML=sin?'<button class="chip on" data-disp="" aria-pressed="true">Sobre pedido</button>':
-      [['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido']].map(o=>'<button class="chip'+(fEstado===o[0]?' on':'')+'" data-disp="'+o[0]+'">'+o[1]+'</button>').join(''); }
+    $('#disp').innerHTML=(sin?[['','Sobre pedido']]:[['','Todo'],['disponible','Entrega inmediata'],['pedido','Sobre pedido']]).concat(hayReb?[['rebaja','Rebajas']]:[])
+      .map(o=>'<button class="chip'+((sin&&!o[0]?fEstado!=='rebaja':fEstado===o[0])?' on':'')+'" data-disp="'+o[0]+'">'+o[1]+'</button>').join(''); }
   $('#titulo').hidden=!vista&&!fMarca; $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='drops'?'Preventas'+(fMarca?' · '+fMarca:''):vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':fMarca+(fCol?' · '+fCol:'');
   const r=filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
