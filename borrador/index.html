@@ -160,6 +160,8 @@ img{display:block;max-width:100%}
 .bn-i{all:unset;cursor:pointer;flex:0 0 100%;scroll-snap-align:start;position:relative;aspect-ratio:4/5;max-height:72vh;display:flex;align-items:flex-end;color:#fff;overflow:hidden}
 .bn-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .bn-i b{position:relative;padding:22px 20px 40px;font-size:clamp(26px,7vw,46px);line-height:1;text-transform:uppercase;font-weight:800;letter-spacing:-.01em}
+.bn-i.ft::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0) 55%)}
+.bn-i.ft b{z-index:1}
 .bn-d{position:absolute;left:0;right:0;bottom:14px;display:flex;gap:6px;justify-content:center}
 .bn-d i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.45)} .bn-d i.on{width:20px;background:#fff}
 @media (min-width:900px){ .bn-i{aspect-ratio:16/7} }
@@ -561,6 +563,7 @@ const LS={get(k,d){try{return JSON.parse(localStorage.getItem('fwmx_'+k))??d;}ca
 const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
 const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 
+let COL_OCULTAS=new Set(); // colecciones que escondiste en el Catálogo
 let P=[], PT=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 /* Tipo de prenda según el nombre (para no clasificar a mano; igual que en el Catálogo).
@@ -795,9 +798,10 @@ let bnT=null;
 function renderBanners(){
   const hayReb=P.some(enRebaja);
   const bs=TIENDA.banners.slice(0,3).map(b=>b.soloRebaja&&!hayReb?b.sinRebaja:b).filter(Boolean);
-  $('#bn').innerHTML=bs.map((b,i)=>'<button class="bn-i" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
+  // con foto: la foto y, si escribiste texto, encima con sombra para que se lea
+  $('#bn').innerHTML=bs.map((b,i)=>'<button class="bn-i'+(b.img&&b.titulo?' ft':'')+'" style="background:'+esc(b.color||'#111')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
     (b.img?'<img src="'+esc(b.img)+'" alt="'+esc(b.titulo||'')+'"'+(i?' loading="lazy"':' fetchpriority="high"')+'>':'')+
-    (b.img?'':'<b>'+esc(b.titulo||'')+'</b>')+'</button>').join('');
+    (b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+'</button>').join('');
   $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   clearInterval(bnT);
   if(bs.length>1) bnT=setInterval(()=>{ const c=$('#bn'); if(!enInicio||document.hidden) return; const n=Math.round(c.scrollLeft/c.clientWidth); c.scrollTo({left:((n+1)%bs.length)*c.clientWidth,behavior:'smooth'}); },5000);
@@ -815,7 +819,7 @@ function renderInicio(){
   $('#fTop').innerHTML=top.map(cardHTML).join('')||seccion('sTop',top.length,'Aquí salen las prendas que marques como "Lo más pedido" en el Catálogo.');
   if(top.length) seccion('sTop',true);
   // colecciones: una tarjeta por marca + colección, con la foto de su primera prenda
-  const cols=new Map(); P.forEach(p=>{ const c=colDe(p); if(!c||!p.marca) return; const k=p.marca+'|'+c; if(!cols.has(k)) cols.set(k,{m:p.marca,c,f:foto1(p)}); else if(!cols.get(k).f) cols.get(k).f=foto1(p); });
+  const cols=new Map(); P.forEach(p=>{ const c=colDe(p); if(!c||!p.marca) return; const k=p.marca+'|'+c; if(COL_OCULTAS.has(k)) return; if(!cols.has(k)) cols.set(k,{m:p.marca,c,f:foto1(p)}); else if(!cols.get(k).f) cols.get(k).f=foto1(p); });
   $('#gCol').innerHTML=[...cols.values()].map(x=>'<button class="col" data-ir="c:'+esc(x.m)+'|'+esc(x.c)+'">'+(x.f?'<img src="'+esc(x.f)+'" alt="" loading="lazy">':'')+'<span><small>'+esc(x.m)+'</small><b>'+esc(x.c)+'</b></span></button>').join('')||
     seccion('sCol',false,'Aquí salen tus colecciones por marca (ej. Gymshark · Onyx), de 2 en 2.');
   if(cols.size) seccion('sCol',true);
@@ -1095,7 +1099,12 @@ $('#annT').innerHTML=[0,1].map(k=>TIENDA.barra.map(t=>'<span'+(k?' aria-hidden="
 guardarBolsa(); guardarFavs();
 const t0=Date.now();
 function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
-fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
+// el borrador lee tus productos y banners reales (los de la tienda), con sus fotos de la carpeta de la tienda
+const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'../':'';
+fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
+  if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
+    (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
+    ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
@@ -1103,6 +1112,10 @@ fetch('datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{prod
     if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else p.colores=cs.filter(c=>!c.agotado); });
   P=PT.filter(p=>!p.agotadoTodo);
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
+  // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
+  const ini=d.inicio||{};
+  if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',img:b.img||'',ir:b.ir||'',color:'#1c1c1f'}));
+  COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
