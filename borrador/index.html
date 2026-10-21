@@ -218,9 +218,9 @@ img{display:block;max-width:100%}
 .tag.t-rev{background:#FFD400;color:#111}
 /* secciones */
 .sec{max-width:1200px;margin:0 auto;padding:26px 0 6px}
-.sec-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px;margin-bottom:12px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px;margin-bottom:12px;gap:12px}
 .sec-h h2{margin:0;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.01em}
-.sec .ver{all:unset;cursor:pointer;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.sec .ver{all:unset;cursor:pointer;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;white-space:nowrap;flex:none}
 .sec-s{margin:-8px 16px 12px;color:var(--muted);font-size:13px}
 .pre-cd{margin:-6px 16px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
 .pre-cd b{background:var(--ink);color:var(--on);padding:5px 10px;border-radius:6px}
@@ -365,12 +365,10 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <div id="inicio">
     <section class="bn" aria-label="Destacados"><div class="bn-c" id="bn"></div><div class="bn-d" id="bnD"></div></section>
     <div class="logos" id="logos" aria-label="Marcas"></div>
-    <section class="sec" id="sPre"><div class="sec-h"><h2>Preventa activa</h2><button class="ver" data-ir="drops">Ver todo</button></div><div id="sPreTxt"></div><div class="fila" id="fPre"></div></section>
+    <div id="sPre"></div>
     <section class="sec" id="sMarcas"><div class="sec-h"><h2>Marcas</h2></div><div class="mosaico" id="mosaico"></div></section>
     <section class="sec" id="sTop"><div class="sec-h"><h2>Lo más vendido</h2><button class="ver" data-ir="masvendido">Ver todo</button></div><div class="fila" id="fTop"></div></section>
-    <section class="sec" id="sCol"><div class="sec-h"><h2>Colecciones por marca</h2></div><div class="g2" id="gCol"></div></section>
     <section class="sec" id="sReb"><div class="sec-h"><h2>Rebajas</h2><button class="ver" data-ir="rebajas">Ver todo</button></div><div class="fila" id="fReb"></div></section>
-    <section class="sec" id="sDisp"><div class="sec-h"><h2>Disponibles</h2><button class="ver" data-ir="disponibles">Ver todo</button></div><p class="sec-s">Entrega inmediata</p><div class="fila" id="fDisp"></div></section>
   </div>
   <div id="lista" hidden>
   <nav class="tabs" id="tabs" aria-label="Línea">
@@ -642,9 +640,9 @@ function precioAntes(p){ return +p.precioAntes||(p.oferta?+p.precioBase:0)||0; }
 function enCat(p,c){ const s=sinAcento(catDe(p)); return [c].concat(TIENDA.alias[c]||[]).some(x=>sinAcento(x)===s); }
 // colección de la prenda (ej. Onyx dentro de Gymshark); en preventas es el nombre de la preventa
 function colDe(p){ return p.coleccion||(p.estado==='early'?p.estadoTxt:'')||''; }
-function clavePre(p){ return (p.marca||'')+'|'+(p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
+function clavePre(p){ return (p.marca||'')+'|'+(p.coleccion||p.estadoTxt||'')+'|'+((p.dropFecha||'').slice(0,10)); }
 function preventas(){ const g=new Map();
-  P.filter(p=>p.estado==='early').forEach(p=>{ const k=clavePre(p); if(!g.has(k)) g.set(k,{k,marca:p.marca||'',nombre:p.estadoTxt&&!/^(preventa|drop|early access|nuevo drop)$/i.test(p.estadoTxt)?p.estadoTxt:'',fecha:dropDate(p),prods:[]}); g.get(k).prods.push(p); });
+  P.filter(p=>p.estado==='early').forEach(p=>{ const k=clavePre(p); if(!g.has(k)) g.set(k,{k,marca:p.marca||'',nombre:p.coleccion||(p.estadoTxt&&!/^(preventa|drop|early access|nuevo drop)$/i.test(p.estadoTxt)?p.estadoTxt:''),fecha:dropDate(p),prods:[]}); g.get(k).prods.push(p); });
   return [...g.values()].filter(x=>!x.fecha||x.fecha>new Date()).sort((a,b)=>(a.fecha||8.64e15)-(b.fecha||8.64e15)); }
 let favs=new Set(LS.get('favs',[])), bolsa=LS.get('bolsa',[]);
 let cur=null, curColor=null, curTalla='';
@@ -696,7 +694,7 @@ function filtrar(sinTipo){
   else if(vista==='masvendido') r=r.filter(p=>p.masVendido||p.masPedido);
   // los accesorios solo salen en ACCESORIOS o si los eliges en "Filtrar y ordenar" (no revueltos con la ropa)
   const soloAcc=vista==='acc'||cat==='Accesorios';
-  if(!soloAcc&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
+  if(!soloAcc&&!fPre&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
   if(linea&&!soloAcc) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
@@ -778,7 +776,7 @@ function render(){
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
   $('#titulo').hidden=!vista&&!fMarca&&fEstado!=='preventa';
-  $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':vista==='masvendido'?'Lo más vendido':fMarca?fMarca+(fCol?' · '+fCol:''):'Preventas';
+  $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':vista==='masvendido'?'Lo más vendido':fMarca?fMarca+(fCol?' · '+fCol:''):fPre?((preventas().find(g=>g.k===fPre)||{}).nombre||'Preventas'):'Preventas';
   pintarActivos();
   const r=filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
@@ -892,25 +890,16 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
   $('#mosaico').innerHTML=TIENDA.marcas.map(m=>tile('m:'+m,m,P.filter(p=>sinAcento(p.marca)===sinAcento(m)),/^(youngla|gymshark)$/i.test(sinAcento(m))?'g':'c',TIENDA.logos[m]))
     .join('')+tile('acc','Accesorios',P.filter(esAcc),'acc','');
   // preventa activa: la que cierra primero; la cuenta es al CIERRE de Dealer (fecha de cierre del Catálogo)
-  const g=preventas()[0];
-  $('#sPreTxt').innerHTML=g?'<div class="pre-cd"><span>'+esc(g.marca)+' · '+esc(g.nombre||'')+'</span>'+(g.fecha?'<b data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</b>':'')+'</div>':'';
-  $('#fPre').innerHTML=g?g.prods.map(cardHTML).join(''):seccion('sPre',false,'Aquí sale la preventa abierta, con la cuenta regresiva a su cierre.');
-  if(g) seccion('sPre',true);
+  // una sección por cada preventa abierta (la que cierra primero va arriba)
+  $('#sPre').innerHTML=preventas().map(g=>'<section class="sec"><div class="sec-h"><h2>Preventa activa '+esc(g.nombre||g.marca)+'</h2><button class="ver" data-ir="p:'+esc(g.k)+'">Ver todo</button></div>'+
+    (g.fecha?'<div class="pre-cd"><b data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</b></div>':'')+'<div class="fila">'+g.prods.map(cardHTML).join('')+'</div></section>').join('');
   // lo que marcaste como "Más vendido" (etiqueta dorada); máximo 12 en el inicio, el resto en "Ver todo"
   const top=P.filter(p=>(p.masVendido||p.masPedido)&&p.estado!=='early').sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0)).slice(0,12);
   $('#fTop').innerHTML=top.map(cardHTML).join('')||seccion('sTop',top.length,'Aquí salen las prendas que marques como "Lo más pedido" en el Catálogo.');
   if(top.length) seccion('sTop',true);
-  // colecciones: una tarjeta por marca + colección, con la foto de su primera prenda
-  const cols=new Map(); P.forEach(p=>{ const c=colDe(p); if(!c||!p.marca) return; const k=p.marca+'|'+c; if(COL_OCULTAS.has(k)) return; if(!cols.has(k)) cols.set(k,{m:p.marca,c,f:foto1(p)}); else if(!cols.get(k).f) cols.get(k).f=foto1(p); });
-  $('#gCol').innerHTML=[...cols.values()].map(x=>'<button class="col" data-ir="c:'+esc(x.m)+'|'+esc(x.c)+'">'+(x.f?'<img src="'+esc(x.f)+'" alt="" loading="lazy">':'')+'<span><small>'+esc(x.m)+'</small><b>'+esc(x.c)+'</b></span></button>').join('')||
-    seccion('sCol',false,'Aquí salen tus colecciones por marca (ej. Gymshark · Onyx), de 2 en 2.');
-  if(cols.size) seccion('sCol',true);
   const reb=P.filter(enRebaja);
   $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas.');
   if(reb.length) seccion('sReb',true);
-  const disp=P.filter(p=>p.estado==='disponible');
-  $('#fDisp').innerHTML=disp.map(cardHTML).join('')||seccion('sDisp',false,'Aquí sale lo que tienes en mano para entrega inmediata.');
-  if(disp.length) seccion('sDisp',true);
 }
 // a dónde llevan el menú, los logos, los banners y los "Ver todo"
 // la flecha de atrás regresa a la sección anterior (cada sección queda en el historial del navegador)
@@ -929,6 +918,7 @@ function ir(g,desdeHistorial){
     if(linea==='hombre'&&!cat) fEstado='pedido'; } // Hombre › Ver todo abre en Sobre pedido
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
+  else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
   else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido') vista=g;
   else linea=g;
   LS.set('linea',linea);
