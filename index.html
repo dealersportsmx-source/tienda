@@ -953,7 +953,7 @@ function pintarProducto(){
   $('#pvBrand').textContent=[p.marca,catDe(p)].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
   $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
-    (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Hoy apartas · el resto ('+money(p.precio-anticipoDe(p.precio))+') cuando llegue, en '+esc(TIENDA.llega)+'</small></span>':'');
+    (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Aparta hoy · restan '+money(p.precio-anticipoDe(p.precio))+' · llega en '+esc(TIENDA.llega)+'</small></span>':'');
   // mismas 3 etiquetas que la tarjeta: Preventa / Sobre pedido / Entrega inmediata
   const est={early:['drop','Preventa'],preventa:['pre','Sobre pedido'],camino:['cam','Sobre pedido'],disponible:['disp','Entrega inmediata']}[p.estado];
   $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
