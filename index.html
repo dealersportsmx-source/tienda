@@ -589,7 +589,7 @@ let P=[], PT=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTal
 function tipoPorNombre(nombre,linea){
   const s=String(nombre||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/cap sleeves?/g,'sleeve');
   const t=re=>re.test(s), mujer=linea!=='hombre';
-  if(t(/\b(jugs?|bottles?|botellas?|termos?|tumblers?|shakers?|hats?|caps?|gorras?|snapbacks?|beanies?|socks?|calcetas?|calcetines|bags?|backpacks?|mochilas?|duffles?|straps?|keychains?|llaveros?|necklaces?|bracelets?|chains?|belts?|gloves?|guantes|towels?|toallas?|wallets?|briefs?|boxers?|underwear|calzones?|trusas?)\b/)) return 'Accesorios';
+  if(t(/\b(jugs?|bottles?|botellas?|termos?|tumblers?|shakers?|hats?|caps?|gorras?|snapbacks?|beanies?|socks?|calcetas?|calcetines|bags?|backpacks?|mochilas?|duffles?|straps?|keychains?|llaveros?|necklaces?|bracelets?|chains?|belts?|gloves?|guantes|towels?|toallas?|wallets?|briefs?|boxers?|underwear|calzones?|trusas?|bralettes?|thongs?|holdalls?|totes?|crossbody|headbands?|sweatbands?|wrist|crew singles?)\b/)) return 'Accesorios';
   if(t(/compression|compresion/)) return 'Compresión';
   if(t(/\b(tanks?|sleeveless|stringers?|cut-?offs?)\b/)) return 'Tank tops';
   if(t(/hoodies?|zip-?ups?|\bzips?\b|quarter-?zips?|sweatshirts?|crewnecks?|\bcrews?\b|sudaderas?/)) return 'Hoodies';
@@ -629,7 +629,10 @@ function hora(d){ let h=d.getHours(),ap=h<12?'am':'pm'; h=h%12||12; return h+':'
 function cuenta(d){ const ms=d-new Date(); if(ms<=0) return 'Ya salió'; const D=Math.floor(ms/864e5),H=Math.floor(ms%864e5/36e5),M=Math.floor(ms%36e5/6e4); return (D?D+'d ':'')+String(H).padStart(2,'0')+'h '+String(M).padStart(2,'0')+'m'; }
 // accesorios sin talla (mochilas, termos, gorras…): si solo traen las tallas de ropa de siempre o "Única", no se pide talla, solo color
 const TALLAS_ROPA=['XS','S','M','L','XL','2XL','3XL'];
-function sinTalla(p,c){ if(!esAcc(p)) return false; const k=Object.keys((c||{}).tallas||{}); return !k.length||k.every(t=>TALLAS_ROPA.includes(t)||/^(única|unica|one size|os)$/i.test(t)); }
+// (si el accesorio trae tallas de verdad, como calcetas S/M/L o cinturón S–4XL, sí se pide talla;
+//  "sin talla" = no trae, trae "Única", o trae justo las 6 de ropa que se ponían por default: XS a 2XL)
+function sinTalla(p,c){ if(!esAcc(p)) return false; const k=Object.keys((c||{}).tallas||{});
+  return !k.length||k.every(t=>/^(única|unica|one size|one-size|os|default title)$/i.test(t))||(k.length===6&&['XS','S','M','L','XL','2XL'].every(t=>k.includes(t))); }
 function tallasDe(p,c){ if(sinTalla(p,c)) return []; const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
 function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0; }
 function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>Object.keys(c.tallas||{}).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
