@@ -880,12 +880,14 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
   if(disp.length) seccion('sDisp',true);
 }
 // a dónde llevan el menú, los logos, los banners y los "Ver todo"
-function ir(g){
+// la flecha de atrás regresa a la sección anterior (cada sección queda en el historial del navegador)
+let vistaActual='inicio';
+function ir(g,desdeHistorial){
   if(!g) return;
   if(g==='terminos'){ abrir('ovTerm'); return; }
   if(g==='contacto'){ abrir('ovContacto'); return; }
   if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
-  if(g==='inicio'){ modo(true); window.scrollTo(0,0); return; }
+  if(g==='inicio'){ modo(true); window.scrollTo(0,0); if(!desdeHistorial&&vistaActual!=='inicio') try{ history.pushState({ir:'inicio'},'',location.pathname+location.search); }catch(e){} vistaActual='inicio'; return; }
   // cada opción empieza limpia (el orden se queda como lo dejaste)
   fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
@@ -898,6 +900,8 @@ function ir(g){
   else linea=g;
   LS.set('linea',linea);
   modo(false); render(); window.scrollTo(0,0);
+  if(!desdeHistorial&&vistaActual!==g) try{ history.pushState({ir:g},'','#ir='+encodeURIComponent(g)); }catch(e){}
+  vistaActual=g;
 }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-ir]'); if(!b||b.closest('.ov')) return; e.preventDefault(); ir(b.dataset.ir); });
 
@@ -935,15 +939,19 @@ $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); 
 $('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; cat=''; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
 
 /* ---------- producto ---------- */
-function abrirProducto(id){
+function abrirProducto(id,sinHistorial){
   const p=P.find(x=>x.id===id); if(!p) return;
   cur=p; curColor=(p.colores||[])[0]||null; curTalla='';
-  try{ history.pushState({p:id},'','#'+encodeURIComponent(id)); }catch(e){}
+  if(!sinHistorial) try{ history.pushState({p:id},'','#'+encodeURIComponent(id)); }catch(e){}
   pintarProducto(); $('#pv').hidden=false; $('#buy').hidden=false; $('#pv').scrollTop=0; document.body.style.overflow='hidden';
 }
 function cerrarProducto(){ $('#pv').hidden=true; $('#buy').hidden=true; cur=null; if(!abierto.length) document.body.style.overflow=''; }
 $('#pvBack').addEventListener('click',()=>{ if(history.state&&history.state.p) history.back(); else cerrarProducto(); });
-window.addEventListener('popstate',()=>{ const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&P.some(p=>p.id===id)) abrirProducto(id); else cerrarProducto(); });
+window.addEventListener('popstate',()=>{ const h=location.hash||'';
+  if(h.startsWith('#ir=')){ const g=decodeURIComponent(h.slice(4)); cerrarProducto(); if(g!==vistaActual) ir(g,true); return; } // de una prenda a su lista: la lista se queda donde ibas
+  const id=decodeURIComponent(h.slice(1));
+  if(id&&P.some(p=>p.id===id)){ abrirProducto(id,true); return; }
+  cerrarProducto(); if(vistaActual!=='inicio') ir('inicio',true); });
 function pintarProducto(){
   const p=cur, c=curColor||{fotos:[],tallas:{}}, of=p.oferta&&p.precioBase>p.precio;
   const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
@@ -1174,7 +1182,8 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   $('#mMarcas').innerHTML=TIENDA.menuMarcas.map(m=>'<button data-go="'+esc(m[1])+'">'+esc(m[0])+'</button>').join('');
   renderInicio(); render(); quitarIntro();
   if((location.hash||'').startsWith('#pedido=')) verPedido(location.hash.slice(8));
-  else { const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id); }
+  else if((location.hash||'').startsWith('#ir=')) ir(decodeURIComponent(location.hash.slice(4)),true); // link directo a una sección
+  else { const id=decodeURIComponent((location.hash||'').slice(1)); if(id&&ids.has(id)) abrirProducto(id,true); }
 });
 })();
 </script>
