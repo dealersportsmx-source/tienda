@@ -243,6 +243,7 @@ img{display:block;max-width:100%}
 .mz:hover img.f{transform:scale(1.04)}
 .mz::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.05) 62%);pointer-events:none}
 .mz img.lg{position:absolute;inset:0;margin:auto;max-width:62%;max-height:28%;object-fit:contain;filter:brightness(0) invert(1);opacity:.92}
+.mz .lgt{position:absolute;inset:0;display:grid;place-items:center;padding-bottom:12%;font-size:clamp(22px,6vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.75)}
 .mz .t{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;width:100%;padding:12px;gap:8px;box-sizing:border-box}
 .mz .t>span:first-child{min-width:0}
 .mz b{display:block;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1.1;color:#fff;overflow-wrap:anywhere}
@@ -255,6 +256,8 @@ img{display:block;max-width:100%}
 @media (min-width:900px){ .mosaico{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px} .mz.g{grid-column:span 2;aspect-ratio:16/10} .mz.acc{grid-column:span 2;aspect-ratio:auto} .mz.g b{font-size:26px} }
 /* aviso de sección vacía (solo se ve en el borrador) */
 .vacio{margin:0 16px;padding:26px 14px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);font-size:13px}
+.vacio.pronto{flex:1 0 100%;margin:0;box-sizing:border-box}
+.vacio.pronto b{display:block;color:var(--ink);font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
 /* pie de una línea */
 footer.pie{display:flex;justify-content:center;align-items:center;gap:12px;padding:26px 16px;margin-top:30px;background:var(--bg);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 footer.pie button,footer.pie a{all:unset;cursor:pointer;color:var(--ink);font-weight:600}
@@ -881,11 +884,9 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
   [...c.children].forEach((s,i)=>{ const v=s.querySelector('video'); if(!v) return; if(i===n){ if(v.paused){ v.currentTime=0; v.play().catch(()=>{}); } } else v.pause(); }); },{passive:true});function renderInicio(){
   renderBanners();
   $('#logos').innerHTML=logosHTML(false);
-  // mosaico de marcas: la foto que pusiste en el Catálogo; si no, la de una prenda de esa marca (si no hay, su logo)
-  const fotoDe=ps=>{ const orden=ps.slice().sort((a,b)=>(!!b.masVendido-!!a.masVendido)||(b.destacado-a.destacado)||(esAcc(a)-esAcc(b))||(b.creado||0)-(a.creado||0));
-    for(const p of orden){ const f=foto1(p); if(f) return f; } return ''; };
-  const tile=(ir,nombre,ps,clase,logo)=>{ const f=(TIENDA.mosaico||{})[nombre]||fotoDe(ps), n=ps.length;
-    return '<button class="mz '+clase+'" data-ir="'+esc(ir)+'" aria-label="'+esc(nombre)+'">'+(f?'<img class="f" src="'+esc(f)+'" alt="" loading="lazy">':logo?'<img class="lg" src="marcas/'+logo+'.png" alt="">':'')+
+  // mosaico de marcas: la foto que pusiste en el Catálogo; si no, el logo de la marca
+  const tile=(ir,nombre,ps,clase,logo)=>{ const f=(TIENDA.mosaico||{})[nombre], n=ps.length;
+    return '<button class="mz '+clase+'" data-ir="'+esc(ir)+'" aria-label="'+esc(nombre)+'">'+(f?'<img class="f" src="'+esc(f)+'" alt="" loading="lazy">':logo?'<img class="lg" src="marcas/'+logo+'.png" alt="">':'<span class="lgt">'+esc(nombre)+'</span>')+
       '<span class="t"><span><b>'+esc(nombre)+'</b><small>'+(n?n+(n===1?' producto':' productos'):'Muy pronto')+'</small></span><span class="fl" aria-hidden="true">→</span></span></button>'; };
   $('#mosaico').innerHTML=TIENDA.marcas.map(m=>tile('m:'+m,m,P.filter(p=>sinAcento(p.marca)===sinAcento(m)),/^(youngla|gymshark)$/i.test(sinAcento(m))?'g':'c',TIENDA.logos[m]))
     .join('')+tile('acc','Accesorios',P.filter(esAcc),'acc','');
@@ -895,11 +896,12 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
     (g.fecha?'<div class="pre-cd"><b data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</b></div>':'')+'<div class="fila">'+g.prods.map(cardHTML).join('')+'</div></section>').join('');
   // lo que marcaste como "Más vendido" (etiqueta dorada); máximo 12 en el inicio, el resto en "Ver todo"
   const top=P.filter(p=>(p.masVendido||p.masPedido)&&p.estado!=='early').sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0)).slice(0,12);
-  $('#fTop').innerHTML=top.map(cardHTML).join('')||seccion('sTop',top.length,'Aquí salen las prendas que marques como "Lo más pedido" en el Catálogo.');
-  if(top.length) seccion('sTop',true);
+  // Lo más vendido y Rebajas siempre se ven; mientras no haya nada dicen "Muy pronto"
   const reb=P.filter(enRebaja);
-  $('#fReb').innerHTML=reb.map(cardHTML).join('')||seccion('sReb',false,'Esta sección solo aparece cuando hay rebajas.');
-  if(reb.length) seccion('sReb',true);
+  $('#fTop').innerHTML=top.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás lo más vendido de cada marca.</div>';
+  $('#fReb').innerHTML=reb.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás las rebajas. Síguenos en Instagram para enterarte primero.</div>';
+  $('#sTop').hidden=false; $('#sReb').hidden=false;
+  $('#sTop .ver').hidden=!top.length; $('#sReb .ver').hidden=!reb.length;
 }
 // a dónde llevan el menú, los logos, los banners y los "Ver todo"
 // la flecha de atrás regresa a la sección anterior (cada sección queda en el historial del navegador)
