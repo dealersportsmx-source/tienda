@@ -137,6 +137,17 @@ img{display:block;max-width:100%}
 .dots{display:flex;align-items:center;gap:5px;margin:7px 0 0}
 .dots i{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
 .dots small{font-size:11px;color:var(--muted)}
+/* cuadros de color en las tarjetas (área para tocar de 40px de alto) */
+.sws{display:flex;flex-wrap:wrap;justify-content:center;margin:4px 0 0}
+.sw{all:unset;box-sizing:border-box;width:33px;height:40px;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sw i{display:block;width:28px;height:28px;box-sizing:border-box;border:1px solid #8e8e94;position:relative}
+.sw.on i{box-shadow:0 0 0 2px var(--bg),0 0 0 3px #fff}
+.sw:focus-visible i{outline:2px solid #fff;outline-offset:3px}
+.sw.agot{cursor:not-allowed}
+.sw.agot i{opacity:.5}
+.sw.agot i::after{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 1px),#f2f2f2 calc(50% - 1px),#f2f2f2 calc(50% + 1px),transparent calc(50% + 1px))}
+.sw.mas{width:auto;padding:0 6px;font-size:12px;font-weight:800;color:var(--muted)}
+@media (min-width:760px){ .sw{width:38px} .sw i{width:30px;height:30px} }
 .fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
 .fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
 .fav.on svg{fill:var(--ink)}
@@ -736,8 +747,27 @@ function cardHTML(p){
     '<p class="pr">'+money(p.precio)+(reb?'<s>'+money(antes)+'</s>':'')+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+
-    (cols.length?'<p class="dots" aria-label="'+esc(cols.map(c=>c.nombre).join(', '))+'">'+cols.slice(0,5).map(c=>'<i style="background:'+colorDe(c.nombre)+'" title="'+esc(c.nombre)+'"></i>').join('')+(cols.length>5?'<small>+'+(cols.length-5)+'</small>':'')+'</p>':'')+
+    swatchesHTML(p)+
   '</div>';
+}
+/* Cuadros de color (como YoungLA): color liso = cuadro de color; estampado, deslavado, camo o color que no se reconoce
+   = miniatura de la tela de la prenda; dos colores (Black/Red) = mitad y mitad. Agotados con X (no se pueden agregar).
+   Al tocar uno cambia la foto de la tarjeta; más de 5 colores: los primeros 5 y "+N" (abre la prenda). */
+const ESTAMPADO=/camo|wash|lavad|print|tie.?dye|marble|acid|graphic|stripe|raya|check|plaid|leopard|zebra|snake|floral|fade|ombre|splat|multi|pattern|marl/i;
+function colorConocido(n){ const s=String(n||'').toLowerCase(); for(const [k,c] of COLORES) if(new RegExp(k).test(s)) return c; return ''; }
+function fondoSwatch(c){
+  const nom=String(c.nombre||''), f=(c.fotos||[])[0], partes=nom.split('/').map(colorConocido);
+  if(f&&(ESTAMPADO.test(nom)||!partes[0])) return 'background-image:url(&quot;'+esc(f)+'&quot;);background-size:420%;background-position:50% 42%';
+  // dos tonos: mitad izquierda y mitad derecha (en diagonal se confundía con la X de agotado)
+  if(partes.length>1&&partes[1]&&partes[1]!==partes[0]) return 'background:linear-gradient(90deg,'+partes[0]+' 50%,'+partes[1]+' 50%)';
+  return 'background:'+(partes[0]||colorDe(nom));
+}
+function swatchesHTML(p){
+  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot);
+  if(!todos.length||(todos.length===1&&!agot.length)) return '';
+  return '<div class="sws" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
+    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+fondoSwatch(c)+'"></i></button>'; }).join('')+
+    (todos.length>5?'<button type="button" class="sw mas" aria-label="Ver los '+todos.length+' colores">+'+(todos.length-5)+'</button>':'')+'</div>';
 }
 // bolitas: el color sale del nombre (Black, Negro, Heather Grey…); si no se reconoce, gris claro
 const COLORES=[['charcoal|carbon|carbón|graphite|grafito','#3d3d40'],['navy|marino','#1f2a44'],['light blue|sky|cielo|baby blue|celeste','#9cc3e6'],['olive|oliva|khaki|caqui','#6b6b3a'],['burgundy|maroon|vino|wine|guinda','#6d1f2b'],
@@ -830,7 +860,13 @@ $('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'
 document.addEventListener('click',e=>{
   const fv=e.target.closest('[data-fav]');
   if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
-  const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id);
+  // cuadros de color de la tarjeta: cambian la foto sin salir de la página ("+N" abre la prenda)
+  const sw=e.target.closest('.sw');
+  if(sw&&!sw.classList.contains('mas')){ e.stopPropagation(); if(sw.classList.contains('agot')) return;
+    const card=sw.closest('.card'), p=card&&P.find(x=>x.id===card.dataset.id), col=p&&(p.colores||[]).find(x=>x.k===sw.dataset.sw); if(!col) return;
+    const f=(col.fotos||[])[0], im=card.querySelector('.ph img'); if(f&&im) im.src=f;
+    card.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',b===sw)); card.dataset.col=col.k; return; }
+  const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id,false,c.dataset.col);
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id); });
 setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
@@ -946,7 +982,7 @@ $('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=
 function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,catDe(p),(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
   $('#qRes').innerHTML=q?(r.length?'<div class="grid">'+r.map(cardHTML).join('')+'</div>':'<p class="empty">No encontramos “'+esc(q)+'”.</p>'):''; }
 $('#q').addEventListener('input',buscar);
-$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
+$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')&&!e.target.closest('.sw:not(.mas)')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
 function chips(el,opts,val,key){ el.innerHTML=opts.map(o=>'<button class="chip'+(val===o[0]?' on':'')+'" data-'+key+'="'+esc(o[0])+'">'+esc(o[1])+'</button>').join(''); }
 function pintarFiltros(){
   chips($('#fOrden'),[['nuevo','Lo más nuevo'],['menor','Menor precio'],['mayor','Mayor precio']],orden,'o');
@@ -964,9 +1000,10 @@ $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); 
 $('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; cat=''; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
 
 /* ---------- producto ---------- */
-function abrirProducto(id,sinHistorial){
+function abrirProducto(id,sinHistorial,colorK){
   const p=P.find(x=>x.id===id); if(!p) return;
-  cur=p; curColor=(p.colores||[])[0]||null; curTalla='';
+  // si en la tarjeta escogiste un color, la prenda abre en ese color
+  cur=p; curColor=(colorK&&(p.colores||[]).find(x=>x.k===colorK))||(p.colores||[])[0]||null; curTalla='';
   if(!sinHistorial) try{ history.pushState({p:id},'','#'+encodeURIComponent(id)); }catch(e){}
   pintarProducto(); $('#pv').hidden=false; $('#buy').hidden=false; $('#pv').scrollTop=0; document.body.style.overflow='hidden';
 }
@@ -1193,7 +1230,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
   PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
-    if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else p.colores=cs.filter(c=>!c.agotado); });
+    if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else { p.coloresAgot=cs.filter(c=>c.agotado); p.colores=cs.filter(c=>!c.agotado); } }); // los agotados salen con X en los cuadros de color
   P=PT.filter(p=>!p.agotadoTodo);
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
