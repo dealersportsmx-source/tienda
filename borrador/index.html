@@ -121,13 +121,14 @@ img{display:block;max-width:100%}
 .card{all:unset;cursor:pointer;display:block;min-width:0}
 .card:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .ph{position:relative;aspect-ratio:4/5;background:var(--soft);border-radius:6px;overflow:hidden}
-.ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-.card:hover .ph img{transform:scale(1.03)}
+.ph img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;user-select:none}
 /* fotos del color en la tarjeta: se deslizan con el dedo; en compu, flechas al pasar el mouse; puntitos abajo */
-.ph-gal{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+/* celular: el dedo de lado cambia de foto; de arriba a abajo la foto no se mueve, solo baja la página */
+.ph-gal{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .ph-gal::-webkit-scrollbar{display:none}
 .ph-gal img{flex:0 0 100%;min-width:0;scroll-snap-align:start}
-.fila .ph-gal{overflow-x:hidden} /* en las filas que se deslizan, el dedo mueve la fila, no las fotos */
+/* compu: la foto queda fija (sin arrastrar ni deslizar con el mouse o el trackpad); solo cambia con las flechas */
+@media (hover:hover) and (pointer:fine){.ph-gal{overflow-x:hidden}}
 .fl{all:unset;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);color:#0b0b0c;display:none;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);z-index:2}
 .fl.izq{left:8px}.fl.der{right:8px}
 .galw{position:relative}
@@ -388,7 +389,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   .addok-in b{font-size:11px} .addok-in p{font-size:13px} .addok-in small{font-size:11px}
   .addok-bt{display:flex;flex-direction:column;gap:4px;margin-top:0} .addok-bt .btn{min-height:26px;padding:0 10px;font-size:11.5px} }
 @media (prefers-reduced-motion: reduce){ .addok{animation:none} }
-@media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}.card:hover .ph img{transform:none}}
+@media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}}
 </style>
 </head>
 <body>
@@ -799,7 +800,7 @@ const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" 
 function galTarjeta(p,col){
   const c=col||(p.colores||[]).find(x=>x.fotos&&x.fotos[0]);
   let fs=((c&&c.fotos)||[]).filter(Boolean).slice(0,FOTOS_TARJETA); if(!fs.length) fs=[foto1(p)].filter(Boolean);
-  return '<div class="ph-gal">'+fs.map((f,i)=>'<img '+(i?'data-src':'src')+'="'+esc(f)+'" alt="'+esc(p.nombre)+(i?' foto '+(i+1):'')+'"'+(i?'':' loading="lazy"')+' decoding="async">').join('')+'</div>'+
+  return '<div class="ph-gal">'+fs.map((f,i)=>'<img '+(i?'data-src':'src')+'="'+esc(f)+'" alt="'+esc(p.nombre)+(i?' foto '+(i+1):'')+'"'+(i?'':' loading="lazy"')+' decoding="async" draggable="false">').join('')+'</div>'+
     (fs.length>1?'<button class="fl izq" type="button" aria-label="Foto anterior" data-fl="-1" hidden>'+FLECHA['-1']+'</button><button class="fl der" type="button" aria-label="Foto siguiente" data-fl="1">'+FLECHA['1']+'</button>'+
       '<span class="pd">'+fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</span>':'');
 }
