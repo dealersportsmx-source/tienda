@@ -126,11 +126,12 @@ img{display:block;max-width:100%}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:#0b0b0c;letter-spacing:.02em}
 /* etiquetas de estado en blanco y negro: Preventa (negro), Sobre pedido (gris oscuro), Entrega inmediata (blanco) */
 .tags{position:absolute;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:4px}.tags .tag{position:static}
-.tag.t-reb{background:#e11d48;color:#fff}
+.tag.t-reb{background:#E0243F;color:#fff}
 /* "Más vendido": dorado */
 .tag.t-mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;box-shadow:0 1px 0 rgba(0,0,0,.25)}
 .estado.mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;margin-left:6px}
-.tag.t-drop{background:#fff;color:#0b0b0c}.tag.t-ped{background:#55555a;color:#fff}.tag.t-ya{background:#0b0b0c;color:#fff;box-shadow:0 0 0 1px #55555a}
+/* colores por estado (mismos en tarjetas, página de la prenda y pestaña activa) */
+.tag.t-drop{background:#7C3AED;color:#fff}.tag.t-ped{background:#2563EB;color:#fff}.tag.t-ya{background:#16A34A;color:#fff}
 .nm .cod{color:var(--muted);font-weight:600}
 .aho{margin:2px 0 0;font-size:12px;font-weight:700}
 .tl{margin:2px 0 0;font-size:12px;color:var(--muted)}
@@ -217,6 +218,7 @@ img{display:block;max-width:100%}
 .logos .lg-breathe-divinity img{max-height:38px}
 .logos .lg-darc-sport img{max-height:40px}
 .logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
+.logos button.todas{width:auto;min-width:72px}.logos button.todas .tx{font-size:13px}
 /* logos en la página de productos: la marca elegida se resalta */
 .logos.lf{border-bottom:0;padding:12px 16px 2px}
 .logos.lf button.on{border-color:var(--ink);background:#1f1f23;box-shadow:inset 0 0 0 1px var(--ink)}
@@ -313,7 +315,10 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 .pv-d .pr{font-size:20px}
 .note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .estado{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.03em}
-.estado.pre,.estado.drop,.estado.cam,.estado.disp{background:var(--soft);color:var(--ink)}
+.estado.pre,.estado.cam{background:#2563EB;color:#fff}.estado.drop{background:#7C3AED;color:#fff}.estado.disp{background:#16A34A;color:#fff}.estado.reb{background:#E0243F;color:#fff;margin-left:6px}
+.cats.en .chip.on[data-disp="pedido"]{background:#2563EB;border-color:#2563EB;color:#fff}.cats.en .chip.on[data-disp="preventa"]{background:#7C3AED;border-color:#7C3AED;color:#fff}.cats.en .chip.on[data-disp="disponible"]{background:#16A34A;border-color:#16A34A;color:#fff}
+.plazo-aviso{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--line);font-size:12.5px;line-height:1.4;color:var(--muted)}
+.empty.vm{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}.empty.vm p{margin:0}
 .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
 .size{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;height:46px;font-weight:700;font-size:14px}
 .size.on{background:var(--ink);color:var(--on);border-color:var(--ink)}
@@ -484,9 +489,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovFiltro" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Filtrar y ordenar">
   <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b">
-    <div id="fTipoBox"><p class="lbl">Tipo de prenda</p><div class="chips" id="fTipo"></div></div>
     <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
-    <p class="lbl">Precio</p><div class="chips" id="fPrecio"></div>
     <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
   </div>
   <div class="pn-f" style="display:flex;gap:8px"><button class="btn o" id="fLimpiar" style="flex:1">Limpiar</button><button class="btn" data-close style="flex:1" id="fVer">Ver</button></div>
@@ -501,7 +504,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <p class="br" id="pvBrand"></p>
       <h2 id="pvName"></h2>
       <p class="pr" id="pvPrice"></p>
-      <span class="estado" id="pvEstado" hidden></span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
+      <span class="estado" id="pvEstado" hidden></span><span class="estado reb" id="pvReb" hidden>Rebaja</span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
       <p class="note" id="pvNote" hidden></p>
       <div id="pvColorsBox"><p class="lbl">Color: <span id="pvColorName" style="font-weight:500;text-transform:none;letter-spacing:0"></span></p><div class="chips" id="pvColors"></div></div>
       <div id="pvTallaBox"><p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div></div>
@@ -544,6 +547,8 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <li>El precio que apartaste se respeta, aunque cambie el tipo de cambio.</li>
       <li>Pagas por transferencia o depósito en efectivo. Envía tu comprobante por DM o WhatsApp.</li>
     </ul>
+    <h3>Apartados y plazo de liquidación</h3>
+    <p>Al apartar un producto con anticipo, el cliente cuenta con un plazo máximo de 30 días naturales a partir de la fecha de su orden para liquidar el saldo restante. Si el saldo no se liquida dentro de este plazo, el pedido se cancela, el anticipo no es reembolsable y el producto pasa a venderse como entrega inmediata.</p>
     <h3>Envíos</h3>
     <ul>
       <li>Monterrey: entrega a domicilio, $<span data-t="envioMty">80</span>.</li>
@@ -619,7 +624,7 @@ const TIENDA={
   // Estos números llegan solos desde Cotizador › Ajustes cuando das "Publicar tienda" en el Catálogo.
   anticipo:30, red:50, gratisMas:3000, // envío gratis en compras MAYORES a esto
   // plazos que salen en Términos y condiciones
-  plazoLiquidar:'3 semanas',
+  plazoLiquidar:'30 días naturales',
   llega:'15 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
   cuentas:[
@@ -691,6 +696,19 @@ function sinTalla(p,c){ if(!esAcc(p)) return false; const k=Object.keys((c||{}).
   return !k.length||k.every(t=>/^(única|unica|one size|one-size|os|default title)$/i.test(t))||(k.length===6&&['XS','S','M','L','XL','2XL'].every(t=>k.includes(t))); }
 function tallasDe(p,c){ if(sinTalla(p,c)) return []; const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
 function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0; }
+/* Regla de tallas mínimas: una prenda sobre pedido solo sale si al menos UN color tiene 3 o más tallas
+   disponibles entre XS, S, M, L, XL y 2XL (3XL y 4XL no cuentan). Si ninguno cumple, se esconde completa;
+   si la marca resurte (el robot lo actualiza cada 3 horas), vuelve a salir sola.
+   No aplica a: entrega inmediata (tu stock), accesorios, talla única ni prendas sin tallas de letra (tenis, etc.). */
+const TALLAS_MIN=['XS','S','M','L','XL','2XL'];
+function pocasTallas(p){
+  if(p.estado==='disponible'||esAcc(p)) return false;
+  let conLetras=false;
+  for(const c of p.colores||[]){ if(sinTalla(p,c)) return false;
+    const s=new Set(); Object.keys(c.tallas||{}).forEach(t=>{ String(t).toUpperCase().replace(/\s+/g,'').split('/').forEach(x=>{ x=x==='XXL'?'2XL':x; if(TALLAS_MIN.includes(x)) s.add(x); if(/^(XS|S|M|L|XL|XXL|\dXL)$/.test(x)) conLetras=true; }); });
+    if(s.size>=3) return false; }
+  return conLetras;
+}
 function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>Object.keys(c.tallas||{}).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
 function foto1(p){ for(const c of p.colores||[]) if(c.fotos&&c.fotos[0]) return c.fotos[0]; return ''; }
 function esNuevo(p){ return p.estado==='disponible'&&p.creado&&(Date.now()-p.creado<14*864e5); }
@@ -730,7 +748,7 @@ function filtrar(sinTipo){
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
   if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
-  if(fTalla) r=r.filter(p=>tallasConStock(p).has(fTalla));
+  if(fTalla) r=r.filter(p=>tallasFiltro(p).has(fTalla));
   if(fEstado==='disponible') r=r.filter(p=>p.estado==='disponible');
   else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
   else if(fEstado==='preventa') r=r.filter(p=>p.estado==='early'&&(!fPre||clavePre(p)===fPre));
@@ -739,7 +757,7 @@ function filtrar(sinTipo){
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
-  else r.sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0));
+  else r.sort((a,b)=>(b.creado||0)-(a.creado||0)); // sin ordenar: siempre lo más nuevo primero
   return r;
 }
 /* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
@@ -796,7 +814,8 @@ const chipHTML=(v,txt,on,attr)=>'<button class="chip'+(on?' on':'')+'" '+attr+'=
 const ESTADO_TXT={pedido:'Sobre pedido',preventa:'Preventa',disponible:'Entrega inmediata'};
 const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 // logos de marcas: en el inicio llevan a la marca; en la página de productos filtran (y se resalta la elegida)
-function logosHTML(lista){ return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
+function logosHTML(lista){ // en la página de productos va primero "Todas" (quita la marca); tocar la marca marcada también la quita
+  return (lista?'<button data-lm="" aria-label="Todas las marcas" aria-pressed="'+!fMarca+'" class="todas'+(fMarca?'':' on')+'"><span class="tx">Todas</span></button>':'')+TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
 function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
@@ -821,7 +840,8 @@ function render(){
   const sin=TIENDA.soloPedido.includes(linea)&&!fMarca;
   if(sin&&fEstado==='disponible') fEstado='';
   $('#disp').hidden=vista==='favs'||vista==='rebajas';
-  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']]).concat([['rebaja','Rebajas']])
+  // pestañas: Sobre pedido · Preventa · Entrega inmediata (Rebajas está en el menú)
+  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
@@ -836,7 +856,10 @@ function render(){
     html=grupos.map(g=>{ const ps=r.filter(p=>clavePre(p)===g.k); if(!ps.length) return '';
       return '<div class="pre-h" id="pre-'+esc(encodeURIComponent(g.k))+'"><div><small>Preventa · '+esc(g.marca)+'</small><b>'+esc(g.nombre||g.marca)+'</b></div>'+(g.fecha?'<div class="cd" data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</div>':'')+'</div>'+ps.map(cardHTML).join(''); }).join('');
   } else html=r.map(cardHTML).join('');
-  $('#grid').innerHTML=html||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':(vista==='rebajas'||fEstado==='rebaja')&&!P.some(enRebaja)?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
+  // con una marca escogida y nada en esta sección: mensaje con botón (en vez de pantalla vacía)
+  const vacioMarca=!html&&fMarca&&vista!=='favs'?'<div class="empty vm" style="grid-column:1/-1"><p>Por ahora no hay productos de '+esc(fMarca)+(fEstado==='disponible'?' en entrega inmediata':' en esta sección')+'.</p>'+
+    (fEstado==='disponible'?'<button class="btn w" data-vm="disp">Ver toda la entrega inmediata</button>':'<button class="btn w" data-vm="'+esc(fMarca)+'">Ver todo '+esc(fMarca)+'</button>')+'</div>':'';
+  $('#grid').innerHTML=html||vacioMarca||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':fEstado==='disponible'&&!P.some(p=>p.estado==='disponible')?'Por ahora no hay prendas de entrega inmediata. Pide la tuya sobre pedido o síguenos en Instagram para enterarte cuando llegue stock.':(vista==='rebajas'||fEstado==='rebaja')&&!P.some(enRebaja)?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
   // si lo elegido quedó fuera de la pantalla (ej. Hoodies al final), la fila se recorre para que se vea
   document.querySelectorAll('#lLogos .on,#cats .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
@@ -858,7 +881,12 @@ function renderHero(){
     sl[heroI].classList.remove('on'); ds[heroI].classList.remove('on'); heroI=(heroI+1)%sl.length; sl[heroI].classList.add('on'); ds[heroI].classList.add('on'); },5000);
 }
 $('#hero').addEventListener('click',e=>{ const b=e.target.closest('[data-pre]'); if(!b) return; e.stopPropagation(); ir('drops'); fPre=b.dataset.pre; render(); });
-$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=fEstado===b.dataset.disp?'':b.dataset.disp; fPre=''; render(); });
+$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=fEstado===b.dataset.disp?'':b.dataset.disp; fPre='';
+  if(fEstado==='disponible'){ fMarca=''; fCol=''; } // Entrega inmediata: siempre todas las marcas juntas (poco stock); los logos siguen filtrando
+  render(); });
+// botón del mensaje "Por ahora no hay productos de…"
+$('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
+  if(b.dataset.vm==='disp'){ fMarca=''; fCol=''; render(); } else ir('m:'+b.dataset.vm); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
 $('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol=''; render(); });
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
@@ -1001,20 +1029,32 @@ function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filte
 $('#q').addEventListener('input',buscar);
 $('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')&&!e.target.closest('.sw:not(.mas)')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
 function chips(el,opts,val,key){ el.innerHTML=opts.map(o=>'<button class="chip'+(val===o[0]?' on':'')+'" data-'+key+'="'+esc(o[0])+'">'+esc(o[1])+'</button>').join(''); }
-function pintarFiltros(){
-  chips($('#fOrden'),[['nuevo','Lo más nuevo'],['menor','Menor precio'],['mayor','Mayor precio']],orden,'o');
-  const ts=new Set(); P.forEach(p=>tallasConStock(p).forEach(t=>ts.add(t)));
-  chips($('#fTalla'),[['','Todas']].concat([...ts].sort((a,b)=>{const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b);return (i<0?99:i)-(j<0?99:j)||parseFloat(a)-parseFloat(b);}).map(t=>[t,t])),fTalla,'t');
-  chips($('#fPrecio'),[['','Todos']].concat(Object.entries(PRECIO_TXT)),fPrecio,'p');
-  const tipos=tiposDe(); $('#fTipoBox').hidden=!tipos.length;
-  chips($('#fTipo'),[['','Todos']].concat(tipos.map(c=>[c,c])),cat,'c');
+/* Filtrar y ordenar: solo Talla y Ordenar por precio (tipo, marca, estado y rebajas ya están en el menú, los logos y las pestañas).
+   Sin ordenar, siempre sale lo más nuevo primero. */
+const TALLAS_FILTRO=['XS','S','M','L','XL','2XL','Talla única'];
+// tallas de una prenda para el filtro: XXL = 2XL; Única / ONE-SIZE = Talla única; S/M cuenta como S y como M; 3XL y 4XL no cuentan
+function tallasFiltro(p){
+  const s=new Set();
+  (p.colores||[]).forEach(c=>{ if(sinTalla(p,c)){ s.add('Talla única'); return; }
+    Object.keys(c.tallas||{}).forEach(t=>{ if(!hay(p,c,t)) return; const u=String(t).toUpperCase().replace(/\s+/g,'');
+      if(/^(ONE-?SIZE|OS|O\/S|UNICA|ÚNICA|U|UNITALLA|TALLAÚNICA|TALLAUNICA)$/.test(u)){ s.add('Talla única'); return; }
+      u.split('/').forEach(x=>{ x=x==='XXL'?'2XL':x; if(TALLAS_FILTRO.includes(x)) s.add(x); }); }); });
+  return s;
 }
-// Filtrar y ordenar: talla, precio y orden (marca, estado y tipo están a la vista en la página)
+function pintarFiltros(){
+  chips($('#fOrden'),[['menor','Menor a mayor precio'],['mayor','Mayor a menor precio']],orden,'o');
+  // solo las tallas que tienen productos en lo que estás viendo
+  const ft=fTalla; fTalla=''; const base=filtrar(); fTalla=ft;
+  const ts=new Set(); base.forEach(p=>tallasFiltro(p).forEach(t=>ts.add(t)));
+  chips($('#fTalla'),TALLAS_FILTRO.filter(t=>ts.has(t)||t===fTalla).map(t=>[t,t]),fTalla,'t');
+  const n=filtrar().length; $('#fVer').textContent=n===1?'Ver 1 producto':'Ver '+n+' productos';
+}
 $('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro'); });
+// tocar la opción marcada la quita (talla) o regresa a "lo más nuevo" (orden)
 $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
-  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('p' in b.dataset) fPrecio=b.dataset.p; if('c' in b.dataset) cat=b.dataset.c;
-  pintarFiltros(); render(); });
-$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; cat=''; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
+  if('o' in b.dataset) orden=orden===b.dataset.o?'nuevo':b.dataset.o; if('t' in b.dataset) fTalla=fTalla===b.dataset.t?'':b.dataset.t;
+  render(); pintarFiltros(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fPrecio=''; render(); pintarFiltros(); });
 
 /* ---------- producto ---------- */
 function abrirProducto(id,sinHistorial,colorK){
@@ -1045,6 +1085,7 @@ function pintarProducto(){
   const est={early:['drop','Preventa'],preventa:['pre','Sobre pedido'],camino:['cam','Sobre pedido'],disponible:['disp','Entrega inmediata']}[p.estado];
   $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
   $('#pvMv').hidden=!p.masVendido;
+  $('#pvReb').hidden=!enRebaja(p); // dos estados (ej. Sobre pedido y Rebaja): las dos etiquetas, cada una con su color
   const d=dropDate(p);
   const nota=p.estado==='early'?(d?(d>new Date()?'Preventa abierta: cierra el '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'. Apártala antes del cierre.':'La preventa ya cerró. Escríbenos y vemos si aún la conseguimos.'):'Preventa abierta. Apártala antes del cierre.')
     :p.estado==='preventa'?'Se aparta con anticipo. Te avisamos cuando llegue.'
@@ -1125,7 +1166,9 @@ function pintarBolsa(){
     '<div style="margin-top:14px"><div class="tot"><span>Productos ('+bolsa.length+')</span><span>'+money(t.sub)+'</span></div>'+
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
-    (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
+    (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>'+
+      // si paga solo el anticipo: aviso del plazo (Términos › Apartados y plazo de liquidación)
+      '<p class="plazo-aviso">Tienes 30 días a partir de tu orden para liquidar. Si no se liquida, el pedido se cancela y el anticipo no es reembolsable.</p>':'')+'</div>';
   // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
   // WhatsApp primero: ahí el mensaje llega ya escrito; en Instagram hay que pegarlo
   $('#bolsaFoot').innerHTML='<a class="btn full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>'+
@@ -1262,7 +1305,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
   PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
     if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else { p.coloresAgot=cs.filter(c=>c.agotado); p.colores=cs.filter(c=>!c.agotado); } }); // los agotados salen con X en los cuadros de color
-  P=PT.filter(p=>!p.agotadoTodo);
+  P=PT.filter(p=>!p.agotadoTodo&&!pocasTallas(p));
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
