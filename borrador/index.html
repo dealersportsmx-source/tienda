@@ -144,7 +144,7 @@ img{display:block;max-width:100%}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:#0b0b0c;letter-spacing:.02em}
 /* etiquetas de estado en blanco y negro: Preventa (negro), Sobre pedido (gris oscuro), Entrega inmediata (blanco) */
 .tags{position:absolute;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:4px}.tags .tag{position:static}
-.tag.t-reb{background:#E0243F;color:#fff}
+.tag.t-reb,.tag.t-desc{background:#E0243F;color:#fff}
 /* "Más vendido": dorado */
 .tag.t-mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;box-shadow:0 1px 0 rgba(0,0,0,.25)}
 .estado.mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;margin-left:6px}
@@ -514,7 +514,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
       <p class="br" id="pvBrand"></p>
       <h2 id="pvName"></h2>
       <p class="pr" id="pvPrice"></p>
-      <span class="estado" id="pvEstado" hidden></span><span class="estado reb" id="pvReb" hidden>Rebaja</span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
+      <span class="estado" id="pvEstado" hidden></span><span class="estado reb" id="pvReb" hidden>Rebaja</span><span class="estado reb" id="pvDescPct" hidden></span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
       <p class="note" id="pvNote" hidden></p>
       <div id="pvColorsBox"><p class="lbl">Color: <span id="pvColorName" style="font-weight:500;text-transform:none;letter-spacing:0"></span></p><div class="chips" id="pvColors"></div></div>
       <div id="pvTallaBox"><p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div></div>
@@ -777,17 +777,36 @@ function redondear(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100; re
 function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||0)/100); }
 // llena los números de Términos con los de TIENDA (los que mandan tus Ajustes)
 function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach(el=>{ const v=TIENDA[el.dataset.t]; if(v!=null) el.textContent=typeof v==='number'?v.toLocaleString('en-US'):v; }); }
+/* Descuentos por sección (Cotizador › Ajustes; llegan a la tienda al dar "Publicar tienda").
+   Uno para Sobre pedido, otro para Preventa y otro para Entrega inmediata, cada uno para todas las marcas o una sola.
+   Se aplica al precio de venta y se redondea igual que siempre; se apaga solo en su fecha de fin.
+   No se suma a las prendas que ya están en Rebajas. */
+const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
+function descuentosDe(a){
+  const ds=Object.assign({},(a&&a.descuentos)||{});
+  // solo en el borrador, para probar sin publicar: ?descuento=pedido-20 (o preventa-15-YoungLA)
+  const q=BORRADOR&&new URLSearchParams(location.search).get('descuento');
+  if(q){ const [s,pct,...m]=q.split('-'); ds[s]={on:true,pct:+pct,marca:m.join('-')}; }
+  return ds;
+}
+function aplicarDescuentos(ds){
+  PT.forEach(p=>{ delete p.desc; if(enRebaja(p)) return;
+    const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
+    if(x.fin&&new Date(x.fin)<=new Date()) return;
+    if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
+    const nuevo=redondear(p.precio*(1-pct/100)); if(nuevo>0&&nuevo<p.precio){ p.desc={pct,antes:+p.precio}; p.precio=nuevo; } });
+}
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
   const t=etiqueta(p), reb=enRebaja(p), antes=precioAntes(p);
   const tl=reb?[...tallasConStock(p)]:[];
   return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+galTarjeta(p)+
-    '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+
+    '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en modo administrador
     '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
     '<p class="br">'+esc(p.marca||'')+'</p>'+
-    '<p class="pr">'+money(p.precio)+(reb?'<s>'+money(antes)+'</s>':'')+'</p>'+
+    '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+
     swatchesHTML(p)+
@@ -1101,14 +1120,17 @@ window.addEventListener('popstate',()=>{ const h=location.hash||'';
   if(id&&P.some(p=>p.id===id)){ abrirProducto(id,true); return; }
   cerrarProducto(); if(vistaActual!=='inicio') ir('inicio',true); });
 function pintarProducto(){
-  const p=cur, c=curColor||{fotos:[],tallas:{}}, of=p.oferta&&p.precioBase>p.precio;
+  const p=cur, c=curColor||{fotos:[],tallas:{}};
+  // precio de antes tachado: descuento de sección o la oferta que pusiste en el Catálogo
+  const base=p.desc?p.desc.antes:(p.oferta&&p.precioBase>p.precio?+p.precioBase:0), of=base>p.precio;
+  $('#pvDescPct').hidden=!p.desc; if(p.desc) $('#pvDescPct').textContent='-'+p.desc.pct+'%';
   const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
   $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
   $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   $('#gal').scrollLeft=0; $('#galIzq').hidden=$('#galDer').hidden=fs.length<2;
   $('#pvBrand').textContent=[p.marca,catDe(p)].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
-  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
+  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(base)+'</s><small style="display:block;font-size:13px">Ahorras '+money(base-p.precio)+'</small>':money(p.precio)+' MXN')+
     (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Aparta hoy · restan '+money(p.precio-anticipoDe(p.precio))+' · llega en '+esc(TIENDA.llega)+'</small></span>':'');
   // mismas 3 etiquetas que la tarjeta: Preventa / Sobre pedido / Entrega inmediata
   const est={early:['drop','Preventa'],preventa:['pre','Sobre pedido'],camino:['cam','Sobre pedido'],disponible:['disp','Entrega inmediata']}[p.estado];
@@ -1346,6 +1368,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(ini.mosaico&&typeof ini.mosaico==='object') TIENDA.mosaico=ini.mosaico; // fotos del mosaico de marcas
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
+  aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // menú: HOMBRE y MUJER con sus tipos de prenda (TIENDA.chips) y MARCAS con tu lista fija
