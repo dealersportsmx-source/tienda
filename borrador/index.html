@@ -355,6 +355,19 @@ footer .logo{width:150px;margin:26px auto 8px;opacity:.9}
 footer .c{text-align:center;color:var(--muted);font-size:12px}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;z-index:120;background:var(--ink);color:var(--on);padding:10px 16px;border-radius:999px;font-size:14px;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+/* aviso al agregar a la bolsa: te quedas en la prenda (se cierra solo en 4 s o al tocar afuera) */
+.addok{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:130;width:min(420px,calc(100% - 24px));box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.55);animation:addokIn .25s ease}
+.addok-in{display:flex;gap:12px;align-items:center}
+.addok-in img{width:56px;height:70px;object-fit:cover;border-radius:6px;flex:none;background:#1a1a1d}
+.addok-in div{min-width:0}
+.addok-in b{display:block;font-size:13px;color:#16a34a}
+.addok-in p{margin:2px 0 0;font-size:14px;font-weight:700;line-height:1.25;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.addok-in small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.addok-bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.addok-bt .btn{min-height:40px;padding:0 10px;font-size:13px}
+@keyframes addokIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (min-width:900px){ .addok{left:auto;right:24px;top:76px;bottom:auto;transform:none;animation:none} }
+@media (prefers-reduced-motion: reduce){ .addok{animation:none} }
 @media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}.card:hover .ph img{transform:none}}
 </style>
 </head>
@@ -564,6 +577,10 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="addok" id="addok" role="status" aria-live="polite" hidden>
+  <div class="addok-in"><img id="addokImg" alt=""><div><b>Agregado a tu bolsa</b><p id="addokNom"></p><small id="addokDet"></small></div></div>
+  <div class="addok-bt"><button class="btn o" id="addokSeguir">Seguir comprando</button><button class="btn w" id="addokVer">Ver bolsa</button></div>
+</div>
 
 <script>
 (function(){
@@ -1056,9 +1073,23 @@ $('#btnAdd').addEventListener('click',()=>{
   const ts=tallasDe(p,c);
   if(ts.length&&!curTalla){ $('#pvErr').hidden=false; $('#pvSizes').scrollIntoView({behavior:'smooth',block:'center'}); return; }
   bolsa.push({id:p.id,nombre:p.nombre,marca:p.marca||'',color:c.nombre||'',talla:curTalla,precio:p.precio,foto:(c.fotos&&c.fotos[0])||foto1(p),estado:p.estadoTxt||{early:'Sobre pedido',preventa:'Sobre pedido',camino:'En camino'}[p.estado]||'',sobrePedido:sobrePedido(p)});
-  guardarBolsa(); toast('Agregado a tu bolsa'); curTalla=''; pintarProducto();
-  setTimeout(()=>{ pintarBolsa(); abrir('ovBolsa'); },350);
+  guardarBolsa(); curTalla=''; pintarProducto();
+  avisoAgregado(bolsa[bolsa.length-1]); // te quedas en la prenda; el número de la bolsa ya cambió
 });
+/* Aviso de "Agregado a tu bolsa": foto, nombre, talla y color, con Seguir comprando / Ver bolsa */
+let addokT=0;
+function avisoAgregado(it){
+  if(!it) return;
+  $('#addokImg').src=it.foto||''; $('#addokImg').hidden=!it.foto;
+  $('#addokNom').textContent=it.nombre||'';
+  $('#addokDet').textContent=[it.color,it.talla?'Talla '+it.talla:''].filter(Boolean).join(' · ');
+  $('#addok').hidden=false; clearTimeout(addokT); addokT=setTimeout(cerrarAviso,4000);
+}
+function cerrarAviso(){ clearTimeout(addokT); $('#addok').hidden=true; }
+$('#addokSeguir').addEventListener('click',cerrarAviso);
+$('#addokVer').addEventListener('click',()=>{ cerrarAviso(); pintarBolsa(); abrir('ovBolsa'); });
+// tocar afuera del aviso lo cierra (el mismo toque que agrega no cuenta)
+document.addEventListener('click',e=>{ if(!$('#addok').hidden&&!e.target.closest('#addok')&&!e.target.closest('#btnAdd')) cerrarAviso(); },true);
 
 /* ---------- bolsa y pedido por WhatsApp ---------- */
 let entrega=LS.get('entrega','mty'), pago=LS.get('pago','transferencia'), nombre=LS.get('nombre','');
