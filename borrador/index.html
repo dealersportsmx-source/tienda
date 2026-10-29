@@ -123,6 +123,20 @@ img{display:block;max-width:100%}
 .ph{position:relative;aspect-ratio:4/5;background:var(--soft);border-radius:6px;overflow:hidden}
 .ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
 .card:hover .ph img{transform:scale(1.03)}
+/* fotos del color en la tarjeta: se deslizan con el dedo; en compu, flechas al pasar el mouse; puntitos abajo */
+.ph-gal{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.ph-gal::-webkit-scrollbar{display:none}
+.ph-gal img{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+.fila .ph-gal{overflow-x:hidden} /* en las filas que se deslizan, el dedo mueve la fila, no las fotos */
+.fl{all:unset;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);color:#0b0b0c;display:none;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);z-index:2}
+.fl.izq{left:8px}.fl.der{right:8px}
+.galw{position:relative}
+.fl:focus-visible{display:grid;outline:2px solid #fff;outline-offset:2px}
+.fl[hidden]{display:none!important}
+@media (hover:hover){.card:hover .fl,.galw:hover .fl{display:grid}}
+.pd{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:4px;pointer-events:none}
+.pd i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 .5px rgba(0,0,0,.3)}
+.pd i.on{background:#fff}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:#0b0b0c;letter-spacing:.02em}
 /* etiquetas de estado en blanco y negro: Preventa (negro), Sobre pedido (gris oscuro), Entrega inmediata (blanco) */
 .tags{position:absolute;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:4px}.tags .tag{position:static}
@@ -491,7 +505,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="pv" id="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pvName">
   <div class="pv-top"><button class="ib" id="pvBack" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="ib" id="pvFav" aria-label="Agregar a favoritos" hidden><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
   <div class="pv-in">
-    <div><div class="gal" id="gal"></div><div class="dots" id="dots"></div></div>
+    <div><div class="galw"><div class="gal" id="gal"></div><button class="fl izq" id="galIzq" type="button" aria-label="Foto anterior" data-fl="-1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="fl der" id="galDer" type="button" aria-label="Foto siguiente" data-fl="1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button></div><div class="dots" id="dots"></div></div>
     <div class="pv-d">
       <p class="br" id="pvBrand"></p>
       <h2 id="pvName"></h2>
@@ -762,10 +776,9 @@ function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
-  const t=etiqueta(p), f=foto1(p), reb=enRebaja(p), antes=precioAntes(p);
-  const cols=(p.colores||[]).filter(c=>c.nombre);
+  const t=etiqueta(p), reb=enRebaja(p), antes=precioAntes(p);
   const tl=reb?[...tallasConStock(p)]:[];
-  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy" decoding="async">':'')+
+  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+galTarjeta(p)+
     '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en modo administrador
     '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
@@ -776,6 +789,23 @@ function cardHTML(p){
     swatchesHTML(p)+
   '</div>';
 }
+/* Fotos de la tarjeta: las del color elegido (hasta 4). Solo la primera se baja al cargar la página;
+   las demás se bajan cuando pasas el mouse, deslizas o tocas una flecha. */
+const FOTOS_TARJETA=4;
+const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
+function galTarjeta(p,col){
+  const c=col||(p.colores||[]).find(x=>x.fotos&&x.fotos[0]);
+  let fs=((c&&c.fotos)||[]).filter(Boolean).slice(0,FOTOS_TARJETA); if(!fs.length) fs=[foto1(p)].filter(Boolean);
+  return '<div class="ph-gal">'+fs.map((f,i)=>'<img '+(i?'data-src':'src')+'="'+esc(f)+'" alt="'+esc(p.nombre)+(i?' foto '+(i+1):'')+'"'+(i?'':' loading="lazy"')+' decoding="async">').join('')+'</div>'+
+    (fs.length>1?'<button class="fl izq" type="button" aria-label="Foto anterior" data-fl="-1">'+FLECHA['-1']+'</button><button class="fl der" type="button" aria-label="Foto siguiente" data-fl="1">'+FLECHA['1']+'</button>'+
+      '<span class="pd">'+fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</span>':'');
+}
+function cargarGal(g){ if(g) g.querySelectorAll('img[data-src]').forEach(im=>{ im.src=im.dataset.src; im.removeAttribute('data-src'); }); }
+// una flecha: pasa a la foto anterior/siguiente (de la última regresa a la primera)
+function moverGal(g,paso){ cargarGal(g); const n=g.children.length; if(n<2) return; const i=Math.round(g.scrollLeft/g.clientWidth); g.scrollTo({left:((i+paso+n)%n)*g.clientWidth,behavior:'smooth'}); }
+document.addEventListener('pointerover',e=>{ const c=e.target.closest&&e.target.closest('.card'); if(c) cargarGal(c.querySelector('.ph-gal')); },{passive:true});
+document.addEventListener('scroll',e=>{ const g=e.target; if(!g.classList||!g.classList.contains('ph-gal')) return; cargarGal(g);
+  const i=Math.round(g.scrollLeft/g.clientWidth); g.parentNode.querySelectorAll('.pd i').forEach((d,j)=>d.classList.toggle('on',i===j)); },{capture:true,passive:true});
 /* Cuadros de color (como YoungLA): color liso = cuadro de color; estampado, deslavado, camo o color que no se reconoce
    = miniatura de la tela de la prenda; dos colores (Black/Red) = mitad y mitad. Agotados con X (no se pueden agregar).
    Al tocar uno cambia la foto de la tarjeta; más de 5 colores: los primeros 5 y "+N" (abre la prenda). */
@@ -896,15 +926,20 @@ $('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'
 document.addEventListener('click',e=>{
   const fv=e.target.closest('[data-fav]');
   if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
-  // cuadros de color de la tarjeta: cambian la foto sin salir de la página ("+N" abre la prenda)
+  // flechas de las fotos (tarjeta o página de la prenda): cambian de foto sin abrir la prenda
+  const fl=e.target.closest('[data-fl]');
+  if(fl){ e.stopPropagation(); moverGal(fl.parentNode.querySelector('.ph-gal,.gal'),+fl.dataset.fl); return; }
+  // cuadros de color de la tarjeta: cambian las fotos sin salir de la página ("+N" abre la prenda)
   const sw=e.target.closest('.sw');
   if(sw&&!sw.classList.contains('mas')){ e.stopPropagation(); if(sw.classList.contains('agot')) return;
     const card=sw.closest('.card'), p=card&&P.find(x=>x.id===card.dataset.id), col=p&&(p.colores||[]).find(x=>x.k===sw.dataset.sw); if(!col) return;
-    const f=(col.fotos||[])[0], im=card.querySelector('.ph img'); if(f&&im) im.src=f;
+    if((col.fotos||[])[0]){ const ph=card.querySelector('.ph'); ph.querySelectorAll('.ph-gal,.fl,.pd').forEach(x=>x.remove()); ph.insertAdjacentHTML('afterbegin',galTarjeta(p,col)); cargarGal(ph.querySelector('.ph-gal')); }
     card.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',b===sw)); card.dataset.col=col.k; return; }
   const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id,false,c.dataset.col);
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id); });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id);
+  // en la página de la prenda, las flechas del teclado cambian de foto
+  if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&cur&&!$('#pv').hidden&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) moverGal($('#gal'),e.key==='ArrowLeft'?-1:1); });
 setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
 
 /* ---------- inicio ---------- */
@@ -1016,7 +1051,7 @@ $('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=
 function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,catDe(p),(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
   $('#qRes').innerHTML=q?(r.length?'<div class="grid">'+r.map(cardHTML).join('')+'</div>':'<p class="empty">No encontramos “'+esc(q)+'”.</p>'):''; }
 $('#q').addEventListener('input',buscar);
-$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')&&!e.target.closest('.sw:not(.mas)')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
+$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')&&!e.target.closest('[data-fl]')&&!e.target.closest('.sw:not(.mas)')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
 function chips(el,opts,val,key){ el.innerHTML=opts.map(o=>'<button class="chip'+(val===o[0]?' on':'')+'" data-'+key+'="'+esc(o[0])+'">'+esc(o[1])+'</button>').join(''); }
 /* Filtrar y ordenar: solo Talla y Ordenar por precio (tipo, marca, estado y rebajas ya están en el menú, los logos y las pestañas).
    Sin ordenar, siempre sale lo más nuevo primero. */
@@ -1065,7 +1100,7 @@ function pintarProducto(){
   const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
   $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
   $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
-  $('#gal').scrollLeft=0;
+  $('#gal').scrollLeft=0; $('#galIzq').hidden=$('#galDer').hidden=fs.length<2;
   $('#pvBrand').textContent=[p.marca,catDe(p)].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
   $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
