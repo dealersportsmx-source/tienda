@@ -133,7 +133,10 @@ img{display:block;max-width:100%}
 .galw{position:relative}
 .fl:focus-visible{display:grid;outline:2px solid #fff;outline-offset:2px}
 .fl[hidden]{display:none!important}
-@media (hover:hover){.card:hover .fl,.galw:hover .fl{display:grid}}
+@media (hover:hover){.galw:hover .fl{display:grid}}
+/* en las tarjetas: flecha blanca delgada, siempre visible (celular y compu), con sombra ligera para fotos claras */
+.ph .fl{display:grid;width:40px;height:56px;border-radius:0;background:none;box-shadow:none;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.ph .fl.izq{left:0}.ph .fl.der{right:0}
 .pd{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:4px;pointer-events:none}
 .pd i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 .5px rgba(0,0,0,.3)}
 .pd i.on{background:#fff}
@@ -792,12 +795,12 @@ function cardHTML(p){
 /* Fotos de la tarjeta: las del color elegido (hasta 4). Solo la primera se baja al cargar la página;
    las demás se bajan cuando pasas el mouse, deslizas o tocas una flecha. */
 const FOTOS_TARJETA=4;
-const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
+const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
 function galTarjeta(p,col){
   const c=col||(p.colores||[]).find(x=>x.fotos&&x.fotos[0]);
   let fs=((c&&c.fotos)||[]).filter(Boolean).slice(0,FOTOS_TARJETA); if(!fs.length) fs=[foto1(p)].filter(Boolean);
   return '<div class="ph-gal">'+fs.map((f,i)=>'<img '+(i?'data-src':'src')+'="'+esc(f)+'" alt="'+esc(p.nombre)+(i?' foto '+(i+1):'')+'"'+(i?'':' loading="lazy"')+' decoding="async">').join('')+'</div>'+
-    (fs.length>1?'<button class="fl izq" type="button" aria-label="Foto anterior" data-fl="-1">'+FLECHA['-1']+'</button><button class="fl der" type="button" aria-label="Foto siguiente" data-fl="1">'+FLECHA['1']+'</button>'+
+    (fs.length>1?'<button class="fl izq" type="button" aria-label="Foto anterior" data-fl="-1" hidden>'+FLECHA['-1']+'</button><button class="fl der" type="button" aria-label="Foto siguiente" data-fl="1">'+FLECHA['1']+'</button>'+
       '<span class="pd">'+fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</span>':'');
 }
 function cargarGal(g){ if(g) g.querySelectorAll('img[data-src]').forEach(im=>{ im.src=im.dataset.src; im.removeAttribute('data-src'); }); }
@@ -805,7 +808,8 @@ function cargarGal(g){ if(g) g.querySelectorAll('img[data-src]').forEach(im=>{ i
 function moverGal(g,paso){ cargarGal(g); const n=g.children.length; if(n<2) return; const i=Math.round(g.scrollLeft/g.clientWidth); g.scrollTo({left:((i+paso+n)%n)*g.clientWidth,behavior:'smooth'}); }
 document.addEventListener('pointerover',e=>{ const c=e.target.closest&&e.target.closest('.card'); if(c) cargarGal(c.querySelector('.ph-gal')); },{passive:true});
 document.addEventListener('scroll',e=>{ const g=e.target; if(!g.classList||!g.classList.contains('ph-gal')) return; cargarGal(g);
-  const i=Math.round(g.scrollLeft/g.clientWidth); g.parentNode.querySelectorAll('.pd i').forEach((d,j)=>d.classList.toggle('on',i===j)); },{capture:true,passive:true});
+  const i=Math.round(g.scrollLeft/g.clientWidth); g.parentNode.querySelectorAll('.pd i').forEach((d,j)=>d.classList.toggle('on',i===j));
+  const iz=g.parentNode.querySelector('.fl.izq'); if(iz) iz.hidden=i===0; },{capture:true,passive:true}); // "<" solo cuando no es la primera foto
 /* Cuadros de color (como YoungLA): color liso = cuadro de color; estampado, deslavado, camo o color que no se reconoce
    = miniatura de la tela de la prenda; dos colores (Black/Red) = mitad y mitad. Agotados con X (no se pueden agregar).
    Al tocar uno cambia la foto de la tarjeta; más de 5 colores: los primeros 5 y "+N" (abre la prenda). */
