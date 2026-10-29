@@ -274,12 +274,6 @@ img{display:block;max-width:100%}
 /* pie de una línea */
 footer.pie{display:flex;justify-content:center;align-items:center;gap:12px;padding:26px 16px;margin-top:30px;background:var(--bg);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 footer.pie button,footer.pie a{all:unset;cursor:pointer;color:var(--ink);font-weight:600}
-/* barra fija abajo en celular */
-.tbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tbar button,.tbar a{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
-.tbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
-@media (min-width:900px){ .tbar{display:none} body{padding-bottom:0} }
 
 /* paneles */
 .ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.65);display:flex;justify-content:flex-end}
@@ -371,7 +365,11 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 .addok-bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .addok-bt .btn{min-height:40px;padding:0 10px;font-size:13px}
 @keyframes addokIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
-@media (min-width:900px){ .addok{left:auto;right:24px;top:76px;bottom:auto;transform:none;animation:none} }
+/* PC: compacto en una fila, esquina superior derecha, arriba de la marca, el precio y el apartado (empiezan a 74px) */
+@media (min-width:900px){ .addok{left:auto;right:16px;top:6px;bottom:auto;transform:none;animation:none;width:390px;display:flex;align-items:center;gap:10px;padding:8px 10px}
+  .addok-in{flex:1;min-width:0;gap:10px} .addok-in img{width:38px;height:46px}
+  .addok-in b{font-size:11px} .addok-in p{font-size:13px} .addok-in small{font-size:11px}
+  .addok-bt{display:flex;flex-direction:column;gap:4px;margin-top:0} .addok-bt .btn{min-height:26px;padding:0 10px;font-size:11.5px} }
 @media (prefers-reduced-motion: reduce){ .addok{animation:none} }
 @media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}.card:hover .ph img{transform:none}}
 </style>
@@ -422,12 +420,6 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <button id="ftTerm">Términos</button><span aria-hidden="true">·</span><button id="ftCto">Contacto</button><span aria-hidden="true">·</span><a id="ftIg" target="_blank" rel="noopener">Instagram</a>
 </footer>
 
-<!-- barra fija abajo (solo celular) -->
-<nav class="tbar" aria-label="Accesos rápidos">
-  <button id="tbTienda"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M10 20v-6h4v6"/></svg>Tienda</button>
-  <button id="tbBuscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Buscar</button>
-  <a id="tbDm" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 4L3 11l7 2.5L12.5 21z"/><path d="M10 13.5L21 4"/></svg>DM</a>
-</nav>
 
 <!-- menú -->
 <div class="ov left" id="ovMenu" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Menú">
@@ -526,12 +518,12 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovTerm" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Términos y condiciones">
   <div class="pn-h"><h2>Términos y condiciones</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b terms">
-    <!-- los números (anticipo, envíos, envío gratis, días) se llenan solos con TIENDA -->
+    <!-- los números (anticipo y envíos) se llenan solos con lo de Cotizador › Ajustes, igual que en la bolsa -->
     <h3>Cómo funciona</h3>
     <ol class="pasos">
-      <li><b>Pide por DM o WhatsApp</b><span>Escoge tu prenda, color y talla y mándanos tu pedido. Te confirmamos disponibilidad antes de pagar.</span></li>
+      <li><b>Arma tu pedido</b><span>Escoge tu prenda, color y talla en la página o mándanos mensaje por DM o WhatsApp. Te confirmamos disponibilidad antes de pagar.</span></li>
       <li><b>Aparta con el <span data-t="anticipo">30</span> %</b><span>Pagas el <span data-t="anticipo">30</span> % del precio de tus prendas. El envío va aparte.</span></li>
-      <li><b>Llega en <span data-t="llega">15–20 días</span></b><span>La pedimos a la marca y te avisamos cuando llega a Monterrey.</span></li>
+      <li><b>Tiempos de llegada</b><span>Sobre pedido: aprox. 15 días. Preventa: según la fecha de la colección. Entrega inmediata: lista para enviar. Te avisamos cuando tu pedido llega a Monterrey.</span></li>
       <li><b>Liquidas y te la enviamos</b><span>Pagas el resto de tus prendas más el envío, y te la mandamos.</span></li>
     </ol>
     <h3>Preventas</h3>
@@ -542,17 +534,16 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <h3>Pagos y anticipo</h3>
     <ul>
       <li>El anticipo es el <span data-t="anticipo">30</span> % del precio de tus prendas.</li>
-      <li>El resto lo liquidas en un plazo máximo de <b data-t="plazoLiquidar">3 semanas</b> desde tu compra. Si no liquidas en ese plazo, se pierde el anticipo y la prenda se libera para venta.</li>
+      <li>El resto lo liquidas en un plazo máximo de 30 días naturales desde tu compra. Si no liquidas en ese plazo, el pedido se cancela, se pierde el anticipo y la prenda pasa a venderse como entrega inmediata.</li>
       <li>Si cancelas tu pedido, pierdes tu anticipo.</li>
       <li>El precio que apartaste se respeta, aunque cambie el tipo de cambio.</li>
       <li>Pagas por transferencia o depósito en efectivo. Envía tu comprobante por DM o WhatsApp.</li>
     </ul>
-    <h3>Apartados y plazo de liquidación</h3>
-    <p>Al apartar un producto con anticipo, el cliente cuenta con un plazo máximo de 30 días naturales a partir de la fecha de su orden para liquidar el saldo restante. Si el saldo no se liquida dentro de este plazo, el pedido se cancela, el anticipo no es reembolsable y el producto pasa a venderse como entrega inmediata.</p>
     <h3>Envíos</h3>
     <ul>
-      <li>Monterrey: entrega a domicilio, $<span data-t="envioMty">80</span>.</li>
-      <li>Resto de México: por paquetería, desde $<span data-t="envioNacional">150</span>. Zonas alejadas se cotizan.</li>
+      <li>Monterrey y área metropolitana: entrega a domicilio, $<span data-t="envioMty">100</span>.</li>
+      <li>Resto de México: por paquetería, $<span data-t="envioNacional">150</span>.</li>
+      <li>Los costos pueden variar según el tamaño y peso del paquete; pedidos grandes o zonas alejadas se cotizan.</li>
       <li>Envío gratis en compras mayores a $<span data-t="gratisMas">3,000</span>.</li>
       <li>Solo se envía con el pedido liquidado. Te damos tu número de guía; una vez entregado a la paquetería, los tiempos dependen de ella.</li>
       <li>Si la dirección de envío está mal o incompleta, el reenvío corre por tu cuenta.</li>
@@ -592,7 +583,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 'use strict';
 /* ---------- datos de la tienda (los cambias aquí) ---------- */
 const TIENDA={
-  whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:80, envioNacional:150,
+  whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:100, envioNacional:150,
   // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
   barra:['Preventas abiertas','100% originales','Envíos a todo México','Envío gratis en compras mayores a $3,000'],
   // marcas de la fila de logos, en este orden
@@ -1020,8 +1011,6 @@ document.querySelectorAll('#ovMenu .mdesp').forEach(b=>b.addEventListener('click
 $('#ftTerm').addEventListener('click',()=>ir('terminos'));
 $('#ftCto').addEventListener('click',()=>ir('contacto'));
 $('#brand').addEventListener('click',e=>{ e.preventDefault(); ir('inicio'); });
-$('#tbTienda').addEventListener('click',()=>ir('inicio'));
-$('#tbBuscar').addEventListener('click',()=>$('#btnBuscar').click());
 $('#ovMenu').addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; cerrar('ovMenu'); ir(b.dataset.go); });
 $('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=''; buscar(); setTimeout(()=>$('#q').focus(),60); });
 function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,catDe(p),(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
@@ -1124,9 +1113,13 @@ function avisoAgregado(it){
   $('#addokImg').src=it.foto||''; $('#addokImg').hidden=!it.foto;
   $('#addokNom').textContent=it.nombre||'';
   $('#addokDet').textContent=[it.color,it.talla?'Talla '+it.talla:''].filter(Boolean).join(' · ');
-  $('#addok').hidden=false; clearTimeout(addokT); addokT=setTimeout(cerrarAviso,4000);
+  $('#addok').hidden=false; avisoTimer();
 }
+// dura 2 segundos; mientras el cursor está encima o el dedo lo toca, no se cierra (al soltar vuelven a contar 2 s)
+function avisoTimer(){ clearTimeout(addokT); addokT=setTimeout(cerrarAviso,2000); }
 function cerrarAviso(){ clearTimeout(addokT); $('#addok').hidden=true; }
+['mouseenter','touchstart','focusin'].forEach(ev=>$('#addok').addEventListener(ev,()=>clearTimeout(addokT),{passive:true}));
+['mouseleave','touchend','touchcancel','focusout'].forEach(ev=>$('#addok').addEventListener(ev,()=>{ if(!$('#addok').hidden) avisoTimer(); },{passive:true}));
 $('#addokSeguir').addEventListener('click',cerrarAviso);
 $('#addokVer').addEventListener('click',()=>{ cerrarAviso(); pintarBolsa(); abrir('ovBolsa'); });
 // tocar afuera del aviso lo cierra (el mismo toque que agrega no cuenta)
@@ -1158,7 +1151,7 @@ function pintarBolsa(){
       '<button class="x" data-quitar="'+i+'">Quitar</button></div>').join('')+
     '<p class="lbl" style="margin-top:20px">Entrega</p>'+
     (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Envío gratis en compras mayores a '+money(TIENDA.gratisMas)+'.</p>':'')+
-    [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · desde $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
+    [['mty','Monterrey y área metropolitana, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · $'+TIENDA.envioNacional+' (pedidos grandes o zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
     '<p class="lbl">Forma de pago</p>'+
     [['transferencia','Transferencia'],['oxxo','Depósito en efectivo']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
     (pago!=='efectivo'?'<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Ver datos para pagar</summary><div style="margin-top:10px">'+pagoHTML()+'</div></details>':'')+
@@ -1167,7 +1160,7 @@ function pintarBolsa(){
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
     (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>'+
-      // si paga solo el anticipo: aviso del plazo (Términos › Apartados y plazo de liquidación)
+      // si paga solo el anticipo: aviso del plazo (Términos › Pagos y anticipo)
       '<p class="plazo-aviso">Tienes 30 días a partir de tu orden para liquidar. Si no se liquida, el pedido se cancela y el anticipo no es reembolsable.</p>':'')+'</div>';
   // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
   // WhatsApp primero: ahí el mensaje llega ya escrito; en Instagram hay que pegarlo
@@ -1287,7 +1280,7 @@ $('#ovBolsa').addEventListener('input',e=>{ if(e.target.id==='bNombre'){ nombre=
 $('#btnBolsa').addEventListener('click',()=>{ pintarBolsa(); abrir('ovBolsa'); });
 
 /* ---------- arranque ---------- */
-$('#ftIg').href=ig; $('#tbDm').href=TIENDA.dm; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
+$('#ftIg').href=ig; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
 // barra en movimiento: los textos van dos veces para que el giro no se corte
 $('#annT').innerHTML=[0,1].map(k=>TIENDA.barra.map(t=>'<span'+(k?' aria-hidden="true"':'')+'>'+esc(t)+'</span>').join('')).join('');
 guardarBolsa(); guardarFavs();
