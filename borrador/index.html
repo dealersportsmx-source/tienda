@@ -775,6 +775,8 @@ function filtrar(sinTipo){
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
+  else if(!fEstado){ // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido (lo más nuevo primero en cada una)
+    const g=p=>p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||(b.creado||0)-(a.creado||0)); }
   else r.sort((a,b)=>(b.creado||0)-(a.creado||0)); // sin ordenar: siempre lo más nuevo primero
   return r;
 }
@@ -916,7 +918,7 @@ function render(){
   if(sin&&fEstado==='disponible') fEstado='';
   $('#disp').hidden=vista==='favs'||vista==='rebajas';
   // pestañas: Sobre pedido · Preventa · Entrega inmediata (Rebajas está en el menú)
-  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']])
+  $('#disp').innerHTML=[['pedido','Sobre pedido']].concat(sin?[]:[['disponible','Entrega inmediata']],[['preventa','Preventa']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
@@ -1077,8 +1079,7 @@ function ir(g,desdeHistorial){
   fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
   else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1); }
-  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); // Hombre › Hoodies
-    if(linea==='hombre'&&!cat) fEstado='pedido'; } // Hombre › Ver todo abre en Sobre pedido
+  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); } // Hombre › Hoodies (sin pestaña marcada: se ve todo)
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
   else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
