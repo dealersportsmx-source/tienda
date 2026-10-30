@@ -245,7 +245,6 @@ img{display:block;max-width:100%}
 .logos .lg-breathe-divinity img{max-height:38px}
 .logos .lg-darc-sport img{max-height:40px}
 .logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
-.logos button.todas{width:auto;min-width:72px}.logos button.todas .tx{font-size:13px}
 /* logos en la página de productos: la marca elegida se resalta */
 .logos.lf{border-bottom:0;padding:12px 16px 2px}
 .logos.lf button.on{border-color:var(--ink);background:#1f1f23;box-shadow:inset 0 0 0 1px var(--ink)}
@@ -775,6 +774,8 @@ function filtrar(sinTipo){
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
+  else if(!fEstado){ // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido (lo más nuevo primero en cada una)
+    const g=p=>p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||(b.creado||0)-(a.creado||0)); }
   else r.sort((a,b)=>(b.creado||0)-(a.creado||0)); // sin ordenar: siempre lo más nuevo primero
   return r;
 }
@@ -879,8 +880,8 @@ const chipHTML=(v,txt,on,attr)=>'<button class="chip'+(on?' on':'')+'" '+attr+'=
 const ESTADO_TXT={pedido:'Sobre pedido',preventa:'Preventa',disponible:'Entrega inmediata'};
 const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 // logos de marcas: en el inicio llevan a la marca; en la página de productos filtran (y se resalta la elegida)
-function logosHTML(lista){ // en la página de productos va primero "Todas" (quita la marca); tocar la marca marcada también la quita
-  return (lista?'<button data-lm="" aria-label="Todas las marcas" aria-pressed="'+!fMarca+'" class="todas'+(fMarca?'':' on')+'"><span class="tx">Todas</span></button>':'')+TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
+function logosHTML(lista){ // en la página de productos, tocar la marca marcada la quita
+  return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
 function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
@@ -916,7 +917,7 @@ function render(){
   if(sin&&fEstado==='disponible') fEstado='';
   $('#disp').hidden=vista==='favs'||vista==='rebajas';
   // pestañas: Sobre pedido · Preventa · Entrega inmediata (Rebajas está en el menú)
-  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']])
+  $('#disp').innerHTML=[['pedido','Sobre pedido']].concat(sin?[]:[['disponible','Entrega inmediata']],[['preventa','Preventa']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
@@ -963,7 +964,9 @@ $('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]')
 $('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
   if(b.dataset.vm==='disp'){ fMarca=''; fCol=''; render(); } else ir('m:'+b.dataset.vm); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
-$('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol=''; render(); });
+// tocar una marca te lleva a su "Sobre pedido" (la pestaña se puede cambiar después)
+$('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol='';
+  if(fMarca){ fEstado='pedido'; fPre=''; } render(); });
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
   if(todo||k==='vista') vista='';
   if(todo||k==='linea'){ linea=''; LS.set('linea',''); }
@@ -1075,14 +1078,16 @@ function ir(g,desdeHistorial){
   if(g==='inicio'){ modo(true); window.scrollTo(0,0); if(!desdeHistorial&&vistaActual!=='inicio') try{ history.pushState({ir:'inicio'},'',location.pathname+location.search); }catch(e){} vistaActual='inicio'; return; }
   // cada opción empieza limpia (el orden se queda como lo dejaste)
   fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
+  // al entrar (menú, categorías o logos del inicio) sale "Sobre pedido" ya marcada; el cliente la cambia si quiere
+  fEstado='pedido';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
-  else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1); }
-  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); // Hombre › Hoodies
-    if(linea==='hombre'&&!cat) fEstado='pedido'; } // Hombre › Ver todo abre en Sobre pedido
+  else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1);
+    if(P.some(p=>sinAcento(p.marca)===sinAcento(fMarca)&&sinAcento(colDe(p))===sinAcento(fCol)&&p.estado==='early')) fEstado='preventa'; } // colección en preventa (banner "Ver preventa")
+  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); } // Hombre › Hoodies
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
   else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
-  else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido') vista=g;
+  else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido'){ vista=g; if(g!=='acc') fEstado=''; } // favoritos, rebajas y lo más vendido: todo junto
   else linea=g;
   LS.set('linea',linea);
   modo(false); render(); window.scrollTo(0,0);
