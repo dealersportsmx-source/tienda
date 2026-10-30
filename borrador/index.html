@@ -245,7 +245,6 @@ img{display:block;max-width:100%}
 .logos .lg-breathe-divinity img{max-height:38px}
 .logos .lg-darc-sport img{max-height:40px}
 .logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
-.logos button.todas{width:auto;min-width:72px}.logos button.todas .tx{font-size:13px}
 /* logos en la página de productos: la marca elegida se resalta */
 .logos.lf{border-bottom:0;padding:12px 16px 2px}
 .logos.lf button.on{border-color:var(--ink);background:#1f1f23;box-shadow:inset 0 0 0 1px var(--ink)}
@@ -881,8 +880,8 @@ const chipHTML=(v,txt,on,attr)=>'<button class="chip'+(on?' on':'')+'" '+attr+'=
 const ESTADO_TXT={pedido:'Sobre pedido',preventa:'Preventa',disponible:'Entrega inmediata'};
 const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 // logos de marcas: en el inicio llevan a la marca; en la página de productos filtran (y se resalta la elegida)
-function logosHTML(lista){ // en la página de productos va primero "Todas" (quita la marca); tocar la marca marcada también la quita
-  return (lista?'<button data-lm="" aria-label="Todas las marcas" aria-pressed="'+!fMarca+'" class="todas'+(fMarca?'':' on')+'"><span class="tx">Todas</span></button>':'')+TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
+function logosHTML(lista){ // en la página de productos, tocar la marca marcada la quita
+  return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
 function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
@@ -965,7 +964,9 @@ $('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]')
 $('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
   if(b.dataset.vm==='disp'){ fMarca=''; fCol=''; render(); } else ir('m:'+b.dataset.vm); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
-$('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol=''; render(); });
+// tocar una marca te lleva a su "Sobre pedido" (la pestaña se puede cambiar después)
+$('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol='';
+  if(fMarca){ fEstado='pedido'; fPre=''; } render(); });
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
   if(todo||k==='vista') vista='';
   if(todo||k==='linea'){ linea=''; LS.set('linea',''); }
