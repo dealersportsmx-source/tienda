@@ -173,6 +173,9 @@ img{display:block;max-width:100%}
 .sws.yla .sw::before{content:"";position:absolute;left:50%;top:0;width:40px;height:40px;transform:translateX(-50%)}
 .sws.yla .sw i{width:22px;height:22px;border:1px solid #c8c8cc;background-color:transparent}
 .sws.yla .sw.mas{width:auto;padding:0 6px}
+/* entrega inmediata: cuadritos con la talla escrita, mismo tamaño que los de color (22px, 6px de separación) */
+.sws.tl-s{gap:6px;margin:9px 0 9px}
+.tl-s span{min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border:1px solid #c8c8cc;display:grid;place-items:center;font-size:10px;font-weight:800;line-height:1}
 .fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
 .fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
 .fav.on svg{fill:var(--ink)}
@@ -809,7 +812,7 @@ function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:
 function cardHTML(p){
   const t=etiqueta(p), reb=enRebaja(p), antes=precioAntes(p);
   const tl=reb?[...tallasConStock(p)]:[];
-  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+galTarjeta(p)+
+  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"'+(p.colFijo?' data-col="'+esc(p.colFijo)+'"':'')+'><div class="ph">'+galTarjeta(p)+
     '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en modo administrador
     '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
@@ -817,7 +820,7 @@ function cardHTML(p){
     '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+
-    swatchesHTML(p)+
+    (p.colFijo?tallasCardHTML(p):swatchesHTML(p))+ // entrega inmediata: tallas en existencia en vez de colores
   '</div>';
 }
 /* Fotos de la tarjeta: las del color elegido (hasta 4). Solo la primera se baja al cargar la página;
@@ -893,6 +896,16 @@ function pintarActivos(){
   if(fPrecio) a.push(['precio',PRECIO_TXT[fPrecio]]);
   $('#activos').innerHTML=a.map(x=>'<button data-quita="'+x[0]+'" aria-label="Quitar '+esc(x[1])+'">'+esc(x[1])+'<b aria-hidden="true">×</b></button>').join('')+(a.length>1?'<button class="todo" data-quita="todo">Quitar todo</button>':'');
 }
+/* Entrega inmediata: cada color va como tarjeta aparte ("Baggy Sweats - Black Wash") y abajo del precio
+   salen las tallas que tienes en existencia. La talla sin piezas desaparece sola; el color sin piezas no sale.
+   (Sobre pedido y preventa siguen igual: una tarjeta por modelo con sus cuadritos de color.) */
+function tallasEnStock(p,c){ return tallasDe(p,c).filter(t=>(+((c.tallas||{})[t])||0)>0); }
+function porColor(ps){ const out=[];
+  ps.forEach(p=>{ if(p.estado!=='disponible'){ out.push(p); return; }
+    (p.colores||[]).forEach(c=>{ if(!Object.values(c.tallas||{}).some(n=>(+n||0)>0)) return;
+      out.push(Object.assign(Object.create(p),{nombre:p.nombre+(c.nombre?' - '+c.nombre:''),colores:[c],coloresAgot:[],colFijo:c.k,tallasStock:tallasEnStock(p,c)})); }); });
+  return out; }
+function tallasCardHTML(p){ const ts=p.tallasStock||[]; return ts.length?'<div class="sws tl-s" aria-label="Tallas en existencia">'+ts.map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>':''; }
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   // 1) marcas
@@ -910,7 +923,7 @@ function render(){
   $('#titulo').hidden=!vista&&!fMarca&&fEstado!=='preventa';
   $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':vista==='masvendido'?'Lo más vendido':fMarca?fMarca+(fCol?' · '+fCol:''):fPre?((preventas().find(g=>g.k===fPre)||{}).nombre||'Preventas'):'Preventas';
   pintarActivos();
-  const r=filtrar();
+  const r=fEstado==='disponible'?porColor(filtrar()):filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
   let html='';
   if(fEstado==='preventa'){ // preventas agrupadas, cada una con su cierre
@@ -978,7 +991,7 @@ document.addEventListener('click',e=>{
     card.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',b===sw)); card.dataset.col=col.k; return; }
   const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id,false,c.dataset.col);
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id);
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id,false,e.target.dataset.col);
   // en la página de la prenda, las flechas del teclado cambian de foto
   if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&cur&&!$('#pv').hidden&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) moverGal($('#gal'),e.key==='ArrowLeft'?-1:1); });
 setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
