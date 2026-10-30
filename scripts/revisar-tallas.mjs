@@ -131,9 +131,9 @@ async function revisarCuadritos() {
 }
 
 // Fotos de espalda de YoungLA: a cada color que en la tienda tiene una sola foto se le buscan en youngla.com
-// las demás fotos con modelo de ese color (llevan el color y "ecomm" en el nombre, ej. 5128_red-wash_003_johnny_ecomm.jpg).
+// más fotos: primero las de modelo de ese color (llevan el color y "ecomm" en el nombre, ej. 5128_red-wash_003_johnny_ecomm.jpg);
+// si no hay, sus acercamientos y las fotos generales de la prenda, para que todos cambien con la flechita.
 // Se guardan en fotos-extra.json: { "<handle>": { "<color en minúsculas>": ["https://cdn.shopify.com/…", …] } }.
-// Si YoungLA no tiene más fotos de ese color, no se pone nada (la tienda lo deja como está).
 const FOTOS_EXTRA_JSON = 'fotos-extra.json';
 const aSlug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const archivoDe = u => String(u || '').split('?')[0].split('/').pop();
@@ -154,12 +154,19 @@ async function revisarEspaldas() {
         const nombres = [...new Set((q.variants || []).map(v => v['option' + (ci + 1)]))];
         const nm = nombres.find(n => aSlug(n) === aSlug(c.nombre)); if (!nm) continue;
         const slugs = nombres.map(n => ({ n, s: aSlug(n) })).filter(x => x.s).sort((a, b) => b.s.length - a.s.length); // "black-wash" antes que "black"
-        const yaTiene = new Set((q.variants || []).filter(v => v['option' + (ci + 1)] === nm && v.featured_image).map(v => archivoDe(v.featured_image.src)));
-        const extra = (q.images || []).map(u => String(u).replace(/^\/\//, 'https://')).filter(u => {
-          if (yaTiene.has(archivoDe(u))) return false; // esa es la que ya tiene la tienda
-          const a = '-' + aSlug(archivoDe(u).replace(/\.\w+$/, '')) + '-', x = slugs.find(x => a.includes('-' + x.s + '-'));
-          return x && x.n === nm && /_ecomm/i.test(archivoDe(u)); // solo fotos con modelo (espalda / de lado); las "floor" son acercamientos
-        }).slice(0, 3).map(u => u.split('?')[0] + '?width=800');
+        // fotos principales de cada color (las que ya tiene la tienda): no se repiten
+        const principales = new Set((q.variants || []).filter(v => v.featured_image).map(v => archivoDe(v.featured_image.src)));
+        // 1) su color con modelo (espalda / de lado), 2) si no hay, sus acercamientos y luego las generales de la prenda:
+        // así todos los colores cambian de foto con la flechita, aunque no sea la espalda
+        const modelo = [], cerca = [], general = [];
+        for (const u0 of q.images || []) {
+          const u = String(u0).replace(/^\/\//, 'https://'), a0 = archivoDe(u);
+          if (principales.has(a0) || /size|chart|guide/i.test(a0)) continue;
+          const a = '-' + aSlug(a0.replace(/\.\w+$/, '')) + '-', x = slugs.find(x => a.includes('-' + x.s + '-'));
+          if (x && x.n === nm) (/_ecomm/i.test(a0) ? modelo : cerca).push(u);
+          else if (!x) general.push(u);
+        }
+        const extra = (modelo.length ? modelo : cerca.concat(general)).slice(0, 3).map(u => u.split('?')[0] + '?width=800');
         if (extra.length) { mapa[h] = Object.assign(mapa[h] || {}, { [k]: extra }); nuevos++; console.log(`✓ fotos de espalda de ${p.nombre} (${c.nombre}): ${extra.length}`); }
       }
     }
