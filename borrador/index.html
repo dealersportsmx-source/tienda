@@ -1089,6 +1089,10 @@ function ir(g,desdeHistorial){
   else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
   else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido'){ vista=g; if(g!=='acc') fEstado=''; } // favoritos, rebajas y lo más vendido: todo junto
   else linea=g;
+  // desde el menú (Hombre › Ver todo, una categoría…) sale marcada la primera marca de la fila de logos (YoungLA);
+  // si esa marca no tiene nada en esa sección, la siguiente que sí tenga
+  if(!fMarca&&fEstado==='pedido'&&(g.startsWith('l:')||g==='acc'||['','hombre','mujer'].includes(g))){
+    for(const m of TIENDA.marcas){ fMarca=m; if(filtrar().length) break; fMarca=''; } }
   LS.set('linea',linea);
   modo(false); render(); window.scrollTo(0,0);
   if(!desdeHistorial&&vistaActual!==g) try{ history.pushState({ir:g},'','#ir='+encodeURIComponent(g)); }catch(e){}
