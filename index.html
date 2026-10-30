@@ -121,22 +121,61 @@ img{display:block;max-width:100%}
 .card{all:unset;cursor:pointer;display:block;min-width:0}
 .card:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .ph{position:relative;aspect-ratio:4/5;background:var(--soft);border-radius:6px;overflow:hidden}
-.ph img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-.card:hover .ph img{transform:scale(1.03)}
+.ph img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;user-select:none}
+/* fotos del color en la tarjeta: se deslizan con el dedo; en compu, flechas al pasar el mouse; puntitos abajo */
+/* celular: el dedo de lado cambia de foto; de arriba a abajo la foto no se mueve, solo baja la página */
+.ph-gal{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.ph-gal::-webkit-scrollbar{display:none}
+.ph-gal img{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+/* compu: la foto queda fija (sin arrastrar ni deslizar con el mouse o el trackpad); solo cambia con las flechas */
+@media (hover:hover) and (pointer:fine){.ph-gal{overflow-x:hidden}}
+.fl{all:unset;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);color:#0b0b0c;display:none;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);z-index:2}
+.fl.izq{left:8px}.fl.der{right:8px}
+.galw{position:relative}
+.fl:focus-visible{display:grid;outline:2px solid #fff;outline-offset:2px}
+.fl[hidden]{display:none!important}
+@media (hover:hover){.galw:hover .fl{display:grid}}
+/* en las tarjetas: flecha blanca delgada, siempre visible (celular y compu), con sombra ligera para fotos claras */
+.ph .fl{display:grid;width:40px;height:56px;border-radius:0;background:none;box-shadow:none;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.ph .fl.izq{left:0}.ph .fl.der{right:0}
+.pd{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:4px;pointer-events:none}
+.pd i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 .5px rgba(0,0,0,.3)}
+.pd i.on{background:#fff}
 .tag{position:absolute;left:8px;top:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;background:#fff;color:#0b0b0c;letter-spacing:.02em}
 /* etiquetas de estado en blanco y negro: Preventa (negro), Sobre pedido (gris oscuro), Entrega inmediata (blanco) */
 .tags{position:absolute;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:4px}.tags .tag{position:static}
-.tag.t-reb{background:#e11d48;color:#fff}
+.tag.t-reb,.tag.t-desc{background:#E0243F;color:#fff}
 /* "Más vendido": dorado */
 .tag.t-mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;box-shadow:0 1px 0 rgba(0,0,0,.25)}
 .estado.mv{background:linear-gradient(135deg,#f6dd8f,#c9a227 60%,#a8841a);color:#1a1300;margin-left:6px}
-.tag.t-drop{background:#fff;color:#0b0b0c}.tag.t-ped{background:#55555a;color:#fff}.tag.t-ya{background:#0b0b0c;color:#fff;box-shadow:0 0 0 1px #55555a}
+/* colores por estado (mismos en tarjetas, página de la prenda y pestaña activa) */
+.tag.t-drop{background:#7C3AED;color:#fff}.tag.t-ped{background:#2563EB;color:#fff}.tag.t-ya{background:#16A34A;color:#fff}
 .nm .cod{color:var(--muted);font-weight:600}
 .aho{margin:2px 0 0;font-size:12px;font-weight:700}
 .tl{margin:2px 0 0;font-size:12px;color:var(--muted)}
 .dots{display:flex;align-items:center;gap:5px;margin:7px 0 0}
 .dots i{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
 .dots small{font-size:11px;color:var(--muted)}
+/* cuadros de color en las tarjetas (área para tocar de 40px de alto) */
+.sws{display:flex;flex-wrap:wrap;justify-content:center;margin:4px 0 0}
+.sw{all:unset;box-sizing:border-box;width:33px;height:40px;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sw i{display:block;width:28px;height:28px;box-sizing:border-box;border:1px solid #8e8e94;position:relative}
+.sw.on i{box-shadow:0 0 0 2px var(--bg),0 0 0 3px #fff}
+.sw:focus-visible i{outline:2px solid #fff;outline-offset:3px}
+.sw.agot{cursor:not-allowed}
+.sw.agot i{opacity:.5}
+.sw.agot i::after{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 1px),#f2f2f2 calc(50% - 1px),#f2f2f2 calc(50% + 1px),transparent calc(50% + 1px))}
+.sw.mas{width:auto;padding:0 6px;font-size:12px;font-weight:800;color:var(--muted)}
+@media (min-width:760px){ .sw{width:38px} .sw i{width:30px;height:30px} }
+/* YoungLA: cuadritos de 22px con 6px de separación (igual que youngla.com, en celular y en compu);
+   el área para tocar es de 40×40 aunque el cuadrito sea chico */
+.sws.yla .sw,.sws.yla .sw:not(.mas){width:28px;height:40px;position:relative}
+.sws.yla .sw::before{content:"";position:absolute;left:50%;top:0;width:40px;height:40px;transform:translateX(-50%)}
+.sws.yla .sw i{width:22px;height:22px;border:1px solid #c8c8cc;background-color:transparent}
+.sws.yla .sw.mas{width:auto;padding:0 6px}
+/* entrega inmediata: cuadritos con la talla escrita, mismo tamaño que los de color (22px, 6px de separación) */
+.sws.tl-s{gap:6px;margin:9px 0 9px}
+.tl-s span{min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border:1px solid #c8c8cc;display:grid;place-items:center;font-size:10px;font-weight:800;line-height:1}
 .fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
 .fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
 .fav.on svg{fill:var(--ink)}
@@ -206,6 +245,7 @@ img{display:block;max-width:100%}
 .logos .lg-breathe-divinity img{max-height:38px}
 .logos .lg-darc-sport img{max-height:40px}
 .logos .tx{font-size:11px;font-weight:800;text-transform:uppercase;text-align:center;line-height:1.1}
+.logos button.todas{width:auto;min-width:72px}.logos button.todas .tx{font-size:13px}
 /* logos en la página de productos: la marca elegida se resalta */
 .logos.lf{border-bottom:0;padding:12px 16px 2px}
 .logos.lf button.on{border-color:var(--ink);background:#1f1f23;box-shadow:inset 0 0 0 1px var(--ink)}
@@ -261,12 +301,6 @@ img{display:block;max-width:100%}
 /* pie de una línea */
 footer.pie{display:flex;justify-content:center;align-items:center;gap:12px;padding:26px 16px;margin-top:30px;background:var(--bg);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 footer.pie button,footer.pie a{all:unset;cursor:pointer;color:var(--ink);font-weight:600}
-/* barra fija abajo en celular */
-.tbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tbar button,.tbar a{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
-.tbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
-@media (min-width:900px){ .tbar{display:none} body{padding-bottom:0} }
 
 /* paneles */
 .ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.65);display:flex;justify-content:flex-end}
@@ -302,7 +336,10 @@ body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 .pv-d .pr{font-size:20px}
 .note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .estado{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.03em}
-.estado.pre,.estado.drop,.estado.cam,.estado.disp{background:var(--soft);color:var(--ink)}
+.estado.pre,.estado.cam{background:#2563EB;color:#fff}.estado.drop{background:#7C3AED;color:#fff}.estado.disp{background:#16A34A;color:#fff}.estado.reb{background:#E0243F;color:#fff;margin-left:6px}
+.cats.en .chip.on[data-disp="pedido"]{background:#2563EB;border-color:#2563EB;color:#fff}.cats.en .chip.on[data-disp="preventa"]{background:#7C3AED;border-color:#7C3AED;color:#fff}.cats.en .chip.on[data-disp="disponible"]{background:#16A34A;border-color:#16A34A;color:#fff}
+.plazo-aviso{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--line);font-size:12.5px;line-height:1.4;color:var(--muted)}
+.empty.vm{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}.empty.vm p{margin:0}
 .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
 .size{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;height:46px;font-weight:700;font-size:14px}
 .size.on{background:var(--ink);color:var(--on);border-color:var(--ink)}
@@ -344,7 +381,24 @@ footer .logo{width:150px;margin:26px auto 8px;opacity:.9}
 footer .c{text-align:center;color:var(--muted);font-size:12px}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;z-index:120;background:var(--ink);color:var(--on);padding:10px 16px;border-radius:999px;font-size:14px;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-@media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}.card:hover .ph img{transform:none}}
+/* aviso al agregar a la bolsa: te quedas en la prenda (se cierra solo en 4 s o al tocar afuera) */
+.addok{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:130;width:min(420px,calc(100% - 24px));box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.55);animation:addokIn .25s ease}
+.addok-in{display:flex;gap:12px;align-items:center}
+.addok-in img{width:56px;height:70px;object-fit:cover;border-radius:6px;flex:none;background:#1a1a1d}
+.addok-in div{min-width:0}
+.addok-in b{display:block;font-size:13px;color:#16a34a}
+.addok-in p{margin:2px 0 0;font-size:14px;font-weight:700;line-height:1.25;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.addok-in small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.addok-bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.addok-bt .btn{min-height:40px;padding:0 10px;font-size:13px}
+@keyframes addokIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+/* PC: compacto en una fila, esquina superior derecha, arriba de la marca, el precio y el apartado (empiezan a 74px) */
+@media (min-width:900px){ .addok{left:auto;right:16px;top:6px;bottom:auto;transform:none;animation:none;width:390px;display:flex;align-items:center;gap:10px;padding:8px 10px}
+  .addok-in{flex:1;min-width:0;gap:10px} .addok-in img{width:38px;height:46px}
+  .addok-in b{font-size:11px} .addok-in p{font-size:13px} .addok-in small{font-size:11px}
+  .addok-bt{display:flex;flex-direction:column;gap:4px;margin-top:0} .addok-bt .btn{min-height:26px;padding:0 10px;font-size:11.5px} }
+@media (prefers-reduced-motion: reduce){ .addok{animation:none} }
+@media (prefers-reduced-motion: reduce){.splash img{animation:none;opacity:1}.pn{animation:none}}
 </style>
 </head>
 <body>
@@ -393,12 +447,6 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
   <button id="ftTerm">Términos</button><span aria-hidden="true">·</span><button id="ftCto">Contacto</button><span aria-hidden="true">·</span><a id="ftIg" target="_blank" rel="noopener">Instagram</a>
 </footer>
 
-<!-- barra fija abajo (solo celular) -->
-<nav class="tbar" aria-label="Accesos rápidos">
-  <button id="tbTienda"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M10 20v-6h4v6"/></svg>Tienda</button>
-  <button id="tbBuscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Buscar</button>
-  <a id="tbDm" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 4L3 11l7 2.5L12.5 21z"/><path d="M10 13.5L21 4"/></svg>DM</a>
-</nav>
 
 <!-- menú -->
 <div class="ov left" id="ovMenu" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Menú">
@@ -460,9 +508,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovFiltro" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Filtrar y ordenar">
   <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b">
-    <div id="fTipoBox"><p class="lbl">Tipo de prenda</p><div class="chips" id="fTipo"></div></div>
     <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
-    <p class="lbl">Precio</p><div class="chips" id="fPrecio"></div>
     <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
   </div>
   <div class="pn-f" style="display:flex;gap:8px"><button class="btn o" id="fLimpiar" style="flex:1">Limpiar</button><button class="btn" data-close style="flex:1" id="fVer">Ver</button></div>
@@ -472,12 +518,12 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="pv" id="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pvName">
   <div class="pv-top"><button class="ib" id="pvBack" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="ib" id="pvFav" aria-label="Agregar a favoritos" hidden><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
   <div class="pv-in">
-    <div><div class="gal" id="gal"></div><div class="dots" id="dots"></div></div>
+    <div><div class="galw"><div class="gal" id="gal"></div><button class="fl izq" id="galIzq" type="button" aria-label="Foto anterior" data-fl="-1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="fl der" id="galDer" type="button" aria-label="Foto siguiente" data-fl="1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button></div><div class="dots" id="dots"></div></div>
     <div class="pv-d">
       <p class="br" id="pvBrand"></p>
       <h2 id="pvName"></h2>
       <p class="pr" id="pvPrice"></p>
-      <span class="estado" id="pvEstado" hidden></span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
+      <span class="estado" id="pvEstado" hidden></span><span class="estado reb" id="pvReb" hidden>Rebaja</span><span class="estado reb" id="pvDescPct" hidden></span><span class="estado mv" id="pvMv" hidden>Más vendido</span>
       <p class="note" id="pvNote" hidden></p>
       <div id="pvColorsBox"><p class="lbl">Color: <span id="pvColorName" style="font-weight:500;text-transform:none;letter-spacing:0"></span></p><div class="chips" id="pvColors"></div></div>
       <div id="pvTallaBox"><p class="lbl">Talla</p><div class="sizes" id="pvSizes"></div></div>
@@ -499,12 +545,12 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovTerm" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Términos y condiciones">
   <div class="pn-h"><h2>Términos y condiciones</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b terms">
-    <!-- los números (anticipo, envíos, envío gratis, días) se llenan solos con TIENDA -->
+    <!-- los números (anticipo y envíos) se llenan solos con lo de Cotizador › Ajustes, igual que en la bolsa -->
     <h3>Cómo funciona</h3>
     <ol class="pasos">
-      <li><b>Pide por DM o WhatsApp</b><span>Escoge tu prenda, color y talla y mándanos tu pedido. Te confirmamos disponibilidad antes de pagar.</span></li>
+      <li><b>Arma tu pedido</b><span>Escoge tu prenda, color y talla en la página o mándanos mensaje por DM o WhatsApp. Te confirmamos disponibilidad antes de pagar.</span></li>
       <li><b>Aparta con el <span data-t="anticipo">30</span> %</b><span>Pagas el <span data-t="anticipo">30</span> % del precio de tus prendas. El envío va aparte.</span></li>
-      <li><b>Llega en <span data-t="llega">15–20 días</span></b><span>La pedimos a la marca y te avisamos cuando llega a Monterrey.</span></li>
+      <li><b>Tiempos de llegada</b><span>Sobre pedido: aprox. 15 días. Preventa: según la fecha de la colección. Entrega inmediata: lista para enviar. Te avisamos cuando tu pedido llega a Monterrey.</span></li>
       <li><b>Liquidas y te la enviamos</b><span>Pagas el resto de tus prendas más el envío, y te la mandamos.</span></li>
     </ol>
     <h3>Preventas</h3>
@@ -515,15 +561,16 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
     <h3>Pagos y anticipo</h3>
     <ul>
       <li>El anticipo es el <span data-t="anticipo">30</span> % del precio de tus prendas.</li>
-      <li>El resto lo liquidas en un plazo máximo de <b data-t="plazoLiquidar">3 semanas</b> desde tu compra. Si no liquidas en ese plazo, se pierde el anticipo y la prenda se libera para venta.</li>
+      <li>El resto lo liquidas en un plazo máximo de 30 días naturales desde tu compra. Si no liquidas en ese plazo, el pedido se cancela, se pierde el anticipo y la prenda pasa a venderse como entrega inmediata.</li>
       <li>Si cancelas tu pedido, pierdes tu anticipo.</li>
       <li>El precio que apartaste se respeta, aunque cambie el tipo de cambio.</li>
       <li>Pagas por transferencia o depósito en efectivo. Envía tu comprobante por DM o WhatsApp.</li>
     </ul>
     <h3>Envíos</h3>
     <ul>
-      <li>Monterrey: entrega a domicilio, $<span data-t="envioMty">80</span>.</li>
-      <li>Resto de México: por paquetería, desde $<span data-t="envioNacional">150</span>. Zonas alejadas se cotizan.</li>
+      <li>Monterrey y área metropolitana: entrega a domicilio, $<span data-t="envioMty">100</span>.</li>
+      <li>Resto de México: por paquetería, $<span data-t="envioNacional">150</span>.</li>
+      <li>Los costos pueden variar según el tamaño y peso del paquete; pedidos grandes o zonas alejadas se cotizan.</li>
       <li>Envío gratis en compras mayores a $<span data-t="gratisMas">3,000</span>.</li>
       <li>Solo se envía con el pedido liquidado. Te damos tu número de guía; una vez entregado a la paquetería, los tiempos dependen de ella.</li>
       <li>Si la dirección de envío está mal o incompleta, el reenvío corre por tu cuenta.</li>
@@ -553,13 +600,17 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="addok" id="addok" role="status" aria-live="polite" hidden>
+  <div class="addok-in"><img id="addokImg" alt=""><div><b>Agregado a tu bolsa</b><p id="addokNom"></p><small id="addokDet"></small></div></div>
+  <div class="addok-bt"><button class="btn o" id="addokSeguir">Seguir comprando</button><button class="btn w" id="addokVer">Ver bolsa</button></div>
+</div>
 
 <script>
 (function(){
 'use strict';
 /* ---------- datos de la tienda (los cambias aquí) ---------- */
 const TIENDA={
-  whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:80, envioNacional:150,
+  whatsapp:'528120796757', instagram:'dealersportsmx00', dm:'https://ig.me/m/dealersportsmx00', envioMty:100, envioNacional:150,
   // textos de la barra negra de arriba (se mueven solos); cambia o agrega los que quieras
   barra:['Preventas abiertas','100% originales','Envíos a todo México','Envío gratis en compras mayores a $3,000'],
   // marcas de la fila de logos, en este orden
@@ -591,7 +642,7 @@ const TIENDA={
   // Estos números llegan solos desde Cotizador › Ajustes cuando das "Publicar tienda" en el Catálogo.
   anticipo:30, red:50, gratisMas:3000, // envío gratis en compras MAYORES a esto
   // plazos que salen en Términos y condiciones
-  plazoLiquidar:'3 semanas',
+  plazoLiquidar:'30 días naturales',
   llega:'15 días',
   beneficiario:'', // tu nombre como aparece en tu cuenta (si queda vacío no se muestra)
   cuentas:[
@@ -663,6 +714,19 @@ function sinTalla(p,c){ if(!esAcc(p)) return false; const k=Object.keys((c||{}).
   return !k.length||k.every(t=>/^(única|unica|one size|one-size|os|default title)$/i.test(t))||(k.length===6&&['XS','S','M','L','XL','2XL'].every(t=>k.includes(t))); }
 function tallasDe(p,c){ if(sinTalla(p,c)) return []; const t=(c||{}).tallas||{}; return Object.keys(t).sort((a,b)=>{ const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b); if(i>=0&&j>=0) return i-j; if(i>=0) return -1; if(j>=0) return 1; return parseFloat(a)-parseFloat(b)||a.localeCompare(b); }); }
 function hay(p,c,t){ return p.estado!=='disponible'||(+((c.tallas||{})[t])||0)>0; }
+/* Regla de tallas mínimas: una prenda sobre pedido solo sale si al menos UN color tiene 3 o más tallas
+   disponibles entre XS, S, M, L, XL y 2XL (3XL y 4XL no cuentan). Si ninguno cumple, se esconde completa;
+   si la marca resurte (el robot lo actualiza cada 3 horas), vuelve a salir sola.
+   No aplica a: entrega inmediata (tu stock), accesorios, talla única ni prendas sin tallas de letra (tenis, etc.). */
+const TALLAS_MIN=['XS','S','M','L','XL','2XL'];
+function pocasTallas(p){
+  if(p.estado==='disponible'||esAcc(p)) return false;
+  let conLetras=false;
+  for(const c of p.colores||[]){ if(sinTalla(p,c)) return false;
+    const s=new Set(); Object.keys(c.tallas||{}).forEach(t=>{ String(t).toUpperCase().replace(/\s+/g,'').split('/').forEach(x=>{ x=x==='XXL'?'2XL':x; if(TALLAS_MIN.includes(x)) s.add(x); if(/^(XS|S|M|L|XL|XXL|\dXL)$/.test(x)) conLetras=true; }); });
+    if(s.size>=3) return false; }
+  return conLetras;
+}
 function tallasConStock(p){ const s=new Set(); (p.colores||[]).forEach(c=>Object.keys(c.tallas||{}).forEach(t=>{ if(hay(p,c,t)) s.add(t); })); return s; }
 function foto1(p){ for(const c of p.colores||[]) if(c.fotos&&c.fotos[0]) return c.fotos[0]; return ''; }
 function esNuevo(p){ return p.estado==='disponible'&&p.creado&&(Date.now()-p.creado<14*864e5); }
@@ -702,7 +766,7 @@ function filtrar(sinTipo){
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
   if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
-  if(fTalla) r=r.filter(p=>tallasConStock(p).has(fTalla));
+  if(fTalla) r=r.filter(p=>tallasFiltro(p).has(fTalla));
   if(fEstado==='disponible') r=r.filter(p=>p.estado==='disponible');
   else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
   else if(fEstado==='preventa') r=r.filter(p=>p.estado==='early'&&(!fPre||clavePre(p)===fPre));
@@ -711,7 +775,7 @@ function filtrar(sinTipo){
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
-  else r.sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0));
+  else r.sort((a,b)=>(b.creado||0)-(a.creado||0)); // sin ordenar: siempre lo más nuevo primero
   return r;
 }
 /* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
@@ -722,22 +786,88 @@ function redondear(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100; re
 function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||0)/100); }
 // llena los números de Términos con los de TIENDA (los que mandan tus Ajustes)
 function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach(el=>{ const v=TIENDA[el.dataset.t]; if(v!=null) el.textContent=typeof v==='number'?v.toLocaleString('en-US'):v; }); }
+/* Descuentos por sección (Cotizador › Ajustes; llegan a la tienda al dar "Publicar tienda").
+   Uno para Sobre pedido, otro para Preventa y otro para Entrega inmediata, cada uno para todas las marcas o una sola.
+   Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
+   No se suma a las prendas que ya están en Rebajas. */
+// hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
+function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
+const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
+function descuentosDe(a){
+  const ds=Object.assign({},(a&&a.descuentos)||{});
+  // solo en el borrador, para probar sin publicar: ?descuento=pedido-20 (o preventa-15-YoungLA)
+  const q=BORRADOR&&new URLSearchParams(location.search).get('descuento');
+  if(q){ const [s,pct,...m]=q.split('-'); ds[s]={on:true,pct:+pct,marca:m.join('-')}; }
+  return ds;
+}
+function aplicarDescuentos(ds){
+  PT.forEach(p=>{ delete p.desc; if(enRebaja(p)) return;
+    const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
+    if(x.fin&&new Date(x.fin)<=new Date()) return;
+    if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
+    const nuevo=redondearAbajo(p.precio*(1-pct/100)); if(nuevo>0&&nuevo<p.precio){ p.desc={pct,antes:+p.precio}; p.precio=nuevo; } });
+}
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
 function cardHTML(p){
-  const t=etiqueta(p), f=foto1(p), reb=enRebaja(p), antes=precioAntes(p);
-  const cols=(p.colores||[]).filter(c=>c.nombre);
+  const t=etiqueta(p), reb=enRebaja(p), antes=precioAntes(p);
   const tl=reb?[...tallasConStock(p)]:[];
-  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"><div class="ph">'+(f?'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+'" loading="lazy" decoding="async">':'')+
-    '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+
+  return '<div class="card" role="link" tabindex="0" data-id="'+esc(p.id)+'"'+(p.colFijo?' data-col="'+esc(p.colFijo)+'"':'')+'><div class="ph">'+galTarjeta(p)+
+    '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(reb?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span></div>'+ // solo en modo administrador
     '<p class="nm">'+(p.codigo?'<span class="cod">'+esc(p.codigo)+' · </span>':'')+esc(p.nombre)+'</p>'+
     '<p class="br">'+esc(p.marca||'')+'</p>'+
-    '<p class="pr">'+money(p.precio)+(reb?'<s>'+money(antes)+'</s>':'')+'</p>'+
+    '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':'')+
-    (cols.length?'<p class="dots" aria-label="'+esc(cols.map(c=>c.nombre).join(', '))+'">'+cols.slice(0,5).map(c=>'<i style="background:'+colorDe(c.nombre)+'" title="'+esc(c.nombre)+'"></i>').join('')+(cols.length>5?'<small>+'+(cols.length-5)+'</small>':'')+'</p>':'')+
+    (p.colFijo?tallasCardHTML(p):swatchesHTML(p))+ // entrega inmediata: tallas en existencia en vez de colores
   '</div>';
+}
+/* Fotos de la tarjeta: las del color elegido (hasta 4). Solo la primera se baja al cargar la página;
+   las demás se bajan cuando pasas el mouse, deslizas o tocas una flecha. */
+const FOTOS_TARJETA=4;
+const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
+function galTarjeta(p,col){
+  const c=col||(p.colores||[]).find(x=>x.fotos&&x.fotos[0]);
+  let fs=((c&&c.fotos)||[]).filter(Boolean).slice(0,FOTOS_TARJETA); if(!fs.length) fs=[foto1(p)].filter(Boolean);
+  return '<div class="ph-gal">'+fs.map((f,i)=>'<img '+(i?'data-src':'src')+'="'+esc(f)+'" alt="'+esc(p.nombre)+(i?' foto '+(i+1):'')+'"'+(i?'':' loading="lazy"')+' decoding="async" draggable="false">').join('')+'</div>'+
+    (fs.length>1?'<button class="fl izq" type="button" aria-label="Foto anterior" data-fl="-1" hidden>'+FLECHA['-1']+'</button><button class="fl der" type="button" aria-label="Foto siguiente" data-fl="1">'+FLECHA['1']+'</button>'+
+      '<span class="pd">'+fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</span>':'');
+}
+function cargarGal(g){ if(g) g.querySelectorAll('img[data-src]').forEach(im=>{ im.src=im.dataset.src; im.removeAttribute('data-src'); }); }
+// una flecha: pasa a la foto anterior/siguiente (de la última regresa a la primera)
+function moverGal(g,paso){ cargarGal(g); const n=g.children.length; if(n<2) return; const i=Math.round(g.scrollLeft/g.clientWidth); g.scrollTo({left:((i+paso+n)%n)*g.clientWidth,behavior:'smooth'}); }
+document.addEventListener('pointerover',e=>{ const c=e.target.closest&&e.target.closest('.card'); if(c) cargarGal(c.querySelector('.ph-gal')); },{passive:true});
+document.addEventListener('scroll',e=>{ const g=e.target; if(!g.classList||!g.classList.contains('ph-gal')) return; cargarGal(g);
+  const i=Math.round(g.scrollLeft/g.clientWidth); g.parentNode.querySelectorAll('.pd i').forEach((d,j)=>d.classList.toggle('on',i===j));
+  const iz=g.parentNode.querySelector('.fl.izq'); if(iz) iz.hidden=i===0; },{capture:true,passive:true}); // "<" solo cuando no es la primera foto
+/* Cuadros de color (como YoungLA): color liso = cuadro de color; estampado, deslavado, camo o color que no se reconoce
+   = miniatura de la tela de la prenda; dos colores (Black/Red) = mitad y mitad. Agotados con X (no se pueden agregar).
+   Al tocar uno cambia la foto de la tarjeta; más de 5 colores: los primeros 5 y "+N" (abre la prenda). */
+const ESTAMPADO=/camo|wash|lavad|print|tie.?dye|marble|acid|graphic|stripe|raya|check|plaid|leopard|zebra|snake|floral|fade|ombre|splat|multi|pattern|marl/i;
+function colorConocido(n){ const s=String(n||'').toLowerCase(); for(const [k,c] of COLORES) if(new RegExp(k).test(s)) return c; return ''; }
+function fondoSwatch(c){
+  const nom=String(c.nombre||''), f=(c.fotos||[])[0], partes=nom.split('/').map(colorConocido);
+  if(f&&(ESTAMPADO.test(nom)||!partes[0])) return 'background-image:url(&quot;'+esc(f)+'&quot;);background-size:420%;background-position:50% 42%';
+  // dos tonos: mitad izquierda y mitad derecha (en diagonal se confundía con la X de agotado)
+  if(partes.length>1&&partes[1]&&partes[1]!==partes[0]) return 'background:linear-gradient(90deg,'+partes[0]+' 50%,'+partes[1]+' 50%)';
+  return 'background:'+(partes[0]||colorDe(nom));
+}
+/* YoungLA: el cuadrito es la misma imagen que muestra youngla.com para ese color (color liso, pedazo de tela
+   o acercamiento al diseño). Sin recortar fotos ni adivinar: si todavía no llega, el cuadro sale vacío con su borde. */
+let CUADRITOS={};
+const esYla=p=>sinAcento(p.marca)==='youngla';
+function cuadritoYla(p,c){
+  const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1], v=h&&(CUADRITOS[h]||{})[String(c.nombre||'').toLowerCase().trim()];
+  if(!v) return '';
+  return /^https:\/\//.test(v)?'background-image:url(&quot;'+esc(v)+'&quot;);background-size:cover;background-position:center':/^[#a-z0-9(),.\s%-]+$/i.test(v)?'background:'+v:'';
+}
+function swatchesHTML(p){
+  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot), yla=esYla(p);
+  if(!todos.length||(todos.length===1&&!agot.length)) return '';
+  return '<div class="sws'+(yla?' yla':'')+'" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
+    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+(yla?cuadritoYla(p,c):fondoSwatch(c))+'"></i></button>'; }).join('')+
+    (todos.length>5?'<button type="button" class="sw mas" aria-label="Ver los '+todos.length+' colores">+'+(todos.length-5)+'</button>':'')+'</div>';
 }
 // bolitas: el color sale del nombre (Black, Negro, Heather Grey…); si no se reconoce, gris claro
 const COLORES=[['charcoal|carbon|carbón|graphite|grafito','#3d3d40'],['navy|marino','#1f2a44'],['light blue|sky|cielo|baby blue|celeste','#9cc3e6'],['olive|oliva|khaki|caqui','#6b6b3a'],['burgundy|maroon|vino|wine|guinda','#6d1f2b'],
@@ -749,7 +879,8 @@ const chipHTML=(v,txt,on,attr)=>'<button class="chip'+(on?' on':'')+'" '+attr+'=
 const ESTADO_TXT={pedido:'Sobre pedido',preventa:'Preventa',disponible:'Entrega inmediata'};
 const PRECIO_TXT={a:'Menos de $1,000',b:'$1,000 a $1,999',c:'$2,000 o más'};
 // logos de marcas: en el inicio llevan a la marca; en la página de productos filtran (y se resalta la elegida)
-function logosHTML(lista){ return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
+function logosHTML(lista){ // en la página de productos va primero "Todas" (quita la marca); tocar la marca marcada también la quita
+  return (lista?'<button data-lm="" aria-label="Todas las marcas" aria-pressed="'+!fMarca+'" class="todas'+(fMarca?'':' on')+'"><span class="tx">Todas</span></button>':'')+TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
 function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
@@ -765,6 +896,16 @@ function pintarActivos(){
   if(fPrecio) a.push(['precio',PRECIO_TXT[fPrecio]]);
   $('#activos').innerHTML=a.map(x=>'<button data-quita="'+x[0]+'" aria-label="Quitar '+esc(x[1])+'">'+esc(x[1])+'<b aria-hidden="true">×</b></button>').join('')+(a.length>1?'<button class="todo" data-quita="todo">Quitar todo</button>':'');
 }
+/* Entrega inmediata: cada color va como tarjeta aparte ("Baggy Sweats - Black Wash") y abajo del precio
+   salen las tallas que tienes en existencia. La talla sin piezas desaparece sola; el color sin piezas no sale.
+   (Sobre pedido y preventa siguen igual: una tarjeta por modelo con sus cuadritos de color.) */
+function tallasEnStock(p,c){ return tallasDe(p,c).filter(t=>(+((c.tallas||{})[t])||0)>0); }
+function porColor(ps){ const out=[];
+  ps.forEach(p=>{ if(p.estado!=='disponible'){ out.push(p); return; }
+    (p.colores||[]).forEach(c=>{ if(!Object.values(c.tallas||{}).some(n=>(+n||0)>0)) return;
+      out.push(Object.assign(Object.create(p),{nombre:p.nombre+(c.nombre?' - '+c.nombre:''),colores:[c],coloresAgot:[],colFijo:c.k,tallasStock:tallasEnStock(p,c)})); }); });
+  return out; }
+function tallasCardHTML(p){ const ts=p.tallasStock||[]; return ts.length?'<div class="sws tl-s" aria-label="Tallas en existencia">'+ts.map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>':''; }
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   // 1) marcas
@@ -774,14 +915,15 @@ function render(){
   const sin=TIENDA.soloPedido.includes(linea)&&!fMarca;
   if(sin&&fEstado==='disponible') fEstado='';
   $('#disp').hidden=vista==='favs'||vista==='rebajas';
-  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']]).concat([['rebaja','Rebajas']])
+  // pestañas: Sobre pedido · Preventa · Entrega inmediata (Rebajas está en el menú)
+  $('#disp').innerHTML=[['pedido','Sobre pedido'],['preventa','Preventa']].concat(sin?[]:[['disponible','Entrega inmediata']])
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
   $('#titulo').hidden=!vista&&!fMarca&&fEstado!=='preventa';
   $('#titulo').textContent=vista==='favs'?'Favoritos':vista==='acc'?'Accesorios':vista==='rebajas'?'Rebajas':vista==='masvendido'?'Lo más vendido':fMarca?fMarca+(fCol?' · '+fCol:''):fPre?((preventas().find(g=>g.k===fPre)||{}).nombre||'Preventas'):'Preventas';
   pintarActivos();
-  const r=filtrar();
+  const r=fEstado==='disponible'?porColor(filtrar()):filtrar();
   $('#cuenta').textContent=r.length===1?'1 producto':r.length+' productos';
   let html='';
   if(fEstado==='preventa'){ // preventas agrupadas, cada una con su cierre
@@ -789,7 +931,10 @@ function render(){
     html=grupos.map(g=>{ const ps=r.filter(p=>clavePre(p)===g.k); if(!ps.length) return '';
       return '<div class="pre-h" id="pre-'+esc(encodeURIComponent(g.k))+'"><div><small>Preventa · '+esc(g.marca)+'</small><b>'+esc(g.nombre||g.marca)+'</b></div>'+(g.fecha?'<div class="cd" data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</div>':'')+'</div>'+ps.map(cardHTML).join(''); }).join('');
   } else html=r.map(cardHTML).join('');
-  $('#grid').innerHTML=html||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':(vista==='rebajas'||fEstado==='rebaja')&&!P.some(enRebaja)?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
+  // con una marca escogida y nada en esta sección: mensaje con botón (en vez de pantalla vacía)
+  const vacioMarca=!html&&fMarca&&vista!=='favs'?'<div class="empty vm" style="grid-column:1/-1"><p>Por ahora no hay productos de '+esc(fMarca)+(fEstado==='disponible'?' en entrega inmediata':' en esta sección')+'.</p>'+
+    (fEstado==='disponible'?'<button class="btn w" data-vm="disp">Ver toda la entrega inmediata</button>':'<button class="btn w" data-vm="'+esc(fMarca)+'">Ver todo '+esc(fMarca)+'</button>')+'</div>':'';
+  $('#grid').innerHTML=html||vacioMarca||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':fEstado==='disponible'&&!P.some(p=>p.estado==='disponible')?'Por ahora no hay prendas de entrega inmediata. Pide la tuya sobre pedido o síguenos en Instagram para enterarte cuando llegue stock.':(vista==='rebajas'||fEstado==='rebaja')&&!P.some(enRebaja)?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
   // si lo elegido quedó fuera de la pantalla (ej. Hoodies al final), la fila se recorre para que se vea
   document.querySelectorAll('#lLogos .on,#cats .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
@@ -811,7 +956,12 @@ function renderHero(){
     sl[heroI].classList.remove('on'); ds[heroI].classList.remove('on'); heroI=(heroI+1)%sl.length; sl[heroI].classList.add('on'); ds[heroI].classList.add('on'); },5000);
 }
 $('#hero').addEventListener('click',e=>{ const b=e.target.closest('[data-pre]'); if(!b) return; e.stopPropagation(); ir('drops'); fPre=b.dataset.pre; render(); });
-$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=fEstado===b.dataset.disp?'':b.dataset.disp; fPre=''; render(); });
+$('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]'); if(!b) return; fEstado=fEstado===b.dataset.disp?'':b.dataset.disp; fPre='';
+  if(fEstado==='disponible'){ fMarca=''; fCol=''; } // Entrega inmediata: siempre todas las marcas juntas (poco stock); los logos siguen filtrando
+  render(); });
+// botón del mensaje "Por ahora no hay productos de…"
+$('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
+  if(b.dataset.vm==='disp'){ fMarca=''; fCol=''; render(); } else ir('m:'+b.dataset.vm); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
 $('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol=''; render(); });
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
@@ -830,9 +980,20 @@ $('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'
 document.addEventListener('click',e=>{
   const fv=e.target.closest('[data-fav]');
   if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
-  const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id);
+  // flechas de las fotos (tarjeta o página de la prenda): cambian de foto sin abrir la prenda
+  const fl=e.target.closest('[data-fl]');
+  if(fl){ e.stopPropagation(); moverGal(fl.parentNode.querySelector('.ph-gal,.gal'),+fl.dataset.fl); return; }
+  // cuadros de color de la tarjeta: cambian las fotos sin salir de la página ("+N" abre la prenda)
+  const sw=e.target.closest('.sw');
+  if(sw&&!sw.classList.contains('mas')){ e.stopPropagation(); if(sw.classList.contains('agot')) return;
+    const card=sw.closest('.card'), p=card&&P.find(x=>x.id===card.dataset.id), col=p&&(p.colores||[]).find(x=>x.k===sw.dataset.sw); if(!col) return;
+    if((col.fotos||[])[0]){ const ph=card.querySelector('.ph'); ph.querySelectorAll('.ph-gal,.fl,.pd').forEach(x=>x.remove()); ph.insertAdjacentHTML('afterbegin',galTarjeta(p,col)); cargarGal(ph.querySelector('.ph-gal')); }
+    card.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',b===sw)); card.dataset.col=col.k; return; }
+  const c=e.target.closest('[data-id]'); if(c&&!c.closest('.ov')) abrirProducto(c.dataset.id,false,c.dataset.col);
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id); });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('card')) abrirProducto(e.target.dataset.id,false,e.target.dataset.col);
+  // en la página de la prenda, las flechas del teclado cambian de foto
+  if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&cur&&!$('#pv').hidden&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) moverGal($('#gal'),e.key==='ArrowLeft'?-1:1); });
 setInterval(()=>document.querySelectorAll('[data-cd]').forEach(el=>{ const p={dropFecha:el.dataset.cd}; const d=dropDate(p); if(d) el.textContent=cuenta(d); }),30000);
 
 /* ---------- inicio ---------- */
@@ -939,34 +1100,45 @@ document.querySelectorAll('#ovMenu .mdesp').forEach(b=>b.addEventListener('click
 $('#ftTerm').addEventListener('click',()=>ir('terminos'));
 $('#ftCto').addEventListener('click',()=>ir('contacto'));
 $('#brand').addEventListener('click',e=>{ e.preventDefault(); ir('inicio'); });
-$('#tbTienda').addEventListener('click',()=>ir('inicio'));
-$('#tbBuscar').addEventListener('click',()=>$('#btnBuscar').click());
 $('#ovMenu').addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; cerrar('ovMenu'); ir(b.dataset.go); });
 $('#btnBuscar').addEventListener('click',()=>{ abrir('ovBuscar'); $('#q').value=''; buscar(); setTimeout(()=>$('#q').focus(),60); });
 function buscar(){ const q=$('#q').value.toLowerCase().trim(); const r=q?P.filter(p=>[p.nombre,p.marca,catDe(p),(p.colores||[]).map(c=>c.nombre).join(' ')].join(' ').toLowerCase().includes(q)):[];
   $('#qRes').innerHTML=q?(r.length?'<div class="grid">'+r.map(cardHTML).join('')+'</div>':'<p class="empty">No encontramos “'+esc(q)+'”.</p>'):''; }
 $('#q').addEventListener('input',buscar);
-$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
+$('#qRes').addEventListener('click',e=>{ const c=e.target.closest('.card'); if(c&&!e.target.closest('[data-fav]')&&!e.target.closest('[data-fl]')&&!e.target.closest('.sw:not(.mas)')){ cerrar('ovBuscar'); abrirProducto(c.dataset.id); } });
 function chips(el,opts,val,key){ el.innerHTML=opts.map(o=>'<button class="chip'+(val===o[0]?' on':'')+'" data-'+key+'="'+esc(o[0])+'">'+esc(o[1])+'</button>').join(''); }
-function pintarFiltros(){
-  chips($('#fOrden'),[['nuevo','Lo más nuevo'],['menor','Menor precio'],['mayor','Mayor precio']],orden,'o');
-  const ts=new Set(); P.forEach(p=>tallasConStock(p).forEach(t=>ts.add(t)));
-  chips($('#fTalla'),[['','Todas']].concat([...ts].sort((a,b)=>{const i=ORDEN_T.indexOf(a),j=ORDEN_T.indexOf(b);return (i<0?99:i)-(j<0?99:j)||parseFloat(a)-parseFloat(b);}).map(t=>[t,t])),fTalla,'t');
-  chips($('#fPrecio'),[['','Todos']].concat(Object.entries(PRECIO_TXT)),fPrecio,'p');
-  const tipos=tiposDe(); $('#fTipoBox').hidden=!tipos.length;
-  chips($('#fTipo'),[['','Todos']].concat(tipos.map(c=>[c,c])),cat,'c');
+/* Filtrar y ordenar: solo Talla y Ordenar por precio (tipo, marca, estado y rebajas ya están en el menú, los logos y las pestañas).
+   Sin ordenar, siempre sale lo más nuevo primero. */
+const TALLAS_FILTRO=['XS','S','M','L','XL','2XL','Talla única'];
+// tallas de una prenda para el filtro: XXL = 2XL; Única / ONE-SIZE = Talla única; S/M cuenta como S y como M; 3XL y 4XL no cuentan
+function tallasFiltro(p){
+  const s=new Set();
+  (p.colores||[]).forEach(c=>{ if(sinTalla(p,c)){ s.add('Talla única'); return; }
+    Object.keys(c.tallas||{}).forEach(t=>{ if(!hay(p,c,t)) return; const u=String(t).toUpperCase().replace(/\s+/g,'');
+      if(/^(ONE-?SIZE|OS|O\/S|UNICA|ÚNICA|U|UNITALLA|TALLAÚNICA|TALLAUNICA)$/.test(u)){ s.add('Talla única'); return; }
+      u.split('/').forEach(x=>{ x=x==='XXL'?'2XL':x; if(TALLAS_FILTRO.includes(x)) s.add(x); }); }); });
+  return s;
 }
-// Filtrar y ordenar: talla, precio y orden (marca, estado y tipo están a la vista en la página)
+function pintarFiltros(){
+  chips($('#fOrden'),[['menor','Menor a mayor precio'],['mayor','Mayor a menor precio']],orden,'o');
+  // solo las tallas que tienen productos en lo que estás viendo
+  const ft=fTalla; fTalla=''; const base=filtrar(); fTalla=ft;
+  const ts=new Set(); base.forEach(p=>tallasFiltro(p).forEach(t=>ts.add(t)));
+  chips($('#fTalla'),TALLAS_FILTRO.filter(t=>ts.has(t)||t===fTalla).map(t=>[t,t]),fTalla,'t');
+  const n=filtrar().length; $('#fVer').textContent=n===1?'Ver 1 producto':'Ver '+n+' productos';
+}
 $('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro'); });
+// tocar la opción marcada la quita (talla) o regresa a "lo más nuevo" (orden)
 $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
-  if('o' in b.dataset) orden=b.dataset.o; if('t' in b.dataset) fTalla=b.dataset.t; if('p' in b.dataset) fPrecio=b.dataset.p; if('c' in b.dataset) cat=b.dataset.c;
-  pintarFiltros(); render(); });
-$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; cat=''; fTalla=''; fPrecio=''; pintarFiltros(); render(); });
+  if('o' in b.dataset) orden=orden===b.dataset.o?'nuevo':b.dataset.o; if('t' in b.dataset) fTalla=fTalla===b.dataset.t?'':b.dataset.t;
+  render(); pintarFiltros(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fPrecio=''; render(); pintarFiltros(); });
 
 /* ---------- producto ---------- */
-function abrirProducto(id,sinHistorial){
+function abrirProducto(id,sinHistorial,colorK){
   const p=P.find(x=>x.id===id); if(!p) return;
-  cur=p; curColor=(p.colores||[])[0]||null; curTalla='';
+  // si en la tarjeta escogiste un color, la prenda abre en ese color
+  cur=p; curColor=(colorK&&(p.colores||[]).find(x=>x.k===colorK))||(p.colores||[])[0]||null; curTalla='';
   if(!sinHistorial) try{ history.pushState({p:id},'','#'+encodeURIComponent(id)); }catch(e){}
   pintarProducto(); $('#pv').hidden=false; $('#buy').hidden=false; $('#pv').scrollTop=0; document.body.style.overflow='hidden';
 }
@@ -978,19 +1150,23 @@ window.addEventListener('popstate',()=>{ const h=location.hash||'';
   if(id&&P.some(p=>p.id===id)){ abrirProducto(id,true); return; }
   cerrarProducto(); if(vistaActual!=='inicio') ir('inicio',true); });
 function pintarProducto(){
-  const p=cur, c=curColor||{fotos:[],tallas:{}}, of=p.oferta&&p.precioBase>p.precio;
+  const p=cur, c=curColor||{fotos:[],tallas:{}};
+  // precio de antes tachado: descuento de sección o la oferta que pusiste en el Catálogo
+  const base=p.desc?p.desc.antes:(p.oferta&&p.precioBase>p.precio?+p.precioBase:0), of=base>p.precio;
+  $('#pvDescPct').hidden=!p.desc; if(p.desc) $('#pvDescPct').textContent='-'+p.desc.pct+'%';
   const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
   $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
   $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
-  $('#gal').scrollLeft=0;
+  $('#gal').scrollLeft=0; $('#galIzq').hidden=$('#galDer').hidden=fs.length<2;
   $('#pvBrand').textContent=[p.marca,catDe(p)].filter(Boolean).join(' · ');
   $('#pvName').textContent=p.nombre;
-  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(p.precioBase)+'</s><small style="display:block;font-size:13px">Ahorras '+money(p.precioBase-p.precio)+'</small>':money(p.precio)+' MXN')+
+  $('#pvPrice').innerHTML=(of?'<span class="rd">'+money(p.precio)+' MXN</span><s>'+money(base)+'</s><small style="display:block;font-size:13px">Ahorras '+money(base-p.precio)+'</small>':money(p.precio)+' MXN')+
     (sobrePedido(p)?'<span class="apt-box"><b>Apártala con '+money(anticipoDe(p.precio))+'</b><small>Aparta hoy · restan '+money(p.precio-anticipoDe(p.precio))+' · llega en '+esc(TIENDA.llega)+'</small></span>':'');
   // mismas 3 etiquetas que la tarjeta: Preventa / Sobre pedido / Entrega inmediata
   const est={early:['drop','Preventa'],preventa:['pre','Sobre pedido'],camino:['cam','Sobre pedido'],disponible:['disp','Entrega inmediata']}[p.estado];
   $('#pvEstado').hidden=!est; if(est){ $('#pvEstado').className='estado '+est[0]; $('#pvEstado').textContent=est[1]; }
   $('#pvMv').hidden=!p.masVendido;
+  $('#pvReb').hidden=!enRebaja(p); // dos estados (ej. Sobre pedido y Rebaja): las dos etiquetas, cada una con su color
   const d=dropDate(p);
   const nota=p.estado==='early'?(d?(d>new Date()?'Preventa abierta: cierra el '+DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+'. Apártala antes del cierre.':'La preventa ya cerró. Escríbenos y vemos si aún la conseguimos.'):'Preventa abierta. Apártala antes del cierre.')
     :p.estado==='preventa'?'Se aparta con anticipo. Te avisamos cuando llegue.'
@@ -1019,9 +1195,27 @@ $('#btnAdd').addEventListener('click',()=>{
   const ts=tallasDe(p,c);
   if(ts.length&&!curTalla){ $('#pvErr').hidden=false; $('#pvSizes').scrollIntoView({behavior:'smooth',block:'center'}); return; }
   bolsa.push({id:p.id,nombre:p.nombre,marca:p.marca||'',color:c.nombre||'',talla:curTalla,precio:p.precio,foto:(c.fotos&&c.fotos[0])||foto1(p),estado:p.estadoTxt||{early:'Sobre pedido',preventa:'Sobre pedido',camino:'En camino'}[p.estado]||'',sobrePedido:sobrePedido(p)});
-  guardarBolsa(); toast('Agregado a tu bolsa'); curTalla=''; pintarProducto();
-  setTimeout(()=>{ pintarBolsa(); abrir('ovBolsa'); },350);
+  guardarBolsa(); curTalla=''; pintarProducto();
+  avisoAgregado(bolsa[bolsa.length-1]); // te quedas en la prenda; el número de la bolsa ya cambió
 });
+/* Aviso de "Agregado a tu bolsa": foto, nombre, talla y color, con Seguir comprando / Ver bolsa */
+let addokT=0;
+function avisoAgregado(it){
+  if(!it) return;
+  $('#addokImg').src=it.foto||''; $('#addokImg').hidden=!it.foto;
+  $('#addokNom').textContent=it.nombre||'';
+  $('#addokDet').textContent=[it.color,it.talla?'Talla '+it.talla:''].filter(Boolean).join(' · ');
+  $('#addok').hidden=false; avisoTimer();
+}
+// dura 2 segundos; mientras el cursor está encima o el dedo lo toca, no se cierra (al soltar vuelven a contar 2 s)
+function avisoTimer(){ clearTimeout(addokT); addokT=setTimeout(cerrarAviso,2000); }
+function cerrarAviso(){ clearTimeout(addokT); $('#addok').hidden=true; }
+['mouseenter','touchstart','focusin'].forEach(ev=>$('#addok').addEventListener(ev,()=>clearTimeout(addokT),{passive:true}));
+['mouseleave','touchend','touchcancel','focusout'].forEach(ev=>$('#addok').addEventListener(ev,()=>{ if(!$('#addok').hidden) avisoTimer(); },{passive:true}));
+$('#addokSeguir').addEventListener('click',cerrarAviso);
+$('#addokVer').addEventListener('click',()=>{ cerrarAviso(); pintarBolsa(); abrir('ovBolsa'); });
+// tocar afuera del aviso lo cierra (el mismo toque que agrega no cuenta)
+document.addEventListener('click',e=>{ if(!$('#addok').hidden&&!e.target.closest('#addok')&&!e.target.closest('#btnAdd')) cerrarAviso(); },true);
 
 /* ---------- bolsa y pedido por WhatsApp ---------- */
 let entrega=LS.get('entrega','mty'), pago=LS.get('pago','transferencia'), nombre=LS.get('nombre','');
@@ -1049,7 +1243,7 @@ function pintarBolsa(){
       '<button class="x" data-quitar="'+i+'">Quitar</button></div>').join('')+
     '<p class="lbl" style="margin-top:20px">Entrega</p>'+
     (t.env===0?'<p class="note" style="margin:0 0 8px;font-weight:700">Envío gratis en compras mayores a '+money(TIENDA.gratisMas)+'.</p>':'')+
-    [['mty','Monterrey, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · desde $'+TIENDA.envioNacional+' (zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
+    [['mty','Monterrey y área metropolitana, a domicilio','$'+TIENDA.envioMty],['nacional','Envío a otra ciudad','Por paquetería · $'+TIENDA.envioNacional+' (pedidos grandes o zonas alejadas se cotizan)']].map(o=>'<label class="opt'+(entrega===o[0]?' on':'')+'"><input type="radio" name="ent" value="'+o[0]+'"'+(entrega===o[0]?' checked':'')+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join('')+
     '<p class="lbl">Forma de pago</p>'+
     [['transferencia','Transferencia'],['oxxo','Depósito en efectivo']].map(o=>'<label class="opt'+(pago===o[0]?' on':'')+'"><input type="radio" name="pag" value="'+o[0]+'"'+(pago===o[0]?' checked':'')+'><span><b>'+o[1]+'</b></span></label>').join('')+
     (pago!=='efectivo'?'<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Ver datos para pagar</summary><div style="margin-top:10px">'+pagoHTML()+'</div></details>':'')+
@@ -1057,7 +1251,9 @@ function pintarBolsa(){
     '<div style="margin-top:14px"><div class="tot"><span>Productos ('+bolsa.length+')</span><span>'+money(t.sub)+'</span></div>'+
     '<div class="tot"><span>Envío</span><span>'+(t.env?money(t.env):'Gratis')+'</span></div>'+
     '<div class="tot big"><span>Total</span><span>'+money(t.tot)+'</span></div>'+
-    (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>':'')+'</div>';
+    (t.hayPedido?'<div class="tot apt-tot"><span>Aparta hoy con</span><span>'+money(t.hoy)+'</span></div><div class="tot"><span>Liquidas al llegar</span><span>'+money(t.resto)+'</span></div>'+
+      // si paga solo el anticipo: aviso del plazo (Términos › Pagos y anticipo)
+      '<p class="plazo-aviso">Tienes 30 días a partir de tu orden para liquidar. Si no se liquida, el pedido se cancela y el anticipo no es reembolsable.</p>':'')+'</div>';
   // el pedido se manda como LINK con su número (DM: se copia y se abre el chat; WhatsApp: va escrito)
   // WhatsApp primero: ahí el mensaje llega ya escrito; en Instagram hay que pegarlo
   $('#bolsaFoot').innerHTML='<a class="btn full" id="btnPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>'+
@@ -1071,7 +1267,7 @@ function mensaje(){
   const lineas=bolsa.map((x,i)=>(i+1)+'. '+x.nombre+(x.marca?' ('+x.marca+')':'')+(x.color?' · '+x.color:'')+(x.talla?' · Talla '+x.talla:'')+(x.estado?' · '+x.estado:'')+' — '+money(x.precio));
   return 'Hola DEALER SPORTS MX.'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
     '\n\nProductos: '+money(t.sub)+
-    '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
+    '\nEntrega: '+(entrega==='mty'?'Monterrey y área metropolitana, a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
     '\nTotal: '+money(t.tot)+
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
     '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en efectivo',efectivo:'Efectivo al recibir'}[pago];
@@ -1176,7 +1372,7 @@ $('#ovBolsa').addEventListener('input',e=>{ if(e.target.id==='bNombre'){ nombre=
 $('#btnBolsa').addEventListener('click',()=>{ pintarBolsa(); abrir('ovBolsa'); });
 
 /* ---------- arranque ---------- */
-$('#ftIg').href=ig; $('#tbDm').href=TIENDA.dm; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
+$('#ftIg').href=ig; $('#cDm').href=TIENDA.dm; $('#cIg').href=ig; $('#cWa').href=wa('Hola DEALER SPORTS MX');
 // barra en movimiento: los textos van dos veces para que el giro no se corte
 $('#annT').innerHTML=[0,1].map(k=>TIENDA.barra.map(t=>'<span'+(k?' aria-hidden="true"':'')+'>'+esc(t)+'</span>').join('')).join('');
 guardarBolsa(); guardarFavs();
@@ -1184,7 +1380,9 @@ const t0=Date.now();
 function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
 // el borrador lee tus productos y banners reales (los de la tienda), con sus fotos de la carpeta de la tienda
 const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'../':'';
-fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
+// cuadritos de color de YoungLA (los pone el robot en colores.json); si no llegan, la tienda abre igual
+const pColores=fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; });
+fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>d)).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
@@ -1193,15 +1391,16 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
   PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
-    if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else p.colores=cs.filter(c=>!c.agotado); });
-  P=PT.filter(p=>!p.agotadoTodo);
+    if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else { p.coloresAgot=cs.filter(c=>c.agotado); p.colores=cs.filter(c=>!c.agotado); } }); // los agotados salen con X en los cuadros de color
+  P=PT.filter(p=>!p.agotadoTodo&&!pocasTallas(p));
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
   if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',cierre:b.cierre||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(ini.mosaico&&typeof ini.mosaico==='object') TIENDA.mosaico=ini.mosaico; // fotos del mosaico de marcas
-  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
+  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
+  aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // menú: HOMBRE y MUJER con sus tipos de prenda (TIENDA.chips) y MARCAS con tu lista fija
