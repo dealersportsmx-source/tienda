@@ -1077,13 +1077,16 @@ function ir(g,desdeHistorial){
   if(g==='inicio'){ modo(true); window.scrollTo(0,0); if(!desdeHistorial&&vistaActual!=='inicio') try{ history.pushState({ir:'inicio'},'',location.pathname+location.search); }catch(e){} vistaActual='inicio'; return; }
   // cada opción empieza limpia (el orden se queda como lo dejaste)
   fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
+  // al entrar (menú, categorías o logos del inicio) sale "Sobre pedido" ya marcada; el cliente la cambia si quiere
+  fEstado='pedido';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
-  else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1); }
-  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); } // Hombre › Hoodies (sin pestaña marcada: se ve todo)
+  else if(g.startsWith('c:')){ const i=g.indexOf('|'); fMarca=g.slice(2,i); fCol=g.slice(i+1);
+    if(P.some(p=>sinAcento(p.marca)===sinAcento(fMarca)&&sinAcento(colDe(p))===sinAcento(fCol)&&p.estado==='early')) fEstado='preventa'; } // colección en preventa (banner "Ver preventa")
+  else if(g.startsWith('l:')){ const i=g.indexOf('|'); linea=g.slice(2,i); cat=g.slice(i+1); } // Hombre › Hoodies
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
   else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
-  else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido') vista=g;
+  else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido'){ vista=g; if(g!=='acc') fEstado=''; } // favoritos, rebajas y lo más vendido: todo junto
   else linea=g;
   LS.set('linea',linea);
   modo(false); render(); window.scrollTo(0,0);
