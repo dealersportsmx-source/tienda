@@ -130,6 +130,44 @@ async function revisarCuadritos() {
   console.log(nuevos ? `Cuadritos nuevos de ${nuevos} prendas.` : 'Cuadritos: nada nuevo.');
 }
 
+// Fotos de espalda de YoungLA: a cada color que en la tienda tiene una sola foto se le buscan en youngla.com
+// las demás fotos con modelo de ese color (llevan el color y "ecomm" en el nombre, ej. 5128_red-wash_003_johnny_ecomm.jpg).
+// Se guardan en fotos-extra.json: { "<handle>": { "<color en minúsculas>": ["https://cdn.shopify.com/…", …] } }.
+// Si YoungLA no tiene más fotos de ese color, no se pone nada (la tienda lo deja como está).
+const FOTOS_EXTRA_JSON = 'fotos-extra.json';
+const aSlug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const archivoDe = u => String(u || '').split('?')[0].split('/').pop();
+async function revisarEspaldas() {
+  let mapa = {}; try { mapa = JSON.parse(fs.readFileSync(FOTOS_EXTRA_JSON, 'utf8')); } catch (e) {}
+  let nuevos = 0; // (cada prenda ya se leyó al revisar tallas, así que esto casi no hace llamadas nuevas)
+  for (const f of ARCHIVOS) {
+    if (!fs.existsSync(f)) continue;
+    for (const p of JSON.parse(fs.readFileSync(f, 'utf8')).productos || []) {
+      if (!/youngla/i.test(p.marca || '') || p.estado === 'disponible') continue;
+      for (const c of p.colores || []) {
+        if ((c.fotos || []).length !== 1 || !c.nombre) continue;
+        const m = /youngla\.com\/(?:[a-z-]+\/)?products\/([^/?#]+)/i.exec(c.link || p.link || ''); if (!m) continue;
+        const h = m[1], k = String(c.nombre).toLowerCase().trim();
+        if ((mapa[h] || {})[k]) continue; // ya las tiene
+        const q = await leerPrenda('https://www.youngla.com', h); if (!q) continue;
+        const opts = (q.options || []).map(o => typeof o === 'string' ? o : o.name), ci = opts.findIndex(n => /colou?r/i.test(n)); if (ci < 0) continue;
+        const nombres = [...new Set((q.variants || []).map(v => v['option' + (ci + 1)]))];
+        const nm = nombres.find(n => aSlug(n) === aSlug(c.nombre)); if (!nm) continue;
+        const slugs = nombres.map(n => ({ n, s: aSlug(n) })).filter(x => x.s).sort((a, b) => b.s.length - a.s.length); // "black-wash" antes que "black"
+        const yaTiene = new Set((q.variants || []).filter(v => v['option' + (ci + 1)] === nm && v.featured_image).map(v => archivoDe(v.featured_image.src)));
+        const extra = (q.images || []).map(u => String(u).replace(/^\/\//, 'https://')).filter(u => {
+          if (yaTiene.has(archivoDe(u))) return false; // esa es la que ya tiene la tienda
+          const a = '-' + aSlug(archivoDe(u).replace(/\.\w+$/, '')) + '-', x = slugs.find(x => a.includes('-' + x.s + '-'));
+          return x && x.n === nm && /_ecomm/i.test(archivoDe(u)); // solo fotos con modelo (espalda / de lado); las "floor" son acercamientos
+        }).slice(0, 3).map(u => u.split('?')[0] + '?width=800');
+        if (extra.length) { mapa[h] = Object.assign(mapa[h] || {}, { [k]: extra }); nuevos++; console.log(`✓ fotos de espalda de ${p.nombre} (${c.nombre}): ${extra.length}`); }
+      }
+    }
+  }
+  if (nuevos) fs.writeFileSync(FOTOS_EXTRA_JSON, JSON.stringify(mapa));
+  console.log(nuevos ? `Fotos de espalda nuevas: ${nuevos} colores.` : 'Fotos de espalda: nada nuevo.');
+}
+
 let total = 0;
 for (const f of ARCHIVOS) {
   if (!fs.existsSync(f)) continue;
@@ -157,3 +195,4 @@ for (const f of ARCHIVOS) {
 }
 console.log(total ? `Listo: ${total} cambios.` : 'Sin cambios: todo sigue igual.');
 await revisarCuadritos();
+await revisarEspaldas();

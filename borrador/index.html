@@ -856,7 +856,15 @@ function fondoSwatch(c){
 }
 /* YoungLA: el cuadrito es la misma imagen que muestra youngla.com para ese color (color liso, pedazo de tela
    o acercamiento al diseño). Sin recortar fotos ni adivinar: si todavía no llega, el cuadro sale vacío con su borde. */
-let CUADRITOS={};
+let CUADRITOS={}, FOTOS_EXTRA={};
+/* YoungLA: a los colores que solo tienen una foto se les agregan las demás fotos de ese color que hay en youngla.com
+   (la espalda, de lado…), en el orden de su página. Si YoungLA no tiene más fotos de ese color, se queda como está. */
+function agregarEspaldas(){
+  // (entrega inmediata no: lleva tus fotos)
+  PT.forEach(p=>{ if(!esYla(p)||p.estado==='disponible') return; (p.colores||[]).forEach(c=>{ if((c.fotos||[]).length!==1) return;
+    const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1], x=h&&(FOTOS_EXTRA[h]||{})[String(c.nombre||'').toLowerCase().trim()];
+    if(Array.isArray(x)) c.fotos=c.fotos.concat(x.filter(u=>/^https:\/\/cdn\.shopify\.com\//.test(u))); }); });
+}
 const esYla=p=>sinAcento(p.marca)==='youngla';
 function cuadritoYla(p,c){
   const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1], v=h&&(CUADRITOS[h]||{})[String(c.nombre||'').toLowerCase().trim()];
@@ -1390,13 +1398,17 @@ function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('ou
 // el borrador lee tus productos y banners reales (los de la tienda), con sus fotos de la carpeta de la tienda
 const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'../':'';
 // cuadritos de color de YoungLA (los pone el robot en colores.json); si no llegan, la tienda abre igual
-const pColores=fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; });
+const pColores=Promise.all([
+  fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; }),
+  // fotos de espalda de YoungLA (las pone el robot en fotos-extra.json)
+  fetch(ARRIBA+'fotos-extra.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; })]);
 fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>d)).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
     const mz=(d.inicio||{}).mosaico; if(mz) Object.keys(mz).forEach(k=>{ mz[k]=f(mz[k]); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  agregarEspaldas();
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
   PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
