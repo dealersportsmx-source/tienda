@@ -136,7 +136,7 @@ img{display:block;max-width:100%}
 .fl[hidden]{display:none!important}
 @media (hover:hover){.galw:hover .fl{display:grid}}
 /* en las tarjetas: flecha blanca delgada, siempre visible (celular y compu), con sombra ligera para fotos claras */
-.ph .fl{display:grid;width:40px;height:56px;border-radius:0;background:none;box-shadow:none;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.ph .fl{display:grid;width:40px;height:56px;border-radius:0;background:none;box-shadow:none;color:#fff;filter:drop-shadow(0 0 1px rgba(0,0,0,.85)) drop-shadow(0 1px 3px rgba(0,0,0,.55))}
 .ph .fl.izq{left:0}.ph .fl.der{right:0}
 .pd{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:4px;pointer-events:none}
 .pd i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 .5px rgba(0,0,0,.3)}
@@ -827,7 +827,7 @@ function cardHTML(p){
 /* Fotos de la tarjeta: las del color elegido (hasta 4). Solo la primera se baja al cargar la página;
    las demás se bajan cuando pasas el mouse, deslizas o tocas una flecha. */
 const FOTOS_TARJETA=4;
-const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
+const FLECHA={'-1':'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>','1':'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'};
 function galTarjeta(p,col){
   const c=col||(p.colores||[]).find(x=>x.fotos&&x.fotos[0]);
   let fs=((c&&c.fotos)||[]).filter(Boolean).slice(0,FOTOS_TARJETA); if(!fs.length) fs=[foto1(p)].filter(Boolean);
