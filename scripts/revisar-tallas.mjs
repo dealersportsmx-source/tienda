@@ -85,6 +85,51 @@ async function tallasDeLink(link, color) {
   } catch (e) { return null; }
 }
 
+// Cuadritos de color de YoungLA: las mismas imágenes que muestra su página para cada color
+// (color liso, pedazo de tela o acercamiento al diseño). Se guardan en colores.json:
+// { "<handle de la prenda>": { "<color en minúsculas>": "https://…png" o "lightgrey" } }.
+// Solo se lee la página de las prendas que todavía no tienen sus cuadritos.
+const COLORES_JSON = 'colores.json';
+async function cuadritosYoungLA(handle) {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const r = await fetch(`https://www.youngla.com/products/${handle}`, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX colores)' } });
+      if (r.status === 404) return null;
+      if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
+      const html = await r.text(), o = {};
+      for (const m of html.matchAll(/<label[^>]*class="[^"]*color-swatch[^"]*"[^>]*>/g)) {
+        const s = m[0].replace(/&amp;/g, '&'), n = (/data-tooltip="([^"]+)"/.exec(s) || [])[1];
+        if (!n || o[n.toLowerCase().trim()]) continue;
+        const img = (/background-image:\s*url\(([^)]+)\)/.exec(s) || [])[1], col = (/background-color:\s*([^;"]+)/.exec(s) || [])[1];
+        if (img) o[n.toLowerCase().trim()] = img.replace(/^\/\//, 'https://').replace(/width=\d+/, 'width=96');
+        else if (col) o[n.toLowerCase().trim()] = col.trim();
+      }
+      await dormir(1500);
+      return o;
+    } catch (e) { await dormir(5000 * (i + 1)); }
+  }
+  return null;
+}
+async function revisarCuadritos() {
+  let mapa = {}; try { mapa = JSON.parse(fs.readFileSync(COLORES_JSON, 'utf8')); } catch (e) {}
+  const pendientes = new Set();
+  for (const f of ARCHIVOS) {
+    if (!fs.existsSync(f)) continue;
+    for (const p of JSON.parse(fs.readFileSync(f, 'utf8')).productos || []) for (const c of p.colores || []) {
+      const m = /youngla\.com\/(?:[a-z-]+\/)?products\/([^/?#]+)/i.exec(c.link || p.link || '');
+      const x = m && mapa[m[1]], semana = x && Date.now() - Date.parse(x._revisado || 0) < 7 * 864e5; // si un color no sale en su página, se vuelve a ver en una semana
+      if (m && c.nombre && !(x && x[String(c.nombre).toLowerCase().trim()]) && !semana) pendientes.add(m[1]);
+    }
+  }
+  let nuevos = 0;
+  for (const h of pendientes) {
+    const o = await cuadritosYoungLA(h);
+    if (o && Object.keys(o).length) { mapa[h] = Object.assign(mapa[h] || {}, o, { _revisado: new Date().toISOString() }); nuevos++; console.log(`✓ cuadritos de ${h}: ${Object.keys(o).join(', ')}`); }
+  }
+  if (nuevos) fs.writeFileSync(COLORES_JSON, JSON.stringify(mapa));
+  console.log(nuevos ? `Cuadritos nuevos de ${nuevos} prendas.` : 'Cuadritos: nada nuevo.');
+}
+
 let total = 0;
 for (const f of ARCHIVOS) {
   if (!fs.existsSync(f)) continue;
@@ -111,3 +156,4 @@ for (const f of ARCHIVOS) {
   if (cambio) { d.tallasRevisadas = new Date().toISOString(); fs.writeFileSync(f, JSON.stringify(d)); }
 }
 console.log(total ? `Listo: ${total} cambios.` : 'Sin cambios: todo sigue igual.');
+await revisarCuadritos();

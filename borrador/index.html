@@ -167,6 +167,12 @@ img{display:block;max-width:100%}
 .sw.agot i::after{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 1px),#f2f2f2 calc(50% - 1px),#f2f2f2 calc(50% + 1px),transparent calc(50% + 1px))}
 .sw.mas{width:auto;padding:0 6px;font-size:12px;font-weight:800;color:var(--muted)}
 @media (min-width:760px){ .sw{width:38px} .sw i{width:30px;height:30px} }
+/* YoungLA: cuadritos de 22px con 6px de separación (igual que youngla.com, en celular y en compu);
+   el área para tocar es de 40×40 aunque el cuadrito sea chico */
+.sws.yla .sw,.sws.yla .sw:not(.mas){width:28px;height:40px;position:relative}
+.sws.yla .sw::before{content:"";position:absolute;left:50%;top:0;width:40px;height:40px;transform:translateX(-50%)}
+.sws.yla .sw i{width:22px;height:22px;border:1px solid #c8c8cc;background-color:transparent}
+.sws.yla .sw.mas{width:auto;padding:0 6px}
 .fav{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
 .fav svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
 .fav.on svg{fill:var(--ink)}
@@ -844,11 +850,20 @@ function fondoSwatch(c){
   if(partes.length>1&&partes[1]&&partes[1]!==partes[0]) return 'background:linear-gradient(90deg,'+partes[0]+' 50%,'+partes[1]+' 50%)';
   return 'background:'+(partes[0]||colorDe(nom));
 }
+/* YoungLA: el cuadrito es la misma imagen que muestra youngla.com para ese color (color liso, pedazo de tela
+   o acercamiento al diseño). Sin recortar fotos ni adivinar: si todavía no llega, el cuadro sale vacío con su borde. */
+let CUADRITOS={};
+const esYla=p=>sinAcento(p.marca)==='youngla';
+function cuadritoYla(p,c){
+  const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1], v=h&&(CUADRITOS[h]||{})[String(c.nombre||'').toLowerCase().trim()];
+  if(!v) return '';
+  return /^https:\/\//.test(v)?'background-image:url(&quot;'+esc(v)+'&quot;);background-size:cover;background-position:center':/^[#a-z0-9(),.\s%-]+$/i.test(v)?'background:'+v:'';
+}
 function swatchesHTML(p){
-  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot);
+  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot), yla=esYla(p);
   if(!todos.length||(todos.length===1&&!agot.length)) return '';
-  return '<div class="sws" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
-    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+fondoSwatch(c)+'"></i></button>'; }).join('')+
+  return '<div class="sws'+(yla?' yla':'')+'" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
+    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+(yla?cuadritoYla(p,c):fondoSwatch(c))+'"></i></button>'; }).join('')+
     (todos.length>5?'<button type="button" class="sw mas" aria-label="Ver los '+todos.length+' colores">+'+(todos.length-5)+'</button>':'')+'</div>';
 }
 // bolitas: el color sale del nombre (Black, Negro, Heather Grey…); si no se reconoce, gris claro
@@ -1239,7 +1254,7 @@ function mensaje(){
   const lineas=bolsa.map((x,i)=>(i+1)+'. '+x.nombre+(x.marca?' ('+x.marca+')':'')+(x.color?' · '+x.color:'')+(x.talla?' · Talla '+x.talla:'')+(x.estado?' · '+x.estado:'')+' — '+money(x.precio));
   return 'Hola DEALER SPORTS MX.'+(n.trim()?' Soy '+n.trim()+'.':'')+' Quiero hacer este pedido:\n\n'+lineas.join('\n')+
     '\n\nProductos: '+money(t.sub)+
-    '\nEntrega: '+(entrega==='mty'?'Monterrey a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
+    '\nEntrega: '+(entrega==='mty'?'Monterrey y área metropolitana, a domicilio':'Envío a otra ciudad')+' ('+(t.env?money(t.env):'gratis')+')'+
     '\nTotal: '+money(t.tot)+
     (t.hayPedido?'\nAparto hoy con: '+money(t.hoy)+'\nResto al llegar: '+money(t.resto):'')+
     '\nPago: '+{transferencia:'Transferencia',oxxo:'Depósito en efectivo',efectivo:'Efectivo al recibir'}[pago];
@@ -1352,7 +1367,9 @@ const t0=Date.now();
 function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('out'),Math.max(0,1100-(Date.now()-t0))); }
 // el borrador lee tus productos y banners reales (los de la tienda), con sus fotos de la carpeta de la tienda
 const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'../':'';
-fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>{
+// cuadritos de color de YoungLA (los pone el robot en colores.json); si no llegan, la tienda abre igual
+const pColores=fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; });
+fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>d)).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
@@ -1369,7 +1386,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',cierre:b.cierre||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(ini.mosaico&&typeof ini.mosaico==='object') TIENDA.mosaico=ini.mosaico; // fotos del mosaico de marcas
-  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
+  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
   aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
