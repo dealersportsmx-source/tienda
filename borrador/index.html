@@ -779,8 +779,10 @@ function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||
 function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach(el=>{ const v=TIENDA[el.dataset.t]; if(v!=null) el.textContent=typeof v==='number'?v.toLocaleString('en-US'):v; }); }
 /* Descuentos por sección (Cotizador › Ajustes; llegan a la tienda al dar "Publicar tienda").
    Uno para Sobre pedido, otro para Preventa y otro para Entrega inmediata, cada uno para todas las marcas o una sola.
-   Se aplica al precio de venta y se redondea igual que siempre; se apaga solo en su fecha de fin.
+   Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
    No se suma a las prendas que ya están en Rebajas. */
+// hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
+function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
@@ -794,7 +796,7 @@ function aplicarDescuentos(ds){
     const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
     if(x.fin&&new Date(x.fin)<=new Date()) return;
     if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
-    const nuevo=redondear(p.precio*(1-pct/100)); if(nuevo>0&&nuevo<p.precio){ p.desc={pct,antes:+p.precio}; p.precio=nuevo; } });
+    const nuevo=redondearAbajo(p.precio*(1-pct/100)); if(nuevo>0&&nuevo<p.precio){ p.desc={pct,antes:+p.precio}; p.precio=nuevo; } });
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
@@ -1367,7 +1369,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',cierre:b.cierre||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
   COL_OCULTAS=new Set(Array.isArray(ini.colOcultas)?ini.colOcultas:[]);
   if(ini.mosaico&&typeof ini.mosaico==='object') TIENDA.mosaico=ini.mosaico; // fotos del mosaico de marcas
-  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; }
+  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0) TIENDA.envioMty=+a.envioMty; if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
   aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
