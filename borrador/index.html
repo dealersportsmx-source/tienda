@@ -774,9 +774,13 @@ function filtrar(sinTipo){
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
-  else if(!fEstado){ // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido (lo más nuevo primero en cada una)
-    const g=p=>p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||(b.creado||0)-(a.creado||0)); }
-  else r.sort((a,b)=>(b.creado||0)-(a.creado||0)); // sin ordenar: siempre lo más nuevo primero
+  else {
+    // tu orden del Catálogo, marca por marca; lo que no tiene número (lo nuevo) va al principio de su marca. Sin orden: lo más nuevo primero
+    const hayOrden=r.some(p=>+p.orden>0), iM=p=>{ const i=TIENDA.marcas.findIndex(m=>sinAcento(m)===sinAcento(p.marca)); return i<0?99:i; };
+    const cmp=(a,b)=>{ if(!hayOrden) return (b.creado||0)-(a.creado||0); const x=+a.orden||0, y=+b.orden||0;
+      return (fMarca?0:iM(a)-iM(b))||(!x&&!y?(b.creado||0)-(a.creado||0):!x?-1:!y?1:x-y); };
+    // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido
+    const g=p=>fEstado?0:p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||cmp(a,b)); }
   return r;
 }
 /* sobre pedido = todo lo que no es entrega inmediata; se aparta con el 30 % (redondeado a la decena) */
@@ -869,7 +873,7 @@ const esGym=p=>sinAcento(p.marca)==='gymshark';
 const TONOS_GYM=[['pebble grey','#b8b4ac'],['poise pink','#e8b4c0'],['carmine red','#a31f2d'],['brand blue','#2450c8'],['super-set pink','#f0509a'],['focus pink','#ec5c96'],['zone blue','#2a7bd4'],['strength pink','#e8609a'],['oat white','#ece4d4'],['cloud pink','#f2d4d8'],['soft white','#f3efe6'],['heavy blue','#1f3a6e'],['sorbet yellow','#f4e08a'],['tranquil blue','#9dbdd6'],['onyx grey','#3f4144'],['chalk beige','#d9cfbd'],['butter yellow','#f1e2a0'],['performance pink','#e85f8f'],['dark grey','#4a4a4d'],['mist grey','#c5c8ca'],['soft brown','#8a6f5a'],['lifestyle brown','#6e5240'],['cherry purple','#5c2140'],['grounded green','#4c5a42'],['amethist','#9c7cc4'],['smokey grey','#7b7d80'],['ash grey','#b2b0ab'],['canvas green','#8a8a66'],['espresso','#3b2a20'],['pitch grey','#2e2f31'],['spiced brown','#8a5a36'],['ecru','#efe8d8'],['tinted white','#efece2'],['undyed','#e8e0d0'],['stealth blue','#2a3442'],['calm pink','#e6c4c8'],['metal grey','#84878a'],['graphite','#44464a'],['impact burgundy','#5e1c2a'],['core olive','#5c5c34'],['force blue','#2c4f8c'],['haze green','#a7b59a'],['stratus grey','#9a9ea2'],['sets red','#c22a30'],['chilled blue','#b3d3e6'],['track green','#2f7a4f'],['conditioning red','#b3242c'],['chalk','#dcd5c6'],['light grey','#c9cacc'],['tactical teal','#2c6a6e'],['iron blue','#3f5a78'],['mushroom','#a59c90'],['linen','#b8a58c'],['haze pink','#e5c3c6'],['trail brown','#77593f'],['earth green','#4a5238'],['shadow blue','#4a6180'],['walnut','#5a3d2a'],['strength green','#3f7a4a'],['peach','#ffae87'],['athletic blue','#2f63b0'],['soft grey','#b9babd'],['white grey','#dcdcdc'],['charcoal','#3d3d40'],['oat','#e3d9c4'],['base green','#5b6b4a'],['terracotta','#c0623a'],['indigo','#40307a'],['cool brown','#7c6a5c'],['petrol','#1f4656'],['pace green','#5d8c5a'],['pace purple','#6a4ca0'],
   ['black','#111113'],['white','#f5f5f2'],['navy','#1f2a44'],['olive','#6b6b3a'],['burgundy','#6d1f2b'],['teal','#2c7a7b'],['beige','#d6c8ae'],['grey','#8e9094'],['gray','#8e9094'],['pink','#e58fb0'],['blue','#3d6fb5'],['green','#4f7a55'],['red','#c0282d'],['brown','#6e5240'],['purple','#6a4c93'],['yellow','#eccd4a'],['orange','#e0782f'],['camo','#5e6048']];
 function tonoGym(n){ const s=String(n||'').split('/')[0].toLowerCase(); for(const [k,c] of TONOS_GYM) if(s.includes(k)) return c; return ''; }
-let CUADRITOS={}, FOTOS_EXTRA={};
+let CUADRITOS={}, FOTOS_EXTRA={}, NO_EXISTE={};
 /* YoungLA: a los colores que solo tienen una foto se les agregan las demás fotos de ese color que hay en youngla.com
    (la espalda, de lado…), en el orden de su página. Si YoungLA no tiene más fotos de ese color, se queda como está. */
 function agregarEspaldas(){
@@ -1414,7 +1418,9 @@ const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'.
 const pColores=Promise.all([
   fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; }),
   // fotos de espalda de YoungLA (las pone el robot en fotos-extra.json)
-  fetch(ARRIBA+'fotos-extra.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; })]);
+  fetch(ARRIBA+'fotos-extra.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; }),
+  // prendas que ya no existen en la página de la marca (las marca el bot en no-existen.json; no se borran)
+  fetch(ARRIBA+'no-existen.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ NO_EXISTE=m&&typeof m==='object'?m:{}; })]);
 fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>d)).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
@@ -1427,7 +1433,8 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
   PT.forEach(p=>{ if(p.estado==='disponible') return; const cs=p.colores||[];
     if(cs.length&&cs.every(c=>c.agotado)) p.agotadoTodo=true; else { p.coloresAgot=cs.filter(c=>c.agotado); p.colores=cs.filter(c=>!c.agotado); } }); // los agotados salen con X en los cuadros de color
-  P=PT.filter(p=>!p.agotadoTodo&&!pocasTallas(p));
+  // lo que el bot marcó como que ya no existe en la marca no sale; "forzar" = tú decidiste mostrarlo en el Catálogo
+  P=PT.filter(p=>!p.agotadoTodo&&(p.forzar||(!pocasTallas(p)&&!NO_EXISTE[p.id])));
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};

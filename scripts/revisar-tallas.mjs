@@ -21,6 +21,7 @@ function corta(t) {
 // Lee la prenda en la marca UNA sola vez (todos sus colores vienen juntos).
 // Si la marca frena por ir muy rápido (429) o falla, espera y vuelve a intentar.
 const yaLeidas = new Map();
+const noEncontrados = new Set(); // páginas que la marca contestó que ya no existen
 async function leerPrenda(origin, handle) {
   const k = origin + '/' + handle;
   if (yaLeidas.has(k)) return yaLeidas.get(k);
@@ -29,7 +30,7 @@ async function leerPrenda(origin, handle) {
     try {
       const r = await fetch(`${origin}/products/${handle}.js`, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
       if (r.ok) p = await r.json();
-      else if (r.status === 404) break; // la marca ya no tiene esa prenda
+      else if (r.status === 404) { noEncontrados.add(`${origin}/${handle}`); break; } // la marca ya no tiene esa prenda
       else await dormir(5000 * (i + 1));
     } catch (e) { await dormir(5000 * (i + 1)); }
   }
@@ -44,7 +45,7 @@ async function tallasGymshark(link, handle) {
   for (let i = 0; i < 4; i++) {
     try {
       const r = await fetch(link, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
-      if (r.status === 404) return null;
+      if (r.status === 404 || (r.redirected && !r.url.includes('/products/'))) { noEncontrados.add(link); return null; }
       if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
       const html = await r.text();
       const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(html); if (!m) return null;
@@ -201,5 +202,26 @@ for (const f of ARCHIVOS) {
   if (cambio) { d.tallasRevisadas = new Date().toISOString(); fs.writeFileSync(f, JSON.stringify(d)); }
 }
 console.log(total ? `Listo: ${total} cambios.` : 'Sin cambios: todo sigue igual.');
+
+// Prendas que ya no existen en la página de la marca (todos sus colores contestan "no existe").
+// Solo se marcan en no-existen.json para que la tienda las esconda y salgan en Ocultos; el bot NUNCA borra nada.
+// Si regresan a la página de la marca, se quitan de la lista solas.
+function marcarNoExisten() {
+  const NE = 'no-existen.json';
+  let antes = {}; try { antes = JSON.parse(fs.readFileSync(NE, 'utf8')); } catch (e) {}
+  const d = JSON.parse(fs.readFileSync('datos.json', 'utf8')), ahora = {}; let revisadas = 0;
+  const falta = l => { try { const u = new URL(l), h = /\/products\/([^/?#]+)/.exec(u.pathname); return !!h && (noEncontrados.has(l) || noEncontrados.has(`${u.origin}/${h[1]}`)); } catch (e) { return false; } };
+  for (const p of d.productos || []) {
+    if (!SOBRE_PEDIDO.includes(p.estado)) continue;
+    const links = (p.colores || []).map(c => c.link).filter(Boolean); if (!links.length) continue;
+    revisadas++;
+    if (links.every(falta)) ahora[p.id] = { nombre: p.nombre, marca: p.marca, desde: (antes[p.id] || {}).desde || new Date().toISOString() };
+  }
+  const n = Object.keys(ahora).length;
+  // seguro: si de pronto "desaparece" mucho de un jalón, es más probable una falla de la marca; no se toca nada
+  if (n > 5 && n > revisadas * 0.2) { console.log(`· No marqué ${n} de ${revisadas} prendas como desaparecidas: parece una falla de la marca.`); return; }
+  if (JSON.stringify(ahora) !== JSON.stringify(antes)) { fs.writeFileSync(NE, JSON.stringify(ahora)); console.log(`Ya no existen en la marca: ${n} prendas.`); }
+}
+marcarNoExisten();
 await revisarCuadritos();
 await revisarEspaldas();
