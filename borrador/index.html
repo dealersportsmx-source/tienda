@@ -507,6 +507,7 @@ footer .c{text-align:center;color:var(--muted);font-size:12px}
 <div class="ov" id="ovFiltro" hidden><div class="pn" role="dialog" aria-modal="true" aria-label="Filtrar y ordenar">
   <div class="pn-h"><h2>Filtrar y ordenar</h2><button class="ib" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="pn-b">
+    <div id="fTipoBox"><p class="lbl">Tipo de prenda</p><div class="chips" id="fTipo"></div></div>
     <p class="lbl">Talla</p><div class="chips" id="fTalla"></div>
     <p class="lbl">Ordenar</p><div class="chips" id="fOrden"></div>
   </div>
@@ -659,6 +660,7 @@ const wa=t=>'https://wa.me/'+TIENDA.whatsapp+'?text='+encodeURIComponent(t);
 const ig='https://www.instagram.com/'+TIENDA.instagram+'/';
 
 let COL_OCULTAS=new Set(); // colecciones que escondiste en el Catálogo
+const fTipos=new Set();
 let P=[], PT=[], linea=LS.get('linea',''), cat='', vista='', orden='nuevo', fTalla='', fMarca='', fEstado='', fPre='', fCol='', fPrecio='', enInicio=true;
 /* cada preventa = marca + fecha de cierre (o el nombre que le pongas en el Catálogo) */
 /* Tipo de prenda según el nombre (para no clasificar a mano; igual que en el Catálogo).
@@ -670,7 +672,7 @@ function tipoPorNombre(nombre,linea){
   if(t(/\b(jugs?|bottles?|botellas?|termos?|tumblers?|shakers?|hats?|caps?|gorras?|snapbacks?|beanies?|socks?|calcetas?|calcetines|bags?|backpacks?|mochilas?|duffles?|straps?|keychains?|llaveros?|necklaces?|bracelets?|chains?|belts?|gloves?|guantes|towels?|toallas?|wallets?|briefs?|boxers?|underwear|calzones?|trusas?|bralettes?|thongs?|holdalls?|totes?|crossbody|headbands?|sweatbands?|wrist|crew singles?)\b/)) return 'Accesorios';
   if(t(/compression|compresion/)) return 'Compresión';
   if(t(/\b(tanks?|sleeveless|stringers?|cut-?offs?)\b/)) return 'Tank tops';
-  if(t(/hoodies?|zip-?ups?|\bzips?\b|quarter-?zips?|sweatshirts?|crewnecks?|\bcrews?\b|sudaderas?/)) return 'Hoodies';
+  if(t(/hoodies?|zip-?ups?|\bzips?\b|quarter-?zips?|sweatshirts?|crewnecks?|\bcrews?\b|sudaderas?|jackets?|chamarras?|chaquetas?|windbreakers?|puffers?|pullovers?/)) return 'Hoodies';
   if(t(/leggings?/)) return 'Leggings';
   if(t(/\b(shorts?|jorts|bikers?)\b/)) return 'Shorts';
   if(t(/\b(pants?|joggers?|sweatpants|sweats|jeans?|trousers?|pantalon(es)?)\b/)) return 'Pants';
@@ -765,6 +767,7 @@ function filtrar(sinTipo){
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
   if(fCol) r=r.filter(p=>sinAcento(colDe(p))===sinAcento(fCol));
+  if(fTipos.size) r=r.filter(p=>[...fTipos].some(t=>enCat(p,t))); // Tipo de prenda: se pueden elegir varios
   if(fTalla) r=r.filter(p=>tallasFiltro(p).has(fTalla));
   if(fEstado==='disponible') r=r.filter(p=>p.estado==='disponible');
   else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
@@ -962,6 +965,7 @@ function pintarActivos(){
   if(fMarca) a.push(['marca',fMarca]);
   if(fCol) a.push(['col',fCol]);
   if(fPre){ const g=preventas().find(g=>g.k===fPre); a.push(['pre',g?g.nombre||g.marca:'Preventa']); }
+  fTipos.forEach(t=>a.push(['tipo:'+t,t]));
   if(fTalla) a.push(['talla','Talla '+fTalla]);
   if(fPrecio) a.push(['precio',PRECIO_TXT[fPrecio]]);
   $('#activos').innerHTML=a.map(x=>'<button data-quita="'+x[0]+'" aria-label="Quitar '+esc(x[1])+'">'+esc(x[1])+'<b aria-hidden="true">×</b></button>').join('')+(a.length>1?'<button class="todo" data-quita="todo">Quitar todo</button>':'');
@@ -1044,6 +1048,7 @@ $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quit
   if(todo||k==='col') fCol='';
   if(todo||k==='estado'){ fEstado=''; fPre=''; }
   if(todo||k==='pre') fPre='';
+  if(todo) fTipos.clear(); else if(String(k).startsWith('tipo:')) fTipos.delete(k.slice(5));
   if(todo||k==='talla') fTalla='';
   if(todo||k==='precio') fPrecio='';
   render(); });
@@ -1146,7 +1151,7 @@ function ir(g,desdeHistorial){
   if(g==='pago'){ pintarPago(); abrir('ovPago'); return; }
   if(g==='inicio'){ modo(true); window.scrollTo(0,0); if(!desdeHistorial&&vistaActual!=='inicio') try{ history.pushState({ir:'inicio'},'',location.pathname+location.search); }catch(e){} vistaActual='inicio'; return; }
   // cada opción empieza limpia (el orden se queda como lo dejaste)
-  fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; cat=''; vista=''; fMarca=''; linea='';
+  fPre=''; fCol=''; fEstado=''; fPrecio=''; fTalla=''; fTipos.clear(); cat=''; vista=''; fMarca=''; linea='';
   // al entrar (menú, categorías o logos del inicio) sale "Sobre pedido" ya marcada; el cliente la cambia si quiere
   fEstado='pedido';
   if(g.startsWith('m:')) fMarca=g.slice(2);                                    // Marcas › YoungLA (con pestañas Hombre / Mujer)
@@ -1199,6 +1204,10 @@ function tallasFiltro(p){
 }
 function pintarFiltros(){
   chips($('#fOrden'),[['menor','Menor a mayor precio'],['mayor','Mayor a menor precio']],orden,'o');
+  // Tipo de prenda: solo los que tienen productos en lo que estás viendo (se pueden marcar varios)
+  const TIPOS_F=['Compresión','Playeras','Tank tops','Shorts','Pants','Hoodies'], guardados=[...fTipos]; fTipos.clear(); const sinTipo=filtrar(); guardados.forEach(t=>fTipos.add(t));
+  const tiposHay=TIPOS_F.filter(t=>fTipos.has(t)||sinTipo.some(p=>enCat(p,t)));
+  chips($('#fTipo'),tiposHay.map(t=>[t,t]),'','ti'); $('#fTipo').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',fTipos.has(b.dataset.ti))); $('#fTipoBox').hidden=!tiposHay.length;
   // solo las tallas que tienen productos en lo que estás viendo
   const ft=fTalla; fTalla=''; const base=filtrar(); fTalla=ft;
   const ts=new Set(); base.forEach(p=>tallasFiltro(p).forEach(t=>ts.add(t)));
@@ -1209,8 +1218,9 @@ $('#btnFiltrar').addEventListener('click',()=>{ pintarFiltros(); abrir('ovFiltro
 // tocar la opción marcada la quita (talla) o regresa a "lo más nuevo" (orden)
 $('#ovFiltro').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
   if('o' in b.dataset) orden=orden===b.dataset.o?'nuevo':b.dataset.o; if('t' in b.dataset) fTalla=fTalla===b.dataset.t?'':b.dataset.t;
+  if('ti' in b.dataset){ if(fTipos.has(b.dataset.ti)) fTipos.delete(b.dataset.ti); else fTipos.add(b.dataset.ti); }
   render(); pintarFiltros(); });
-$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fPrecio=''; render(); pintarFiltros(); });
+$('#fLimpiar').addEventListener('click',()=>{ orden='nuevo'; fTalla=''; fPrecio=''; fTipos.clear(); render(); pintarFiltros(); });
 
 /* ---------- producto ---------- */
 function abrirProducto(id,sinHistorial,colorK){
