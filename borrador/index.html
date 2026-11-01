@@ -856,6 +856,19 @@ function fondoSwatch(c){
 }
 /* YoungLA: el cuadrito es la misma imagen que muestra youngla.com para ese color (color liso, pedazo de tela
    o acercamiento al diseño). Sin recortar fotos ni adivinar: si todavía no llega, el cuadro sale vacío con su borde. */
+/* Solo se ofrece hasta 2XL: 3XL, 4XL… no salen en la prenda, los cuadritos ni los filtros.
+   Un color sobre pedido que solo tenía esas tallas queda como agotado. */
+function quitarTallasGrandes(){
+  PT.forEach(p=>(p.colores||[]).forEach(c=>{ const k=Object.keys(c.tallas||{}); if(!k.length) return;
+    const grandes=k.filter(t=>/^(?:[3-9]XL|X{3,}L?)$/i.test(String(t).trim())); if(!grandes.length) return;
+    grandes.forEach(t=>delete c.tallas[t]); if(grandes.length===k.length&&p.estado!=='disponible') c.agotado=true; }));
+}
+/* Gymshark no tiene cuadritos oficiales (su selector son fotos): cada cuadrito es un solo color sólido, sacado del nombre.
+   Si tiene varios tonos ("Black/Wash", "Heavy Blue/Soft White") se usa el primero. Nunca se recorta la foto. */
+const esGym=p=>sinAcento(p.marca)==='gymshark';
+const TONOS_GYM=[['pebble grey','#b8b4ac'],['poise pink','#e8b4c0'],['carmine red','#a31f2d'],['brand blue','#2450c8'],['super-set pink','#f0509a'],['focus pink','#ec5c96'],['zone blue','#2a7bd4'],['strength pink','#e8609a'],['oat white','#ece4d4'],['cloud pink','#f2d4d8'],['soft white','#f3efe6'],['heavy blue','#1f3a6e'],['sorbet yellow','#f4e08a'],['tranquil blue','#9dbdd6'],['onyx grey','#3f4144'],['chalk beige','#d9cfbd'],['butter yellow','#f1e2a0'],['performance pink','#e85f8f'],['dark grey','#4a4a4d'],['mist grey','#c5c8ca'],['soft brown','#8a6f5a'],['lifestyle brown','#6e5240'],['cherry purple','#5c2140'],['grounded green','#4c5a42'],['amethist','#9c7cc4'],['smokey grey','#7b7d80'],['ash grey','#b2b0ab'],['canvas green','#8a8a66'],['espresso','#3b2a20'],['pitch grey','#2e2f31'],['spiced brown','#8a5a36'],['ecru','#efe8d8'],['tinted white','#efece2'],['undyed','#e8e0d0'],['stealth blue','#2a3442'],['calm pink','#e6c4c8'],['metal grey','#84878a'],['graphite','#44464a'],['impact burgundy','#5e1c2a'],['core olive','#5c5c34'],['force blue','#2c4f8c'],['haze green','#a7b59a'],['stratus grey','#9a9ea2'],['sets red','#c22a30'],['chilled blue','#b3d3e6'],['track green','#2f7a4f'],['conditioning red','#b3242c'],['chalk','#dcd5c6'],['light grey','#c9cacc'],['tactical teal','#2c6a6e'],['iron blue','#3f5a78'],['mushroom','#a59c90'],['linen','#b8a58c'],['haze pink','#e5c3c6'],['trail brown','#77593f'],['earth green','#4a5238'],['shadow blue','#4a6180'],['walnut','#5a3d2a'],['strength green','#3f7a4a'],['peach','#ffae87'],['athletic blue','#2f63b0'],['soft grey','#b9babd'],['white grey','#dcdcdc'],['charcoal','#3d3d40'],['oat','#e3d9c4'],['base green','#5b6b4a'],['terracotta','#c0623a'],['indigo','#40307a'],['cool brown','#7c6a5c'],['petrol','#1f4656'],['pace green','#5d8c5a'],['pace purple','#6a4ca0'],
+  ['black','#111113'],['white','#f5f5f2'],['navy','#1f2a44'],['olive','#6b6b3a'],['burgundy','#6d1f2b'],['teal','#2c7a7b'],['beige','#d6c8ae'],['grey','#8e9094'],['gray','#8e9094'],['pink','#e58fb0'],['blue','#3d6fb5'],['green','#4f7a55'],['red','#c0282d'],['brown','#6e5240'],['purple','#6a4c93'],['yellow','#eccd4a'],['orange','#e0782f'],['camo','#5e6048']];
+function tonoGym(n){ const s=String(n||'').split('/')[0].toLowerCase(); for(const [k,c] of TONOS_GYM) if(s.includes(k)) return c; return ''; }
 let CUADRITOS={}, FOTOS_EXTRA={};
 /* YoungLA: a los colores que solo tienen una foto se les agregan las demás fotos de ese color que hay en youngla.com
    (la espalda, de lado…), en el orden de su página. Si YoungLA no tiene más fotos de ese color, se queda como está. */
@@ -872,10 +885,10 @@ function cuadritoYla(p,c){
   return /^https:\/\//.test(v)?'background-image:url(&quot;'+esc(v)+'&quot;);background-size:cover;background-position:center':/^[#a-z0-9(),.\s%-]+$/i.test(v)?'background:'+v:'';
 }
 function swatchesHTML(p){
-  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot), yla=esYla(p);
+  const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot), yla=esYla(p), gym=esGym(p);
   if(!todos.length||(todos.length===1&&!agot.length)) return '';
-  return '<div class="sws'+(yla?' yla':'')+'" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
-    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+(yla?cuadritoYla(p,c):fondoSwatch(c))+'"></i></button>'; }).join('')+
+  return '<div class="sws'+(yla||gym?' yla':'')+'" aria-label="Colores">'+todos.slice(0,5).map((c,i)=>{ const ag=i>=disp.length;
+    return '<button type="button" class="sw'+(i===0?' on':'')+(ag?' agot':'')+'" data-sw="'+esc(c.k)+'" aria-label="'+esc(c.nombre)+(ag?' (agotado)':'')+'"'+(ag?' aria-disabled="true"':'')+' title="'+esc(c.nombre)+(ag?' · agotado':'')+'"><i style="'+(yla?cuadritoYla(p,c):gym?(tonoGym(c.nombre)?'background:'+tonoGym(c.nombre):''):fondoSwatch(c))+'"></i></button>'; }).join('')+
     (todos.length>5?'<button type="button" class="sw mas" aria-label="Ver los '+todos.length+' colores">+'+(todos.length-5)+'</button>':'')+'</div>';
 }
 // bolitas: el color sale del nombre (Black, Negro, Heather Grey…); si no se reconoce, gris claro
@@ -1408,6 +1421,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
     const mz=(d.inicio||{}).mosaico; if(mz) Object.keys(mz).forEach(k=>{ mz[k]=f(mz[k]); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  quitarTallasGrandes();
   agregarEspaldas();
   // sobre pedido: los colores que la marca ya no tiene se esconden; si se acabaron todos, la prenda no sale
   // (PT las guarda todas para que los links de pedidos viejos sigan abriendo)
