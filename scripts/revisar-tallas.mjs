@@ -176,12 +176,15 @@ async function revisarEspaldas() {
 
 let total = 0;
 const reactivados = [];
+const INICIO = Date.now();
+async function revisarTallas(soloGym) {
 for (const f of ARCHIVOS) {
   if (!fs.existsSync(f)) continue;
   const d = JSON.parse(fs.readFileSync(f, 'utf8'));
   let cambio = false;
   for (const p of d.productos || []) {
     if (!SOBRE_PEDIDO.includes(p.estado)) continue;
+    if (soloGym && !/gymshark/i.test(p.marca || '')) continue;
     for (const c of p.colores || []) {
       if (!c.link) continue;
       const quien = `${p.nombre}${c.nombre ? ' (' + c.nombre + ')' : ''}`;
@@ -202,6 +205,8 @@ for (const f of ARCHIVOS) {
   if (cambio) { d.tallasRevisadas = new Date().toISOString(); fs.writeFileSync(f, JSON.stringify(d)); }
 }
 console.log(total ? `Listo: ${total} cambios.` : 'Sin cambios: todo sigue igual.');
+}
+await revisarTallas(false);
 
 // Prendas que ya no existen en la página de la marca (todos sus colores contestan "no existe").
 // Solo se marcan en no-existen.json para que la tienda las esconda y salgan en Ocultos; el bot NUNCA borra nada.
@@ -257,7 +262,7 @@ try { await revisarLanzamientos(); } catch (e) { console.log("· No pude revisar
 // (publicar en el Catálogo no lo borra). Lo que falla la autorevisión no se publica: se queda como estaba y va al reporte.
 // Reporte de cada corrida en reporte.json (lo enseña el Catálogo). Si hay errores nuevos, el robot termina en rojo y GitHub te avisa.
 let hayErroresNuevos = false;
-async function revisarSincro() {
+async function revisarSincro(soloGym) {
   const leerJ = (a, d) => { try { return JSON.parse(fs.readFileSync(a, 'utf8')); } catch (e) { return d; } };
   const previo = leerJ('sincro.json', {}), repAntes = leerJ('reporte.json', {});
   const modelos = new Map();
@@ -265,6 +270,7 @@ async function revisarSincro() {
     let u; try { u = new URL(link); } catch (e) { return null; }
     const h = (/\/products\/([^/?#]+)/.exec(u.pathname) || [])[1]; if (!h) return null;
     if (/gymshark\.com$/.test(u.hostname)) return leerGymshark(link, h);
+    if (soloGym) return null; // revisión de cada hora: lo demás se queda como estaba
     const k = u.origin + '/' + h; if (modelos.has(k)) return modelos.get(k);
     const q = await leerPrenda(u.origin, h), m = q ? modeloShopify(q, u.origin) : null; modelos.set(k, m); return m;
   };
@@ -280,8 +286,21 @@ async function revisarSincro() {
 try { await revisarSincro(); } catch (e) { console.log('· No pude revisar la sincronía: se reintenta en la siguiente corrida. ' + (e && e.message || e)); }
 
 // Solo en GitHub: guarda aquí el trabajo, para no perderlo si publicas desde el Catálogo mientras corre
-if (process.env.GITHUB_ACTIONS) {
+function guardar() {
+  if (!process.env.GITHUB_ACTIONS) return;
   try { execSync('bash scripts/guardar-robot.sh', { stdio: 'inherit' }); }
   catch (e) { console.log('· No se pudo guardar: se reintenta en la siguiente corrida.'); }
+}
+guardar();
+// Rebajas de Gymshark cada hora: el robot corre cada 3 horas, así que se queda y a la hora y a las 2 horas
+// vuelve a revisar solo Gymshark (precios, rebajas y tallas). No pasa de 2 h 20 min, antes de que empiece la siguiente corrida.
+if (process.env.GITHUB_ACTIONS) for (const min of [60, 120]) {
+  const falta = INICIO + min * 60000 - Date.now(); if (falta > 0) await dormir(falta);
+  if (Date.now() - INICIO > 140 * 60000) break;
+  try { execSync('git pull -q --rebase', { stdio: 'inherit' }); } catch (e) { console.log('· No pude traer lo más nuevo: dejo la revisión de Gymshark para la siguiente corrida.'); break; }
+  console.log(`Revisión de Gymshark (minuto ${min})`);
+  modelosGym.clear(); noEncontrados.clear(); reactivados.length = 0; total = 0;
+  try { await revisarTallas(true); await revisarSincro(true); } catch (e) { console.log('· Falló la revisión de Gymshark: ' + (e && e.message || e)); }
+  guardar();
 }
 if (hayErroresNuevos) process.exitCode = 1;

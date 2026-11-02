@@ -698,12 +698,13 @@ function enRebaja(p){ return precioAntes(p)>+p.precio; }
 // cada color lleva su precio: la prenda muestra el del color elegido
 function usarColor(p,c){ if(!c||c.precio==null) return; p.precio=c.precio; p.precioAntes=c.antes||0; p.oferta=c.antes>c.precio; p.precioBase=c.antes||c.precio; if(c.desc) p.desc=c.desc; else delete p.desc; }
 const prenda=id=>P.find(x=>x.id===id)||REB.find(x=>x.id===id);
-// mínimo 3 tallas disponibles entre XS y 2XL en ese color (accesorios y talla única no cuentan)
-function tallasMinOk(p,c){ if(sinTalla(p,c)) return true; const s=new Set(); Object.keys(c.tallas||{}).forEach(t=>{ if(!hay(p,c,t)) return; String(t).toUpperCase().replace(/\s+/g,'').split('/').forEach(x=>{ x=x==='XXL'?'2XL':x; if(TALLAS_MIN.includes(x)) s.add(x); }); }); return s.size>=3; }
-/* Rebajas: cada prenda con colores en rebaja sale aparte, solo con esos colores; en Sobre pedido se queda con todos.
-   Gymshark: solo colores con 3 tallas o más; el color que no llega se vende a precio normal. */
-function armarRebajas(){ REB=[]; P.forEach(p=>{ const cs=(p.colores||[]).filter(c=>{ if(!(c.antes>c.precio)) return false; if(!esGym(p)||tallasMinOk(p,c)) return true; c.precio=c.antes; c.antes=0; return false; });
-  usarColor(p,(p.colores||[])[0]); if(!cs.length) return; const r=Object.create(p); Object.assign(r,{id:p.id+'~r',base:p,colores:cs,coloresAgot:[]}); usarColor(r,cs[0]); REB.push(r); }); }
+// Rebajas: basta una talla disponible entre XS y XL en ese color (accesorios y talla única siempre cuentan)
+function tallasRebOk(p,c){ if(sinTalla(p,c)) return true; const ts=c.tallasTodas||c.tallas||{}; return Object.keys(ts).some(t=>{ const x=String(t).toUpperCase().replace(/\s+/g,''); return ['XS','S','M','L','XL'].includes(x)&&(p.estado!=='disponible'||(+ts[t]||0)>0); }); }
+/* Rebajas: cada prenda con colores en rebaja sale aparte, solo con esos colores y con TODAS sus tallas (también 2XL y 3XL);
+   en Sobre pedido se queda con todos sus colores. Se esconde cuando ya no queda ninguna talla de XS a XL.
+   Gymshark: el color en rebaja que ya no tiene tallas de XS a XL se vende a precio normal. */
+function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ const cs=(p.colores||[]).filter(c=>{ if(!(c.antes>c.precio)) return false; if(tallasRebOk(p,c)) return true; if(esGym(p)){ c.precio=c.antes; c.antes=0; } return false; });
+  usarColor(p,(p.colores||[])[0]); if(!cs.length) return; const r=Object.create(p); Object.assign(r,{id:p.id+'~r',base:p,colores:cs.map(c=>Object.assign({},c,{tallas:c.tallasTodas||c.tallas})),coloresAgot:[]}); usarColor(r,r.colores[0]); REB.push(r); }); }
 /* Sincronía con la marca (sincro.json, lo pone el robot; publicar en el Catálogo no lo borra): colores nuevos, fotos que faltaban y precio de cada color.
    El precio sale del precio en dólares de la marca × el factor de la prenda (multiplicador × tu tipo de cambio).
    Entrega inmediata y precios a mano nunca se tocan. */
@@ -712,8 +713,9 @@ function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=
 function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; const s=(SINCRO.prendas||{})[p.id]; if(!s) return; p.colores=p.colores||[];
   (s.nuevos||[]).forEach(n=>{ if(!p.colores.some(c=>normC(c.nombre)===normC(n.nombre))) p.colores.push(Object.assign({},n)); });
   p.colores.forEach(c=>{ const f=(s.fotos||{})[c.k]; if(f&&f.length) c.fotos=f.slice(); });
-  const fa=+p.factor||+(SINCRO.factores||{})[sinAcento(p.marca)]; if(!(fa>0)||p.precioFijo) return;
-  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=precioMxn(x.n*fa); if(+x.d>0){ c.antes=normal; c.precio=redondearAbajo(normal*(1-x.d/100)); } else { c.precio=normal; c.antes=0; } }); }); }
+  // tu precio normal se mueve igual que el de la marca: precio × (dólares de la marca hoy ÷ dólares con los que hiciste tu precio)
+  const base=+p.precioBase||0, u=+p.usd>0?+p.usd:(s.b===base?+s.u:0); if(!(u>0)||!base||p.precioFijo) return;
+  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=precioMxn(base*x.n/u); if(+x.d>0){ c.antes=normal; c.precio=redondearAbajo(normal*(1-x.d/100)); } else { c.precio=normal; c.antes=0; } }); }); }
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
 function juntarRepetidas(){ const vistos=new Map(), clave=(p,c)=>{ const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1]; return h?h+'|'+normC(c.nombre)+'|'+(p.estado==='disponible'):''; };
   PT=PT.filter(p=>{ const ks=(p.colores||[]).map(c=>clave(p,c)).filter(Boolean), o=ks.map(k=>vistos.get(k)).find(Boolean);
@@ -856,7 +858,7 @@ function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:
 function tagsHTML(p){ const t=etiqueta(p); return '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(enRebaja(p)?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span>'; } // solo en modo administrador
 const AVISO_REB='Sujeto a confirmación de disponibilidad';
-function precioCardHTML(p){ const reb=enRebaja(p), antes=precioAntes(p), tl=reb?[...tallasConStock(p)]:[];
+function precioCardHTML(p){ const reb=enRebaja(p), antes=precioAntes(p), tl=reb?[...tallasConStock(p)].sort((a,b)=>{ const i=ORDEN_T.indexOf(a), j=ORDEN_T.indexOf(b); return (i<0?99:i)-(j<0?99:j); }):[];
   return '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (reb&&esGym(p)?'<p class="tl">'+AVISO_REB+'</p>':'')+
@@ -936,7 +938,7 @@ function fondoSwatch(c){
 /* Solo se ofrece hasta 2XL: 3XL, 4XL… no salen en la prenda, los cuadritos ni los filtros.
    Un color sobre pedido que solo tenía esas tallas queda como agotado. */
 function quitarTallasGrandes(){
-  PT.forEach(p=>(p.colores||[]).forEach(c=>{ const k=Object.keys(c.tallas||{}); if(!k.length) return;
+  PT.forEach(p=>(p.colores||[]).forEach(c=>{ const k=Object.keys(c.tallas||{}); if(!k.length) return; c.tallasTodas=Object.assign({},c.tallas); // Rebajas sí las enseña
     const grandes=k.filter(t=>/^(?:[3-9]XL|X{3,}L?)$/i.test(String(t).trim())); if(!grandes.length) return;
     grandes.forEach(t=>delete c.tallas[t]); if(grandes.length===k.length&&p.estado!=='disponible') c.agotado=true; }));
 }
@@ -1541,8 +1543,9 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
     if(p.colores.some(c=>(c.fotos||[])[0])) p.colores=p.colores.filter(c=>(c.fotos||[])[0]); });
   preciosPorColor();
   // lo que el bot marcó como que ya no existe en la marca no sale; "forzar" = tú decidiste mostrarlo en el Catálogo
-  const ocultas=(TIENDA.marcasOcultas||[]).map(sinAcento);
-  P=PT.filter(p=>!ocultas.includes(sinAcento(p.marca))&&!p.agotadoTodo&&(p.forzar||(!pocasTallas(p)&&!NO_EXISTE[p.id])));
+  const ocultas=(TIENDA.marcasOcultas||[]).map(sinAcento), visible=p=>!ocultas.includes(sinAcento(p.marca))&&!p.agotadoTodo&&(p.forzar||!NO_EXISTE[p.id]);
+  P=PT.filter(p=>visible(p)&&(p.forzar||!pocasTallas(p)));
+  const enRebajas=PT.filter(visible); // en Rebajas no aplica el mínimo de 3 tallas
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};
   if(Array.isArray(ini.banners)&&ini.banners.length) TIENDA.banners=ini.banners.map(b=>({titulo:b.titulo||'',boton:b.boton||'',cierre:b.cierre||'',img:b.img||'',imgPc:b.imgPc||'',video:b.video||'',videoPc:b.videoPc||'',ir:b.ir||'',color:'#1c1c1f'}));
@@ -1551,7 +1554,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   if(ini.mosaicoPos&&typeof ini.mosaicoPos==='object') Object.assign(TIENDA.mosaicoPos,ini.mosaicoPos); // encuadre que elegiste en el Catálogo
   if(ini.pestanaMarca&&typeof ini.pestanaMarca==='object') TIENDA.pestanaMarca=ini.pestanaMarca; // pestaña inicial que fijaste para una marca
   aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
-  armarRebajas();
+  armarRebajas(enRebajas);
   pintarTerminos();
   const ids=new Set(P.map(p=>p.id)); favs=new Set([...favs].filter(id=>ids.has(id))); guardarFavs();
   // menú: HOMBRE y MUJER con sus tipos de prenda (TIENDA.chips) y MARCAS con tu lista fija
