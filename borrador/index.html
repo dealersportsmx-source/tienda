@@ -715,7 +715,9 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
   p.colores.forEach(c=>{ const f=(s.fotos||{})[c.k]; if(f&&f.length) c.fotos=f.slice(); });
   // tu precio normal se mueve igual que el de la marca: precio × (dólares de la marca hoy ÷ dólares con los que hiciste tu precio)
   const base=+p.precioBase||0, u=+p.usd>0?+p.usd:(s.b===base?+s.u:0); if(!(u>0)||!base||p.precioFijo) return;
-  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=precioMxn(base*x.n/u); if(+x.d>0){ c.antes=normal; c.precio=redondearAbajo(normal*(1-x.d/100)); } else { c.precio=normal; c.antes=0; } }); }); }
+  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=precioMxn(base*x.n/u);
+    // en rebaja: nunca abajo de tu ganancia mínima (x.m, la calcula el robot); si no llega, a precio normal
+    const venta=+x.d>0?Math.max(redondearAbajo(normal*(1-x.d/100)),+x.m||0):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
 function juntarRepetidas(){ const vistos=new Map(), clave=(p,c)=>{ const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1]; return h?h+'|'+normC(c.nombre)+'|'+(p.estado==='disponible'):''; };
   PT=PT.filter(p=>{ const ks=(p.colores||[]).map(c=>clave(p,c)).filter(Boolean), o=ks.map(k=>vistos.get(k)).find(Boolean);
@@ -1020,6 +1022,8 @@ function porColor(ps){ const out=[];
       out.push(Object.assign(Object.create(p),{nombre:p.nombre+(c.nombre?' - '+c.nombre:''),colores:[c],coloresAgot:[],colFijo:c.k,tallasStock:tallasEnStock(p,c)})); }); });
   return out; }
 function tallasCardHTML(p){ const ts=p.tallasStock||[]; return ts.length?'<div class="sws tl-s" aria-label="Tallas en existencia">'+ts.map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>':''; }
+const POR_PAGINA=40; let limite=POR_PAGINA, firmaLista='';
+const vigiaMas='IntersectionObserver' in window?new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)){ vigiaMas.disconnect(); limite+=POR_PAGINA; render(); } },{rootMargin:'400px'}):null;
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   // 1) marcas
@@ -1041,12 +1045,15 @@ function render(){
     const grupos=preventas().filter(g=>!fPre||g.k===fPre);
     html=grupos.map(g=>{ const ps=r.filter(p=>clavePre(p)===g.k); if(!ps.length) return '';
       return '<div class="pre-h" id="pre-'+esc(encodeURIComponent(g.k))+'"><div><small>Preventa · '+esc(g.marca)+'</small><b>'+esc(g.nombre||g.marca)+'</b></div>'+(g.fecha?'<div class="cd" data-cdt="'+g.fecha.getTime()+'">Cierra en '+cuenta(g.fecha)+'</div>':'')+'</div>'+ps.map(cardHTML).join(''); }).join('');
-  } else html=r.map(cardHTML).join('');
+  } else { // de 40 en 40: la pantalla sale rápido y al bajar se cargan más solas
+    const firma=[vista,fEstado,fMarca,fCol,fPre,linea,cat,[...fTipos].join(),fTalla,fPrecio,orden].join('|'); if(firma!==firmaLista){ firmaLista=firma; limite=POR_PAGINA; }
+    html=r.slice(0,limite).map(cardHTML).join('')+(r.length>limite?'<div style="grid-column:1/-1;text-align:center;padding:6px 0 10px"><button class="btn o" data-mas>Ver más ('+(r.length-limite)+')</button></div>':''); }
   // con una marca escogida y nada en esta sección: mensaje con botón (en vez de pantalla vacía)
   const vacioMarca=!html&&fMarca&&vista!=='favs'?'<div class="empty vm" style="grid-column:1/-1"><p>Por ahora no hay productos de '+esc(fMarca)+(fEstado==='disponible'?' en entrega inmediata':' en esta sección')+'.</p>'+
     (fEstado==='disponible'?'<button class="btn w" data-vm="disp">Ver toda la entrega inmediata</button>':'<button class="btn w" data-vm="'+esc(fMarca)+'">Ver todo '+esc(fMarca)+'</button>')+'</div>':'';
   $('#grid').innerHTML=html||vacioMarca||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':fEstado==='disponible'&&!P.some(p=>p.estado==='disponible')?'Por ahora no hay prendas de entrega inmediata. Pide la tuya sobre pedido o síguenos en Instagram para enterarte cuando llegue stock.':(vista==='rebajas'||fEstado==='rebaja')&&!REB.length?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
+  const mas=$('#grid [data-mas]'); if(vigiaMas){ vigiaMas.disconnect(); if(mas) vigiaMas.observe(mas); }
   // si lo elegido quedó fuera de la pantalla (ej. Hoodies al final), la fila se recorre para que se vea
   document.querySelectorAll('#lLogos .on,#cats .on,#disp .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
     if(d<0||d+b.offsetWidth>c.clientWidth) c.scrollLeft+=d-16; });
@@ -1071,7 +1078,7 @@ $('#disp').addEventListener('click',e=>{ const b=e.target.closest('[data-disp]')
   if(fEstado==='disponible'){ fMarca=''; fCol=''; } // Entrega inmediata: siempre todas las marcas juntas (poco stock); los logos siguen filtrando
   render(); });
 // botón del mensaje "Por ahora no hay productos de…"
-$('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
+$('#grid').addEventListener('click',e=>{ if(e.target.closest('[data-mas]')){ e.stopPropagation(); limite+=POR_PAGINA; render(); return; } const b=e.target.closest('[data-vm]'); if(!b) return; e.stopPropagation();
   if(b.dataset.vm==='disp'){ fMarca=''; fCol=''; render(); } else ir('m:'+b.dataset.vm); });
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
 // tocar una marca te lleva a su "Sobre pedido" (la pestaña se puede cambiar después)
@@ -1178,7 +1185,7 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
   const reb=REB.slice(0,12); // en el inicio máximo 12; el resto en "Ver todo"
   $('#fTop').innerHTML=top.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás lo más vendido de cada marca.</div>';
   $('#fReb').innerHTML=reb.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás las rebajas. Síguenos en Instagram para enterarte primero.</div>';
-  $('#sTop').hidden=false; $('#sReb').hidden=false;
+  $('#sTop').hidden=!TIENDA.masVendido; $('#sReb').hidden=false; // "Lo más vendido": se prende en el Catálogo (Ajustes › Inicio de la tienda)
   $('#sTop .ver').hidden=!top.length; $('#sReb .ver').hidden=!reb.length;
 }
 // a dónde llevan el menú, los logos, los banners y los "Ver todo"
@@ -1512,18 +1519,18 @@ function quitarIntro(){ const s=$('#splash'); setTimeout(()=>s.classList.add('ou
 const ARRIBA=/\/borrador\/$|\/borrador\/index\.html$/.test(location.pathname)?'../':'';
 // cuadritos de color de YoungLA (los pone el robot en colores.json); si no llegan, la tienda abre igual
 const pColores=Promise.all([
-  fetch(ARRIBA+'colores.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; }),
+  fetch(ARRIBA+'colores.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ CUADRITOS=m&&typeof m==='object'?m:{}; }),
   // fotos de espalda de YoungLA (las pone el robot en fotos-extra.json)
-  fetch(ARRIBA+'fotos-extra.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; }),
+  fetch(ARRIBA+'fotos-extra.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; }),
   // prendas que ya no existen en la página de la marca (las marca el bot en no-existen.json; no se borran)
-  fetch(ARRIBA+'no-existen.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ NO_EXISTE=m&&typeof m==='object'?m:{}; }),
+  fetch(ARRIBA+'no-existen.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ NO_EXISTE=m&&typeof m==='object'?m:{}; }),
   // fecha de lanzamiento de cada prenda en su marca (las pone el robot en lanzamientos.json)
-  fetch(ARRIBA+'lanzamientos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ LANZAMIENTOS=m&&typeof m==='object'?m:{}; }),
+  fetch(ARRIBA+'lanzamientos.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ LANZAMIENTOS=m&&typeof m==='object'?m:{}; }),
   // precios, rebajas, colores nuevos y fotos que faltaban (los pone el robot en sincro.json)
-  fetch(ARRIBA+'sincro.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ SINCRO=m&&typeof m==='object'?m:{}; })]);
+  fetch(ARRIBA+'sincro.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ SINCRO=m&&typeof m==='object'?m:{}; })]);
 // solo para revisar en el borrador: prendas de prueba que no están en la tienda real
-const pPrueba=BORRADOR?fetch((ARRIBA?'':'borrador/')+'prueba-rebajas.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).catch(()=>[]):Promise.resolve([]);
-fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>pPrueba).then(x=>{ if(Array.isArray(x)&&x.length) d.productos=(d.productos||[]).concat(x); return d; })).then(d=>{
+const pPrueba=BORRADOR?fetch((ARRIBA?'':'borrador/')+'prueba-rebajas.json',{cache:'no-cache'}).then(r=>r.ok?r.json():[]).catch(()=>[]):Promise.resolve([]);
+fetch(ARRIBA+'datos.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>pPrueba).then(x=>{ if(Array.isArray(x)&&x.length) d.productos=(d.productos||[]).concat(x); return d; })).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
@@ -1557,6 +1564,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   if(ini.mosaico&&typeof ini.mosaico==='object') TIENDA.mosaico=ini.mosaico; // fotos del mosaico de marcas
   if(ini.mosaicoPos&&typeof ini.mosaicoPos==='object') Object.assign(TIENDA.mosaicoPos,ini.mosaicoPos); // encuadre que elegiste en el Catálogo
   if(ini.pestanaMarca&&typeof ini.pestanaMarca==='object') TIENDA.pestanaMarca=ini.pestanaMarca; // pestaña inicial que fijaste para una marca
+  TIENDA.masVendido=!!ini.masVendido;
   aplicarDescuentos(descuentosDe(d.ajustes)); // va después del redondeo, para usar el tuyo
   armarRebajas(enRebajas);
   pintarTerminos();

@@ -297,21 +297,51 @@ async function revisarSincro(soloGym) {
     const q = await leerPrenda(u.origin, h), m = q ? modeloShopify(q, u.origin) : null; modelos.set(k, m); return m;
   };
 const datos = JSON.parse(fs.readFileSync('datos.json', 'utf8'));
-  const { sincro, reporte } = await sincronizar({ datos, previo, lector, eventos: { reactivados } });
+  // ganancia mínima: dólar del día (público) y tu piso por pieza (lo manda el Catálogo; mientras no, piso-rebajas.json)
+  let dolar = 0; try { const r = await fetch('https://open.er-api.com/v6/latest/USD'); if (r.ok) dolar = +((await r.json()).rates || {}).MXN || 0; } catch (e) {}
+  if (!(dolar > 0)) dolar = +previo.dolar || 0;
+  const porPieza = +datos.pisoPieza >= 0 && datos.pisoPieza != null ? +datos.pisoPieza : +(leerJ('piso-rebajas.json', {}).porPieza) || 0;
+  const piso = { dolar, porPieza };
+  const { sincro, reporte } = await sincronizar({ datos, previo, lector, eventos: { reactivados }, piso });
+  if (dolar > 0) sincro.dolar = Math.round(dolar * 100) / 100;
   // rebajas por liga: las que pegaste en el Catálogo (si todavía no publicas ninguna, las de ligas-rebajas.json)
   const ligas = Array.isArray(datos.ligasRebajas) ? datos.ligasRebajas : leerJ('ligas-rebajas.json', []);
-  const lr = await rebajasDeLigas({ datos, sincro, ligas, leerLista: leerListaGym, previas: previo.rebajas || [] });
+  const lr = await rebajasDeLigas({ datos, sincro, ligas, leerLista: leerListaGym, previas: previo.rebajas || [], piso });
   sincro.rebajas = lr.rebajas;
-  reporte.agregados.push(...lr.rep.agregados); reporte.salieron.push(...lr.rep.salieron); reporte.errores.push(...lr.rep.errores);
+  ['agregados', 'salieron', 'errores', 'alMinimo', 'sinGanancia'].forEach(k => reporte[k].push(...lr.rep[k]));
   if (JSON.stringify(sincro) !== JSON.stringify(previo)) fs.writeFileSync('sincro.json', JSON.stringify(sincro));
   const rep = agregarReporte(repAntes, reporte);
   if (JSON.stringify(rep) !== JSON.stringify(repAntes)) fs.writeFileSync('reporte.json', JSON.stringify(rep));
-  const yaAvisados = new Set(((repAntes.corridas || [])[0] || {}).errores || []);
+  const yaAvisados = new Set(((repAntes.corridas || []).find(c => c.errores) || {}).errores || []);
   hayErroresNuevos = (reporte.errores || []).some(e => !yaAvisados.has(e));
   console.log(`Sincronía: ${reporte.agregados.length} colores nuevos, ${reporte.precios.length} precios, ${reporte.entraron.length} a rebajas, ${reporte.salieron.length} salieron, ${reporte.errores.length} errores.`);
   reporte.errores.forEach(e => console.log('✗ ' + e));
 }
 try { await revisarSincro(); } catch (e) { console.log('· No pude revisar la sincronía: se reintenta en la siguiente corrida. ' + (e && e.message || e)); }
+
+/* Limpieza semanal (nunca borra prendas ni fotos; solo quita datos del robot de prendas que ya no están y te avisa):
+   - lanzamientos, cuadritos y fotos de espalda de prendas que ya no están en tu tienda
+   - te enlista las prendas que ya no existen en la marca desde hace más de 30 días (para que tú las quites en el Catálogo)
+   - te avisa si hay fotos en la tienda que ya no usa ninguna prenda
+   - el reporte guarda solo los últimos 30 días */
+function limpiezaSemanal() {
+  const leerJ = (a, d) => { try { return JSON.parse(fs.readFileSync(a, 'utf8')); } catch (e) { return d; } };
+  const rep = leerJ('reporte.json', {});
+  if (Date.now() - Date.parse(rep.limpieza || 0) < 7 * 864e5) return;
+  const d = leerJ('datos.json', null); if (!d || !(d.productos || []).length) return;
+  const ids = new Set(d.productos.map(p => p.id)), handles = new Set(), usadas = new Set();
+  d.productos.forEach(p => (p.colores || []).forEach(c => { const h = (/\/products\/([^/?#]+)/.exec(c.link || p.link || '') || [])[1]; if (h) handles.add(h); (c.fotos || []).forEach(f => usadas.add(f)); }));
+  JSON.stringify(d.inicio || {}).replace(/fotos\/[A-Za-z0-9_-]+\.\w+/g, f => { usadas.add(f); return f; });
+  const quitar = (archivo, guarda) => { const o = leerJ(archivo, null); if (!o) return 0; let n = 0; for (const k of Object.keys(o)) if (!guarda(k)) { delete o[k]; n++; } if (n) fs.writeFileSync(archivo, JSON.stringify(o)); return n; };
+  const n1 = quitar('lanzamientos.json', k => ids.has(k)), n2 = quitar('colores.json', k => handles.has(k)), n3 = quitar('fotos-extra.json', k => handles.has(k));
+  const ne = leerJ('no-existen.json', {}), viejas = Object.values(ne).filter(x => Date.now() - Date.parse(x.desde) > 30 * 864e5).map(x => `${x.marca} · ${x.nombre}`);
+  const sinUsar = fs.existsSync('fotos') ? fs.readdirSync('fotos').filter(f => !usadas.has('fotos/' + f)).length : 0;
+  const nota = { fecha: new Date().toISOString(), limpieza: [`Limpieza semanal: quité datos viejos del robot de ${n1 + n2 + n3} prendas que ya no están en tu tienda.`].concat(sinUsar ? [`Hay ${sinUsar} fotos que ya no usa ninguna prenda (se quitan solas la próxima vez que publiques).`] : []), paraQuitar: viejas };
+  const nuevo = Object.assign({}, rep, { limpieza: nota.fecha, corridas: [nota, ...(rep.corridas || [])].slice(0, 40) });
+  fs.writeFileSync('reporte.json', JSON.stringify(nuevo));
+  console.log(nota.limpieza.join(' '), viejas.length ? `Para quitar: ${viejas.length}` : '');
+}
+try { limpiezaSemanal(); } catch (e) { console.log('· No pude hacer la limpieza semanal: ' + (e && e.message || e)); }
 
 // Solo en GitHub: guarda aquí el trabajo, para no perderlo si publicas desde el Catálogo mientras corre
 function guardar() {

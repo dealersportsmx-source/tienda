@@ -65,7 +65,8 @@ function redondeador(aj) {
   const r = +(aj || {}).red || 50, m = String((aj || {}).redondeo || '');
   const abajo = x => m === '90' ? Math.max(90, Math.floor((x + 10) / 100) * 100 - 10) : Math.floor(x / r + 1e-9) * r;
   const normal = x => m === '90' ? abajo(x) : /a$/.test(m) ? Math.ceil(x / r - 1e-9) * r : Math.floor(x / r + 0.5 + 1e-9) * r;
-  return { normal, abajo };
+  const arriba = x => m === '90' ? Math.ceil((x + 10) / 100 - 1e-9) * 100 - 10 : Math.ceil(x / r - 1e-9) * r;
+  return { normal, abajo, arriba };
 }
 
 // (sin factor de marca: ver el ancla de precio más abajo)
@@ -94,7 +95,9 @@ function revisar(p, e, previa) {
 }
 
 /* lector(link, nombreColor) → modelo de la marca o null si no se pudo leer. Solo se pide una vez por modelo. */
-export async function sincronizar({ datos, previo, lector, eventos = {}, ahora = new Date().toISOString() }) {
+/* Ganancia mínima en rebajas: el precio en rebaja nunca baja de lo que te cuesta la pieza (precio de la marca en rebaja × dólar del día)
+   más tu "piso por pieza" (costo extra + ganancia mínima, del Catálogo). Si para llegar ahí queda igual o arriba del precio normal, sale de Rebajas. */
+export async function sincronizar({ datos, previo, lector, eventos = {}, piso = {}, ahora = new Date().toISOString() }) {
   const red = redondeador(datos.ajustes), prendasAntes = (previo && previo.prendas) || {};
 /* Precio: tu precio normal (el que publicas desde el Catálogo) se mueve en la misma proporción que el precio de la marca.
      No se guarda ni se publica tu tipo de cambio ni tu margen: solo tus precios finales y los precios públicos de la marca.
@@ -108,7 +111,7 @@ export async function sincronizar({ datos, previo, lector, eventos = {}, ahora =
     lecturas.set(p.id, ms);
   }
 
-  const prendas = {}, rep = { agregados: [], precios: [], entraron: [], salieron: [], reactivados: eventos.reactivados || [], errores: [] };
+  const prendas = {}, rep = { agregados: [], precios: [], entraron: [], salieron: [], reactivados: eventos.reactivados || [], errores: [], alMinimo: [], sinGanancia: [] };
   for (const p of ps) {
     const ms = lecturas.get(p.id), previa = prendasAntes[p.id];
     if (!ms.length) { if (previa) prendas[p.id] = previa; continue; } // no se pudo leer: se queda como estaba
@@ -148,6 +151,18 @@ export async function sincronizar({ datos, previo, lector, eventos = {}, ahora =
     if (+p.usd > 0) { e.u = +p.usd; e.b = base; }
     else if (previa && previa.b === base && previa.u > 0) { e.u = previa.u; e.b = base; }
     else if (leidos.length && base) { e.u = Math.max(...leidos); e.b = base; }
+    if (piso.dolar > 0 && piso.porPieza >= 0 && e.u > 0 && e.b > 0 && !p.precioFijo) {
+      const antesC = Object.assign({}, (previa || {}).colores, Object.fromEntries(((previa || {}).nuevos || []).map(n => [n.k, n])));
+      for (const [k, x] of [...Object.entries(e.colores), ...e.nuevos.map(n => [n.k, n])]) {
+        if (!x.r || !(x.d > 0)) continue;
+        const normal = red.normal(e.b * x.n / e.u), venta = red.abajo(normal * (1 - x.d / 100)), minimo = red.arriba(x.r.usd * piso.dolar + piso.porPieza);
+        x.v = x.r.usd; // lo que te cuesta en la marca (USD), para que el Catálogo te enseñe tu ganancia
+        if (venta >= minimo) continue;
+        const nom = ((p.colores || []).find(c => c.k === k) || x).nombre || '', a = antesC[k] || {};
+        if (minimo >= normal) { x.d = 0; delete x.v; if (a.d > 0 || !previa) rep.sinGanancia.push(`${p.marca} · ${p.nombre} (${nom}): no deja tu ganancia mínima, sale de Rebajas`); }
+        else { x.m = minimo; if (a.m !== minimo) rep.alMinimo.push(`${p.marca} · ${p.nombre} (${nom}): $${venta} → $${minimo}`); }
+      }
+    }
     todos.forEach(x => { delete x.r; });
     if (!Object.keys(e.fotos).length) delete e.fotos;
     if (!e.nuevos.length) delete e.nuevos;
@@ -193,17 +208,18 @@ function buscarColor(p, ms) {
 
 // Corridas guardadas para el Catálogo: solo las que hicieron algo o encontraron errores
 export function agregarReporte(anterior, r, max = 40) {
-  const hizo = ['agregados', 'precios', 'entraron', 'salieron', 'reactivados', 'errores', 'duplicadas'].some(k => (r[k] || []).length);
-  const lista = (anterior && anterior.corridas) || [];
-  return { corridas: hizo ? [r, ...lista].slice(0, max) : lista };
+  const hizo = ['agregados', 'precios', 'entraron', 'salieron', 'reactivados', 'errores', 'duplicadas', 'alMinimo', 'sinGanancia'].some(k => (r[k] || []).length);
+  const mes = Date.now() - 30 * 864e5; // solo los últimos 30 días
+  const lista = ((anterior && anterior.corridas) || []).filter(c => !(Date.parse(c.fecha) < mes));
+  return Object.assign({}, anterior, { corridas: hizo ? [r, ...lista].slice(0, max) : lista });
 }
 
 /* Rebajas por liga (Gymshark): tus ligas de su sección de rebajas, con tus filtros, se leen tal cual en cada corrida.
    Sube cada modelo con sus colores en rebaja que tengan alguna talla de XS a XL, con un solo descuento (el más bajo).
    No sube lo que ya tienes en el Catálogo ni lo que ocultaste. Salen solo en Rebajas.
    Precio: tu misma proporción de precio de Gymshark, sacada de tus prendas en esta corrida (no se guarda ni se publica). */
-export async function rebajasDeLigas({ datos, sincro, ligas, leerLista, previas = [], ahora = new Date().toISOString() }) {
-  const red = redondeador(datos.ajustes), rep = { agregados: [], salieron: [], errores: [] };
+export async function rebajasDeLigas({ datos, sincro, ligas, leerLista, previas = [], piso = {}, ahora = new Date().toISOString() }) {
+  const red = redondeador(datos.ajustes), rep = { agregados: [], salieron: [], errores: [], alMinimo: [], sinGanancia: [] };
   const gym = (datos.productos || []).filter(esGym), idsGym = new Set(gym.map(p => p.id));
   const razones = Object.entries((sincro && sincro.prendas) || {}).filter(([id, e]) => idsGym.has(id) && e.u > 0 && e.b > 0).map(([, e]) => e.b / e.u).sort((a, b) => a - b);
   if (!razones.length || !(ligas || []).length) return { rebajas: (ligas || []).length ? previas : [], rep };
@@ -226,7 +242,10 @@ export async function rebajasDeLigas({ datos, sincro, ligas, leerLista, previas 
     if (!(pct > 0 && pct <= 90)) { rep.errores.push(`Rebajas por liga · ${titulo}: descuento raro de ${pct}%`); continue; }
     const g = [...new Set(hs.flatMap(h => [].concat(h.gender || [])))];
     const colores = cs.map(c => { const normal = red.normal(c.antes * f), tallas = {}; c.tallas.filter(x => x.ok).forEach(x => { tallas[x.t] = 0; });
-      return { k: 'r-' + norm(c.nombre), nombre: c.nombre, link: c.link, tallas, fotos: c.fotos, precio: red.abajo(normal * (1 - pct / 100)), antes: normal }; });
+      let precio = red.abajo(normal * (1 - pct / 100));
+      if (piso.dolar > 0 && piso.porPieza >= 0) precio = Math.max(precio, red.arriba(c.usd * piso.dolar + piso.porPieza)); // ganancia mínima
+      return { k: 'r-' + norm(c.nombre), nombre: c.nombre, link: c.link, tallas, fotos: c.fotos, precio, antes: normal, usd: c.usd }; }).filter(c => c.precio < c.antes);
+    if (!colores.length) { if (antes.has(id) || !previas.length) rep.sinGanancia.push(`Rebajas por liga · ${titulo}: no deja tu ganancia mínima`); continue; }
     if (colores.some(c => !(c.precio > 0) || !(c.antes > c.precio))) { rep.errores.push(`Rebajas por liga · ${titulo}: precio en cero`); continue; }
     out.push({ id, nombre: titulo, marca: 'Gymshark', linea: g.includes('m') && !g.includes('f') ? 'hombre' : g.includes('f') && !g.includes('m') ? 'mujer' : 'unisex',
       desde: (antes.get(id) || {}).desde || ahora, colores });
