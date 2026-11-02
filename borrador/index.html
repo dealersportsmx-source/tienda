@@ -336,7 +336,7 @@ footer.pie button,footer.pie a{all:unset;cursor:pointer;color:var(--ink);font-we
 .note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .estado{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.03em}
 .estado.pre,.estado.cam{background:#2563EB;color:#fff}.estado.drop{background:#7C3AED;color:#fff}.estado.disp{background:#16A34A;color:#fff}.estado.reb{background:#E0243F;color:#fff;margin-left:6px}
-.cats.en .chip.on[data-disp="pedido"]{background:#2563EB;border-color:#2563EB;color:#fff}.cats.en .chip.on[data-disp="preventa"]{background:#7C3AED;border-color:#7C3AED;color:#fff}.cats.en .chip.on[data-disp="disponible"]{background:#16A34A;border-color:#16A34A;color:#fff}
+.cats.en .chip.on[data-disp="rebaja"]{background:#E0243F;border-color:#E0243F;color:#fff}.cats.en .chip[data-disp="rebaja"]:not(.on){color:#E0243F;border-color:#E0243F}.cats.en .chip.on[data-disp="pedido"]{background:#2563EB;border-color:#2563EB;color:#fff}.cats.en .chip.on[data-disp="preventa"]{background:#7C3AED;border-color:#7C3AED;color:#fff}.cats.en .chip.on[data-disp="disponible"]{background:#16A34A;border-color:#16A34A;color:#fff}
 .plazo-aviso{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--line);font-size:12.5px;line-height:1.4;color:var(--muted)}
 .empty.vm{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}.empty.vm p{margin:0}
 .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
@@ -752,6 +752,8 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(abierto.length) cerrar(abierto[abierto.length-1]); else if(!$('#pv').hidden) cerrarProducto(); });
 
 /* ---------- lista ---------- */
+// fecha para ordenar: lanzamiento en la marca (lanzamientos.json, lo pone el robot); si no hay, fecha de la preventa o de subida al Catálogo
+function fechaDe(p){ return Date.parse(LANZAMIENTOS[p.id])||+dropDate(p)||+p.creado||0; }
 /* todos los filtros se combinan: Hombre/Mujer + tipo de prenda + marca + estado + talla + precio */
 function filtrar(sinTipo){
   const ahora=new Date();
@@ -762,7 +764,7 @@ function filtrar(sinTipo){
   else if(vista==='masvendido') r=r.filter(p=>p.masVendido||p.masPedido);
   // los accesorios solo salen en ACCESORIOS o si los eliges en "Filtrar y ordenar" (no revueltos con la ropa)
   const soloAcc=vista==='acc'||cat==='Accesorios';
-  if(!soloAcc&&!fPre&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
+  if(!soloAcc&&fEstado!=='acc'&&!fPre&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
   if(linea&&!soloAcc) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
@@ -773,15 +775,15 @@ function filtrar(sinTipo){
   else if(fEstado==='pedido') r=r.filter(p=>p.estado!=='disponible'&&p.estado!=='early');
   else if(fEstado==='preventa') r=r.filter(p=>p.estado==='early'&&(!fPre||clavePre(p)===fPre));
   else if(fEstado==='rebaja') r=r.filter(enRebaja);
+  else if(fEstado==='acc') r=r.filter(esAcc);
   if(fPrecio) r=r.filter(p=>{ const v=+p.precio||0; return fPrecio==='a'?v<1000:fPrecio==='b'?v>=1000&&v<2000:v>=2000; });
   if(fEstado==='preventa') r.sort((a,b)=>(dropDate(a)||0)-(dropDate(b)||0));
   if(orden==='menor') r.sort((a,b)=>a.precio-b.precio);
   else if(orden==='mayor') r.sort((a,b)=>b.precio-a.precio);
   else {
-    // tu orden del Catálogo, marca por marca; lo que no tiene número (lo nuevo) va al principio de su marca. Sin orden: lo más nuevo primero
-    const hayOrden=r.some(p=>+p.orden>0), iM=p=>{ const i=TIENDA.marcas.findIndex(m=>sinAcento(m)===sinAcento(p.marca)); return i<0?99:i; };
-    const cmp=(a,b)=>{ if(!hayOrden) return (b.creado||0)-(a.creado||0); const x=+a.orden||0, y=+b.orden||0;
-      return (fMarca?0:iM(a)-iM(b))||(!x&&!y?(b.creado||0)-(a.creado||0):!x?-1:!y?1:x-y); };
+    // primero las que moviste a mano en el Catálogo (en ese orden) y las destacadas; el resto, de la más nueva a la más vieja
+    const rango=p=>p.fijo?0:p.destacado?1:2;
+    const cmp=(a,b)=>rango(a)-rango(b)||(a.fijo&&b.fijo?(+a.orden||0)-(+b.orden||0):0)||fechaDe(b)-fechaDe(a);
     // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido
     const g=p=>fEstado?0:p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||cmp(a,b)); }
   return r;
@@ -920,7 +922,7 @@ function tonoDf(p,c){
   if(foto&&nom){ const rgb=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16)), a=rgb(foto), b=rgb(nom); return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])>50?nom:foto; }
   return foto||nom||'';
 }
-let CUADRITOS={}, FOTOS_EXTRA={}, NO_EXISTE={};
+let CUADRITOS={}, FOTOS_EXTRA={}, NO_EXISTE={}, LANZAMIENTOS={};
 /* YoungLA: a los colores que solo tienen una foto se les agregan las demás fotos de ese color que hay en youngla.com
    (la espalda, de lado…), en el orden de su página. Si YoungLA no tiene más fotos de ese color, se queda como está. */
 function agregarEspaldas(){
@@ -956,7 +958,7 @@ function logosHTML(lista){ // en la página de productos, tocar la marca marcada
   return TIENDA.marcas.map(m=>{ const f=TIENDA.logos[m], on=lista&&sinAcento(m)===sinAcento(fMarca);
   return '<button '+(lista?'data-lm':'data-ir')+'="'+(lista?'':'m:')+esc(m)+'" aria-label="'+esc(m)+'"'+(lista?' aria-pressed="'+on+'"':'')+' class="'+(f?'lg-'+f:'')+(on?' on':'')+'">'+(f?'<img src="marcas/'+f+'.png" alt="" onerror="this.outerHTML=\'<span class=tx>'+esc(m)+'</span>\'">':'<span class="tx">'+esc(m)+'</span>')+'</button>'; }).join(''); }
 // tipos de prenda que se pueden elegir: los de Hombre o Mujer según la pestaña; en Todo, los de las dos
-function tiposDe(){ if(vista==='acc'||vista==='favs') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
+function tiposDe(){ if(vista==='acc'||vista==='favs'||fEstado==='acc') return []; return (linea?TIENDA.chips[linea]||[]:[...new Set(TIENDA.chips.hombre.concat(TIENDA.chips.mujer))]).concat(['Accesorios']); }
 // pastillas con × solo para los filtros extra (tipo de prenda, marca, talla, precio);
 // Hombre/Mujer y el estado ya se ven arriba en sus botones
 function pintarActivos(){
@@ -984,13 +986,10 @@ function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.linea===linea));
   // 1) marcas
   $('#lLogos').innerHTML=logosHTML(true);
-  // 2) estado: Sobre pedido, Preventa, Entrega inmediata, Rebajas (en MUJER no hay stock: sin Entrega inmediata).
-  //    Sin ninguno marcado se ve todo; tocar el marcado otra vez lo quita.
-  const sin=TIENDA.soloPedido.includes(linea)&&!fMarca;
-  if(sin&&fEstado==='disponible') fEstado='';
+  // 2) estado. Sin ninguno marcado se ve todo; tocar el marcado otra vez lo quita.
   $('#disp').hidden=vista==='favs'||vista==='rebajas';
-  // pestañas: Sobre pedido · Preventa · Entrega inmediata (Rebajas está en el menú)
-  $('#disp').innerHTML=[['pedido','Sobre pedido']].concat(sin?[]:[['disponible','Entrega inmediata']],[['preventa','Preventa']])
+  // pestañas (Rebajas y Accesorios también siguen en el menú)
+  $('#disp').innerHTML=[['pedido','Sobre pedido'],['disponible','Entrega inmediata'],['rebaja','Rebajas'],['preventa','Preventa'],['acc','Accesorios']]
     .map(o=>chipHTML(o[0],o[1],fEstado===o[0],'data-disp')).join('');
   // el tipo de prenda se elige en "Filtrar y ordenar"; si cambias a una pestaña donde no existe, se quita
   if(cat&&!tiposDe().includes(cat)) cat='';
@@ -1011,7 +1010,7 @@ function render(){
   $('#grid').innerHTML=html||vacioMarca||'<p class="empty" style="grid-column:1/-1">'+(vista==='favs'?'Todavía no tienes favoritos. Toca el corazón de una prenda para guardarla.':fEstado==='preventa'&&!preventas().length?'Por ahora no hay preventas abiertas. Síguenos en Instagram para enterarte de la próxima.':fEstado==='disponible'&&!P.some(p=>p.estado==='disponible')?'Por ahora no hay prendas de entrega inmediata. Pide la tuya sobre pedido o síguenos en Instagram para enterarte cuando llegue stock.':(vista==='rebajas'||fEstado==='rebaja')&&!P.some(enRebaja)?'Por ahora no hay rebajas. Síguenos en Instagram para enterarte de las próximas.':P.length?'No hay productos con esos filtros.':'Muy pronto subiremos productos nuevos. Síguenos en Instagram.')+'</p>';
   const np=preventas().length; $('#mPre').textContent=np?String(np):'';
   // si lo elegido quedó fuera de la pantalla (ej. Hoodies al final), la fila se recorre para que se vea
-  document.querySelectorAll('#lLogos .on,#cats .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
+  document.querySelectorAll('#lLogos .on,#cats .on,#disp .on').forEach(b=>{ const c=b.parentNode, d=b.getBoundingClientRect().left-c.getBoundingClientRect().left;
     if(d<0||d+b.offsetWidth>c.clientWidth) c.scrollLeft+=d-16; });
 }
 /* carrusel: una lámina por cada preventa abierta, va pasando sola */
@@ -1039,7 +1038,7 @@ $('#grid').addEventListener('click',e=>{ const b=e.target.closest('[data-vm]'); 
 // logo de marca en la página de productos: filtra (si ya estaba elegida, la quita)
 // tocar una marca te lleva a su "Sobre pedido" (la pestaña se puede cambiar después)
 $('#lLogos').addEventListener('click',e=>{ const b=e.target.closest('[data-lm]'); if(!b) return; const m=b.dataset.lm; fMarca=sinAcento(m)===sinAcento(fMarca)?'':m; fCol='';
-  if(fMarca){ fEstado='pedido'; fPre=''; } render(); });
+  if(fMarca&&fEstado!=='rebaja'&&fEstado!=='acc'){ fEstado='pedido'; fPre=''; } render(); }); // en Rebajas y Accesorios se queda en la pestaña, filtrando por la marca
 $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quita]'); if(!b) return; const k=b.dataset.quita, todo=k==='todo';
   if(todo||k==='vista') vista='';
   if(todo||k==='linea'){ linea=''; LS.set('linea',''); }
@@ -1053,7 +1052,7 @@ $('#activos').addEventListener('click',e=>{ const b=e.target.closest('[data-quit
   if(todo||k==='precio') fPrecio='';
   render(); });
 setInterval(()=>document.querySelectorAll('[data-cdt]').forEach(el=>{ el.textContent='Cierra en '+cuenta(new Date(+el.dataset.cdt)); }),30000);
-$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'); if(!b) return; linea=b.dataset.linea; LS.set('linea',linea); vista=''; if(TIENDA.soloPedido.includes(linea)&&fEstado==='disponible') fEstado=''; render(); });
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-linea]'); if(!b) return; linea=b.dataset.linea; LS.set('linea',linea); vista=''; render(); });
 document.addEventListener('click',e=>{
   const fv=e.target.closest('[data-fav]');
   if(fv){ e.stopPropagation(); const id=fv.dataset.fav; if(favs.has(id)) favs.delete(id); else { favs.add(id); toast('Guardado en favoritos'); } guardarFavs(); fv.classList.toggle('on',favs.has(id)); return; }
@@ -1161,11 +1160,12 @@ function ir(g,desdeHistorial){
   else if(g==='disponibles') fEstado='disponible';
   else if(g==='drops') fEstado='preventa';
   else if(g.startsWith('p:')){ fEstado='preventa'; fPre=g.slice(2); } // Ver todo de una preventa
-  else if(g==='favs'||g==='acc'||g==='rebajas'||g==='masvendido'){ vista=g; if(g!=='acc') fEstado=''; } // favoritos, rebajas y lo más vendido: todo junto
+  else if(g==='acc') fEstado='acc'; // Accesorios del menú: abre su pestaña
+  else if(g==='favs'||g==='rebajas'||g==='masvendido'){ vista=g; fEstado=''; } // favoritos, rebajas y lo más vendido: todo junto
   else linea=g;
   // desde el menú (Hombre › Ver todo, una categoría…) sale marcada la primera marca de la fila de logos (YoungLA);
   // si esa marca no tiene nada en esa sección, la siguiente que sí tenga
-  if(!fMarca&&fEstado==='pedido'&&(g.startsWith('l:')||g==='acc'||['','hombre','mujer'].includes(g))){
+  if(!fMarca&&(fEstado==='pedido'||fEstado==='acc')&&(g.startsWith('l:')||g==='acc'||['','hombre','mujer'].includes(g))){
     for(const m of TIENDA.marcas){ fMarca=m; if(filtrar().length) break; fMarca=''; } }
   LS.set('linea',linea);
   modo(false); render(); window.scrollTo(0,0);
@@ -1474,7 +1474,9 @@ const pColores=Promise.all([
   // fotos de espalda de YoungLA (las pone el robot en fotos-extra.json)
   fetch(ARRIBA+'fotos-extra.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ FOTOS_EXTRA=m&&typeof m==='object'?m:{}; }),
   // prendas que ya no existen en la página de la marca (las marca el bot en no-existen.json; no se borran)
-  fetch(ARRIBA+'no-existen.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ NO_EXISTE=m&&typeof m==='object'?m:{}; })]);
+  fetch(ARRIBA+'no-existen.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ NO_EXISTE=m&&typeof m==='object'?m:{}; }),
+  // fecha de lanzamiento de cada prenda en su marca (las pone el robot en lanzamientos.json)
+  fetch(ARRIBA+'lanzamientos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})).then(m=>{ LANZAMIENTOS=m&&typeof m==='object'?m:{}; })]);
 fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{productos:[]}).catch(()=>({productos:[]})).then(d=>pColores.then(()=>d)).then(d=>{
   if(ARRIBA){ const f=s=>s&&!/^(https?:|\/|\.\.\/)/.test(s)?ARRIBA+s:s;
     (d.productos||[]).forEach(p=>(p.colores||[]).forEach(c=>{ c.fotos=(c.fotos||[]).map(f); }));

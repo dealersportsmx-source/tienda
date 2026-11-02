@@ -227,6 +227,33 @@ marcarNoExisten();
 await revisarCuadritos();
 await revisarEspaldas();
 
+// Fecha de lanzamiento de cada prenda en su marca, para que la tienda ordene de la más nueva a la más vieja.
+// Se guarda en lanzamientos.json: { "<id de la prenda>": "fecha" }. Solo se lee en la marca lo que aún no tiene fecha o ya se leyó en esta corrida.
+// Gymshark no publica esa fecha: la tienda usa la fecha de subida al Catálogo.
+async function revisarLanzamientos() {
+  const LZ = 'lanzamientos.json';
+  let antes = {}; try { antes = JSON.parse(fs.readFileSync(LZ, 'utf8')); } catch (e) {}
+  const d = JSON.parse(fs.readFileSync('datos.json', 'utf8')), ahora = {};
+  for (const p of d.productos || []) {
+    let mejor = '';
+    const prendas = new Map();
+    for (const c of p.colores || []) { try { const u = new URL(c.link), h = /\/products\/([^/?#]+)/.exec(u.pathname); if (h && !/gymshark/i.test(u.hostname)) prendas.set(`${u.origin}/${h[1]}`, [u.origin, h[1]]); } catch (e) {} }
+    for (const [k, [origin, handle]] of prendas) {
+      if (antes[p.id] && !yaLeidas.has(k)) continue; // ya tiene fecha: no se molesta a la marca
+      let q = yaLeidas.get(k);
+      if (q === undefined) {
+        try { const r = await fetch(`${origin}/products/${handle}.js`, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX fechas)' } }); q = r.ok ? await r.json() : null; } catch (e) { q = null; }
+        yaLeidas.set(k, q); await dormir(1000);
+      }
+      const f = q && Date.parse(q.published_at);
+      if (f && (!mejor || f > Date.parse(mejor))) mejor = new Date(f).toISOString().replace('.000Z', 'Z');
+    }
+    if (mejor || antes[p.id]) ahora[p.id] = mejor || antes[p.id];
+  }
+  if (JSON.stringify(ahora) !== JSON.stringify(antes)) { fs.writeFileSync(LZ, JSON.stringify(ahora)); console.log(`Fechas de lanzamiento: ${Object.keys(ahora).length} prendas.`); }
+}
+try { await revisarLanzamientos(); } catch (e) { console.log("· No pude revisar las fechas de lanzamiento: se reintenta en la siguiente corrida."); }
+
 // Solo en GitHub: guarda aquí el trabajo, para no perderlo si publicas desde el Catálogo mientras corre
 if (process.env.GITHUB_ACTIONS) {
   try { execSync('bash scripts/guardar-robot.sh', { stdio: 'inherit' }); }
