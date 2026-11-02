@@ -4,6 +4,7 @@
 // - Si un color se queda sin ninguna talla, se marca "agotado" y la tienda lo esconde.
 // Corre solo cada 3 horas en GitHub (ver .github/workflows/revisar-tallas.yml).
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const ARCHIVOS = ['datos.json', 'borrador/datos.json'];
 const SOBRE_PEDIDO = ['early', 'preventa', 'camino'];
@@ -225,3 +226,9 @@ function marcarNoExisten() {
 marcarNoExisten();
 await revisarCuadritos();
 await revisarEspaldas();
+
+// Solo en GitHub: guarda aquí el trabajo, para no perderlo si publicas desde el Catálogo mientras corre
+if (process.env.GITHUB_ACTIONS) {
+  try { execSync('bash scripts/guardar-robot.sh', { stdio: 'inherit' }); }
+  catch (e) { console.log('· No se pudo guardar: se reintenta en la siguiente corrida.'); }
+}
