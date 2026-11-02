@@ -197,3 +197,41 @@ export function agregarReporte(anterior, r, max = 40) {
   const lista = (anterior && anterior.corridas) || [];
   return { corridas: hizo ? [r, ...lista].slice(0, max) : lista };
 }
+
+/* Rebajas por liga (Gymshark): tus ligas de su sección de rebajas, con tus filtros, se leen tal cual en cada corrida.
+   Sube cada modelo con sus colores en rebaja que tengan alguna talla de XS a XL, con un solo descuento (el más bajo).
+   No sube lo que ya tienes en el Catálogo ni lo que ocultaste. Salen solo en Rebajas.
+   Precio: tu misma proporción de precio de Gymshark, sacada de tus prendas en esta corrida (no se guarda ni se publica). */
+export async function rebajasDeLigas({ datos, sincro, ligas, leerLista, previas = [], ahora = new Date().toISOString() }) {
+  const red = redondeador(datos.ajustes), rep = { agregados: [], salieron: [], errores: [] };
+  const gym = (datos.productos || []).filter(esGym), idsGym = new Set(gym.map(p => p.id));
+  const razones = Object.entries((sincro && sincro.prendas) || {}).filter(([id, e]) => idsGym.has(id) && e.u > 0 && e.b > 0).map(([, e]) => e.b / e.u).sort((a, b) => a - b);
+  if (!razones.length || !(ligas || []).length) return { rebajas: (ligas || []).length ? previas : [], rep };
+  const f = razones[razones.length >> 1];
+  const ya = new Set(), nombres = new Set(gym.map(p => norm(p.nombre)));
+  gym.forEach(p => (p.colores || []).forEach(c => ya.add(handleDe(c.link))));
+  const ocultas = new Set((datos.rebajasOcultas || []).map(String));
+  const hits = new Map(); let leidas = 0;
+  for (const l of ligas) { const hs = await leerLista(l); if (!hs) continue; leidas++; hs.forEach(h => { if (h && h.handle && !hits.has(h.handle)) hits.set(h.handle, h); }); }
+  if (!leidas) return { rebajas: previas, rep }; // no se pudo leer ninguna liga: se queda como estaba
+  const grupos = new Map();
+  for (const h of hits.values()) { const t = String(h.title || '').trim(); if (!t) continue; if (!grupos.has(t)) grupos.set(t, []); grupos.get(t).push(h); }
+  const out = [], antes = new Map(previas.map(r => [r.id, r]));
+  for (const [titulo, hs] of grupos) {
+    const id = 'r-' + norm(titulo);
+    if (nombres.has(norm(titulo)) || ocultas.has(id) || hs.some(h => ya.has(h.handle) || ocultas.has(h.handle))) continue;
+    const cs = modeloGymshark({ variants: hs }).colores.filter(c => c.antes > c.usd && c.usd > 0 && c.fotos.length && tallasReb(c.tallas));
+    if (!cs.length) continue;
+    const pct = Math.min(...cs.map(c => Math.round((1 - c.usd / c.antes) * 1000) / 10));
+    if (!(pct > 0 && pct <= 90)) { rep.errores.push(`Rebajas por liga · ${titulo}: descuento raro de ${pct}%`); continue; }
+    const g = [...new Set(hs.flatMap(h => [].concat(h.gender || [])))];
+    const colores = cs.map(c => { const normal = red.normal(c.antes * f), tallas = {}; c.tallas.filter(x => x.ok).forEach(x => { tallas[x.t] = 0; });
+      return { k: 'r-' + norm(c.nombre), nombre: c.nombre, link: c.link, tallas, fotos: c.fotos, precio: red.abajo(normal * (1 - pct / 100)), antes: normal }; });
+    if (colores.some(c => !(c.precio > 0) || !(c.antes > c.precio))) { rep.errores.push(`Rebajas por liga · ${titulo}: precio en cero`); continue; }
+    out.push({ id, nombre: titulo, marca: 'Gymshark', linea: g.includes('m') && !g.includes('f') ? 'hombre' : g.includes('f') && !g.includes('m') ? 'mujer' : 'unisex',
+      desde: (antes.get(id) || {}).desde || ahora, colores });
+    if (!antes.has(id)) rep.agregados.push(`Rebajas por liga · ${titulo} (${colores.length} ${colores.length === 1 ? 'color' : 'colores'}, ${pct}%)`);
+  }
+  previas.filter(r => !out.some(x => x.id === r.id)).forEach(r => rep.salieron.push(`Rebajas por liga · ${r.nombre}`));
+  return { rebajas: out, rep };
+}

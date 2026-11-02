@@ -1175,7 +1175,7 @@ $('#bn').addEventListener('scroll',()=>{ const c=$('#bn'), n=Math.round(c.scroll
   // lo que marcaste como "Más vendido" (etiqueta dorada); máximo 12 en el inicio, el resto en "Ver todo"
   const top=P.filter(p=>(p.masVendido||p.masPedido)&&p.estado!=='early').sort((a,b)=>(b.destacado-a.destacado)||(b.creado||0)-(a.creado||0)).slice(0,12);
   // Lo más vendido y Rebajas siempre se ven; mientras no haya nada dicen "Muy pronto"
-  const reb=REB;
+  const reb=REB.slice(0,12); // en el inicio máximo 12; el resto en "Ver todo"
   $('#fTop').innerHTML=top.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás lo más vendido de cada marca.</div>';
   $('#fReb').innerHTML=reb.map(cardHTML).join('')||'<div class="vacio pronto"><b>Muy pronto</b>Aquí verás las rebajas. Síguenos en Instagram para enterarte primero.</div>';
   $('#sTop').hidden=false; $('#sReb').hidden=false;
@@ -1529,6 +1529,10 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
     const mz=(d.inicio||{}).mosaico; if(mz) Object.keys(mz).forEach(k=>{ mz[k]=f(mz[k]); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
+  // rebajas por liga (las sube el robot desde tus ligas de Gymshark): solo salen en Rebajas; las que ocultaste en el Catálogo no
+  const ocultasLiga=new Set(d.rebajasOcultas||[]);
+  (SINCRO.rebajas||[]).forEach(r=>{ if(!r||!r.id||ocultasLiga.has(r.id)||(r.colores||[]).some(c=>ocultasLiga.has((/\/products\/([^/?#]+)/.exec(c.link||'')||[])[1]))) return;
+    PT.push({id:r.id,nombre:r.nombre,marca:r.marca||'Gymshark',linea:r.linea||'',categoria:'',estado:'preventa',soloRebaja:true,creado:Date.parse(r.desde)||0,colores:(r.colores||[]).map(c=>Object.assign({},c))}); });
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
   juntarRepetidas();
@@ -1544,7 +1548,7 @@ fetch(ARRIBA+'datos.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json(
   preciosPorColor();
   // lo que el bot marcó como que ya no existe en la marca no sale; "forzar" = tú decidiste mostrarlo en el Catálogo
   const ocultas=(TIENDA.marcasOcultas||[]).map(sinAcento), visible=p=>!ocultas.includes(sinAcento(p.marca))&&!p.agotadoTodo&&(p.forzar||!NO_EXISTE[p.id]);
-  P=PT.filter(p=>visible(p)&&(p.forzar||!pocasTallas(p)));
+  P=PT.filter(p=>visible(p)&&!p.soloRebaja&&(p.forzar||!pocasTallas(p)));
   const enRebajas=PT.filter(visible); // en Rebajas no aplica el mínimo de 3 tallas
   // inicio que escoges en el Catálogo (Ajustes › Inicio de la tienda): tus banners y las colecciones escondidas
   const ini=d.inicio||{};

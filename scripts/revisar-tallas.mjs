@@ -5,7 +5,7 @@
 // Corre solo cada 3 horas en GitHub (ver .github/workflows/revisar-tallas.yml).
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
-import { sincronizar, agregarReporte, modeloGymshark, modeloShopify, corta } from './sincro.mjs';
+import { sincronizar, agregarReporte, modeloGymshark, modeloShopify, corta, rebajasDeLigas } from './sincro.mjs';
 
 const ARCHIVOS = ['datos.json', 'borrador/datos.json'];
 const SOBRE_PEDIDO = ['early', 'preventa', 'camino'];
@@ -262,6 +262,28 @@ try { await revisarLanzamientos(); } catch (e) { console.log("· No pude revisar
 // (publicar en el Catálogo no lo borra). Lo que falla la autorevisión no se publica: se queda como estaba y va al reporte.
 // Reporte de cada corrida en reporte.json (lo enseña el Catálogo). Si hay errores nuevos, el robot termina en rojo y GitHub te avisa.
 let hayErroresNuevos = false;
+// Lista de una sección de Gymshark con tus filtros (tal cual la liga): todas sus páginas de 60 prendas, máximo 12
+async function leerListaGym(liga) {
+  let u; try { u = new URL(liga); } catch (e) { return null; } if (!/gymshark\.com$/.test(u.hostname)) return null;
+  const todo = [];
+  for (let pg = 0, total = 1; pg < Math.min(total, 12); pg++) {
+    if (pg) u.searchParams.set('page', pg);
+    let q = null;
+    for (let i = 0; i < 4 && !q; i++) {
+      try {
+        const r = await fetch(u.href, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX rebajas)' } });
+        if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
+        const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(await r.text());
+        q = m && (((JSON.parse(m[1]).props || {}).pageProps || {}).ssrQuery || null); if (!q) return pg ? todo : null;
+      } catch (e) { await dormir(5000 * (i + 1)); }
+    }
+    if (!q) return pg ? todo : null;
+    total = q.nbPages || 1;
+    (q.hits || []).forEach(h => todo.push({ handle: h.handle, title: h.title, colour: h.colour, price: h.price, compareAtPrice: h.compareAtPrice, gender: h.gender, availableSizes: h.availableSizes, media: h.media }));
+    await dormir(1500);
+  }
+  return todo;
+}
 async function revisarSincro(soloGym) {
   const leerJ = (a, d) => { try { return JSON.parse(fs.readFileSync(a, 'utf8')); } catch (e) { return d; } };
   const previo = leerJ('sincro.json', {}), repAntes = leerJ('reporte.json', {});
@@ -274,7 +296,13 @@ async function revisarSincro(soloGym) {
     const k = u.origin + '/' + h; if (modelos.has(k)) return modelos.get(k);
     const q = await leerPrenda(u.origin, h), m = q ? modeloShopify(q, u.origin) : null; modelos.set(k, m); return m;
   };
-  const { sincro, reporte } = await sincronizar({ datos: JSON.parse(fs.readFileSync('datos.json', 'utf8')), previo, lector, eventos: { reactivados } });
+const datos = JSON.parse(fs.readFileSync('datos.json', 'utf8'));
+  const { sincro, reporte } = await sincronizar({ datos, previo, lector, eventos: { reactivados } });
+  // rebajas por liga: las que pegaste en el Catálogo (si todavía no publicas ninguna, las de ligas-rebajas.json)
+  const ligas = Array.isArray(datos.ligasRebajas) ? datos.ligasRebajas : leerJ('ligas-rebajas.json', []);
+  const lr = await rebajasDeLigas({ datos, sincro, ligas, leerLista: leerListaGym, previas: previo.rebajas || [] });
+  sincro.rebajas = lr.rebajas;
+  reporte.agregados.push(...lr.rep.agregados); reporte.salieron.push(...lr.rep.salieron); reporte.errores.push(...lr.rep.errores);
   if (JSON.stringify(sincro) !== JSON.stringify(previo)) fs.writeFileSync('sincro.json', JSON.stringify(sincro));
   const rep = agregarReporte(repAntes, reporte);
   if (JSON.stringify(rep) !== JSON.stringify(repAntes)) fs.writeFileSync('reporte.json', JSON.stringify(rep));
