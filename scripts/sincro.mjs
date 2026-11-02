@@ -27,13 +27,19 @@ export function tallasOk(tallas) {
   return new Set(letras.filter(x => x.ok && TALLAS.includes(x.t)).map(x => x.t)).size >= 3;
 }
 
+// tallas de un color de Gymshark; los accesorios (sin talla, "default title") salen como "Única" para saber si se agotaron
+function tallasGym(lista) {
+  const ts = [].concat(lista || []), ropa = ts.filter(s => !/default/i.test(s.size));
+  if (!ropa.length && ts.length) return [{ t: 'Única', ok: ts.some(s => !!s.inStock) }];
+  return [...new Map(ropa.map(s => [corta(s.size), !!s.inStock]))].map(([t, ok]) => ({ t, ok }));
+}
 // Gymshark: la página de un color trae todos los colores del modelo, con precio, tallas y fotos (productData.variants)
 export function modeloGymshark(pd, origen = 'https://www.gymshark.com') {
   const lista = [...(pd.variants || [])];
   if (pd.product && !lista.some(v => v.handle === pd.product.handle)) lista.push(pd.product);
   return { titulo: (pd.product || lista[0] || {}).title || '', colores: lista.filter(v => v && v.handle).map(v => ({
     nombre: String(v.colour || '').trim(), clave: v.handle, link: `${origen}/products/${v.handle}`, usd: +v.price || 0, antes: +v.compareAtPrice || 0,
-    tallas: [...new Map((v.availableSizes || []).filter(s => !/default/i.test(s.size)).map(s => [corta(s.size), !!s.inStock]))].map(([t, ok]) => ({ t, ok })),
+    tallas: tallasGym(v.availableSizes),
     fotos: (v.media || []).map(m => m.src).filter(Boolean).slice(0, 4) })) };
 }
 

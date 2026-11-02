@@ -49,13 +49,17 @@ async function leerGymshark(link, handle) {
       const modelo = modeloGymshark(pd);
       modelo.colores.forEach(c => modelosGym.set(c.clave, modelo));
       await dormir(1500);
-      return modelo.colores.some(c => c.clave === handle) ? modelo : null;
+      if (modelo.colores.some(c => c.clave === handle)) return modelo;
+      if (modelo.colores.length) coloresQuitados.add(handle); // la página abrió bien, pero la marca ya no tiene ese color
+      return null;
     } catch (e) { await dormir(5000 * (i + 1)); }
   }
   return null;
 }
+const coloresQuitados = new Set();
 async function tallasGymshark(link, handle) {
   const m = await leerGymshark(link, handle), c = m && m.colores.find(x => x.clave === handle);
+  if (!m && coloresQuitados.has(handle)) return []; // color que ya no está en la marca: se toma como agotado (se esconde solo)
   return c && c.tallas.length ? c.tallas : null;
 }
 
@@ -353,7 +357,7 @@ if (process.env.GITHUB_ACTIONS) for (const min of [60, 120]) {
   if (Date.now() - INICIO > 140 * 60000) break;
   try { execSync('git pull -q --rebase', { stdio: 'inherit' }); } catch (e) { console.log('· No pude traer lo más nuevo: dejo la revisión de Gymshark para la siguiente corrida.'); break; }
   console.log(`Revisión de Gymshark (minuto ${min})`);
-  modelosGym.clear(); noEncontrados.clear(); reactivados.length = 0; total = 0;
+  modelosGym.clear(); noEncontrados.clear(); coloresQuitados.clear(); reactivados.length = 0; total = 0;
   try { await revisarTallas(true); await revisarSincro(true); } catch (e) { console.log('· Falló la revisión de Gymshark: ' + (e && e.message || e)); }
   guardar();
 }
