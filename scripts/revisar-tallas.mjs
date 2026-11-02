@@ -304,11 +304,7 @@ const datos = JSON.parse(fs.readFileSync('datos.json', 'utf8'));
   const piso = { dolar, porPieza };
   const { sincro, reporte } = await sincronizar({ datos, previo, lector, eventos: { reactivados }, piso });
   if (dolar > 0) sincro.dolar = Math.round(dolar * 100) / 100;
-  // rebajas por liga: las que pegaste en el Catálogo (si todavía no publicas ninguna, las de ligas-rebajas.json)
-  const ligas = Array.isArray(datos.ligasRebajas) ? datos.ligasRebajas : leerJ('ligas-rebajas.json', []);
-  const lr = await rebajasDeLigas({ datos, sincro, ligas, leerLista: leerListaGym, previas: previo.rebajas || [], piso });
-  sincro.rebajas = lr.rebajas;
-  ['agregados', 'salieron', 'errores', 'alMinimo', 'sinGanancia'].forEach(k => reporte[k].push(...lr.rep[k]));
+  // las rebajas por liga están apagadas (2026-11-02): tú subes las rebajas a mano en el Catálogo
   if (JSON.stringify(sincro) !== JSON.stringify(previo)) fs.writeFileSync('sincro.json', JSON.stringify(sincro));
   const rep = agregarReporte(repAntes, reporte);
   if (JSON.stringify(rep) !== JSON.stringify(repAntes)) fs.writeFileSync('reporte.json', JSON.stringify(rep));

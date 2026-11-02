@@ -1538,12 +1538,7 @@ fetch(ARRIBA+'datos.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{productos:[
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
     const mz=(d.inicio||{}).mosaico; if(mz) Object.keys(mz).forEach(k=>{ mz[k]=f(mz[k]); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
-  // rebajas por liga (las sube el robot desde tus ligas de Gymshark): solo salen en Rebajas; las que ocultaste en el Catálogo no
-  const ocultasLiga=new Set(d.rebajasOcultas||[]);
-  (SINCRO.rebajas||[]).forEach(r=>{ if(!r||!r.id||ocultasLiga.has(r.id)||(r.colores||[]).some(c=>ocultasLiga.has((/\/products\/([^/?#]+)/.exec(c.link||'')||[])[1]))) return;
-    const mano=+((d.preciosRebaja||{})[r.id])||0; // tu precio a mano (Catálogo › Rebajas automáticas): el robot no lo cambia
-    PT.push({id:r.id,nombre:r.nombre,marca:r.marca||'Gymshark',linea:r.linea||'',categoria:'',estado:'preventa',soloRebaja:true,creado:Date.parse(r.desde)||0,
-      colores:(r.colores||[]).map(c=>{ const x=Object.assign({},c); if(mano){ x.precio=mano; if(!(x.antes>mano)) x.antes=0; } return x; })}); });
+  // las rebajas por liga están apagadas (2026-11-02): Rebajas solo enseña tus prendas del Catálogo
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
   juntarRepetidas();
