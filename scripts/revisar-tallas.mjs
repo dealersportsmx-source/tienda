@@ -5,19 +5,13 @@
 // Corre solo cada 3 horas en GitHub (ver .github/workflows/revisar-tallas.yml).
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
+import { sincronizar, agregarReporte, modeloGymshark, modeloShopify, corta } from './sincro.mjs';
 
 const ARCHIVOS = ['datos.json', 'borrador/datos.json'];
 const SOBRE_PEDIDO = ['early', 'preventa', 'camino'];
 const dormir = ms => new Promise(r => setTimeout(r, ms));
 const igual = (a, b) => String(a || '').toLowerCase().trim() === String(b || '').toLowerCase().trim();
 
-// "Small" → "S", "XLarge" → "XL"… (igual que la extensión)
-function corta(t) {
-  const x = String(t).toLowerCase().trim().replace(/[\s_]+/g, '-');
-  const m = { 'xx-small': 'XXS', 'x-small': 'XS', 'xsmall': 'XS', 'small': 'S', 'medium': 'M', 'large': 'L', 'x-large': 'XL', 'xlarge': 'XL',
-    'xx-large': '2XL', 'xxlarge': '2XL', 'xxl': '2XL', 'xxx-large': '3XL', 'xxxlarge': '3XL', 'xxxl': '3XL' };
-  return m[x] || String(t).trim().toUpperCase();
-}
 
 // Lee la prenda en la marca UNA sola vez (todos sus colores vienen juntos).
 // Si la marca frena por ir muy rápido (429) o falla, espera y vuelve a intentar.
@@ -40,26 +34,29 @@ async function leerPrenda(origin, handle) {
   return p;
 }
 
-// Gymshark: su página no tiene el archivo de la prenda como las demás tiendas, pero la página de cada color
-// trae sus tallas dentro (__NEXT_DATA__). Cada color de Gymshark es una prenda aparte, así que basta su link.
-async function tallasGymshark(link, handle) {
+// Gymshark: su página no tiene el archivo de la prenda como las demás tiendas, pero la página de cualquier color
+// trae dentro (__NEXT_DATA__) todos los colores del modelo con precio, tallas y fotos: se lee UNA vez por modelo.
+const modelosGym = new Map(); // liga de cada color → su modelo
+async function leerGymshark(link, handle) {
+  if (modelosGym.has(handle)) return modelosGym.get(handle);
   for (let i = 0; i < 4; i++) {
     try {
       const r = await fetch(link, { headers: { 'User-Agent': 'Mozilla/5.0 (DealerSportsMX tallas)' } });
-      if (r.status === 404 || (r.redirected && !r.url.includes('/products/'))) { noEncontrados.add(link); return null; }
+      if (r.status === 404 || (r.redirected && !r.url.includes('/products/'))) { noEncontrados.add(link); modelosGym.set(handle, null); return null; }
       if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
-      const html = await r.text();
-      const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(html); if (!m) return null;
-      let prenda = null;
-      (function walk(o) { if (prenda || !o || typeof o !== 'object') return; if (Array.isArray(o)) return o.forEach(walk);
-        if (o.handle === handle && Array.isArray(o.availableSizes)) { prenda = o; return; } Object.values(o).forEach(walk); })(JSON.parse(m[1]));
+      const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(await r.text()); if (!m) return null;
+      const pd = ((JSON.parse(m[1]).props || {}).pageProps || {}).productData; if (!pd) return null;
+      const modelo = modeloGymshark(pd);
+      modelo.colores.forEach(c => modelosGym.set(c.clave, modelo));
       await dormir(1500);
-      if (!prenda) return null;
-      const t = new Map(); prenda.availableSizes.forEach(s => { if (/default/i.test(s.size)) return; const k = corta(s.size); t.set(k, t.get(k) || !!s.inStock); });
-      return t.size ? [...t].map(([t, ok]) => ({ t, ok })) : null;
+      return modelo.colores.some(c => c.clave === handle) ? modelo : null;
     } catch (e) { await dormir(5000 * (i + 1)); }
   }
   return null;
+}
+async function tallasGymshark(link, handle) {
+  const m = await leerGymshark(link, handle), c = m && m.colores.find(x => x.clave === handle);
+  return c && c.tallas.length ? c.tallas : null;
 }
 
 // Pregunta a la marca (tiendas Shopify: YoungLA, Gymshark, Darc Sport…) qué tallas tiene de un color.
@@ -178,6 +175,7 @@ async function revisarEspaldas() {
 }
 
 let total = 0;
+const reactivados = [];
 for (const f of ARCHIVOS) {
   if (!fs.existsSync(f)) continue;
   const d = JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -197,6 +195,7 @@ for (const f of ARCHIVOS) {
       if (mismas && !!c.agotado === agotado) continue;
       const quita = antes.filter(x => !hay.includes(x)), pone = hay.filter(x => !antes.includes(x));
       console.log(`✓ ${f} · ${quien}: ` + [pone.length ? 'regresó ' + pone.join(', ') : '', quita.length ? 'se agotó ' + quita.join(', ') : '', agotado ? 'COLOR AGOTADO (se esconde)' : (c.agotado ? 'el color regresó' : '')].filter(Boolean).join(' · '));
+      if (f === 'datos.json' && (pone.length || (c.agotado && !agotado))) reactivados.push(`${p.marca} · ${quien}: ${c.agotado && !agotado ? 'el color regresó' : 'regresó ' + pone.join(', ')}`);
       c.tallas = nuevo; c.agotado = agotado; cambio = true; total++;
     }
   }
@@ -254,8 +253,35 @@ async function revisarLanzamientos() {
 }
 try { await revisarLanzamientos(); } catch (e) { console.log("· No pude revisar las fechas de lanzamiento: se reintenta en la siguiente corrida."); }
 
+// Sincronía con las marcas: precios y rebajas por color, colores nuevos y fotos que faltaban. Se guarda en sincro.json
+// (publicar en el Catálogo no lo borra). Lo que falla la autorevisión no se publica: se queda como estaba y va al reporte.
+// Reporte de cada corrida en reporte.json (lo enseña el Catálogo). Si hay errores nuevos, el robot termina en rojo y GitHub te avisa.
+let hayErroresNuevos = false;
+async function revisarSincro() {
+  const leerJ = (a, d) => { try { return JSON.parse(fs.readFileSync(a, 'utf8')); } catch (e) { return d; } };
+  const previo = leerJ('sincro.json', {}), repAntes = leerJ('reporte.json', {});
+  const modelos = new Map();
+  const lector = async link => {
+    let u; try { u = new URL(link); } catch (e) { return null; }
+    const h = (/\/products\/([^/?#]+)/.exec(u.pathname) || [])[1]; if (!h) return null;
+    if (/gymshark\.com$/.test(u.hostname)) return leerGymshark(link, h);
+    const k = u.origin + '/' + h; if (modelos.has(k)) return modelos.get(k);
+    const q = await leerPrenda(u.origin, h), m = q ? modeloShopify(q, u.origin) : null; modelos.set(k, m); return m;
+  };
+  const { sincro, reporte } = await sincronizar({ datos: JSON.parse(fs.readFileSync('datos.json', 'utf8')), previo, lector, eventos: { reactivados } });
+  if (JSON.stringify(sincro) !== JSON.stringify(previo)) fs.writeFileSync('sincro.json', JSON.stringify(sincro));
+  const rep = agregarReporte(repAntes, reporte);
+  if (JSON.stringify(rep) !== JSON.stringify(repAntes)) fs.writeFileSync('reporte.json', JSON.stringify(rep));
+  const yaAvisados = new Set(((repAntes.corridas || [])[0] || {}).errores || []);
+  hayErroresNuevos = (reporte.errores || []).some(e => !yaAvisados.has(e));
+  console.log(`Sincronía: ${reporte.agregados.length} colores nuevos, ${reporte.precios.length} precios, ${reporte.entraron.length} a rebajas, ${reporte.salieron.length} salieron, ${reporte.errores.length} errores.`);
+  reporte.errores.forEach(e => console.log('✗ ' + e));
+}
+try { await revisarSincro(); } catch (e) { console.log('· No pude revisar la sincronía: se reintenta en la siguiente corrida. ' + (e && e.message || e)); }
+
 // Solo en GitHub: guarda aquí el trabajo, para no perderlo si publicas desde el Catálogo mientras corre
 if (process.env.GITHUB_ACTIONS) {
   try { execSync('bash scripts/guardar-robot.sh', { stdio: 'inherit' }); }
   catch (e) { console.log('· No se pudo guardar: se reintenta en la siguiente corrida.'); }
 }
+if (hayErroresNuevos) process.exitCode = 1;
