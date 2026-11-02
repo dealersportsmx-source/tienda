@@ -151,7 +151,7 @@ export async function sincronizar({ datos, previo, lector, eventos = {}, piso = 
     if (+p.usd > 0) { e.u = +p.usd; e.b = base; }
     else if (previa && previa.b === base && previa.u > 0) { e.u = previa.u; e.b = base; }
     else if (leidos.length && base) { e.u = Math.max(...leidos); e.b = base; }
-    if (piso.dolar > 0 && piso.porPieza >= 0 && e.u > 0 && e.b > 0 && !p.precioFijo) {
+    if (piso.dolar > 0 && piso.porPieza > 0 && e.u > 0 && e.b > 0 && !p.precioFijo) { // apagado con 0
       const antesC = Object.assign({}, (previa || {}).colores, Object.fromEntries(((previa || {}).nuevos || []).map(n => [n.k, n])));
       for (const [k, x] of [...Object.entries(e.colores), ...e.nuevos.map(n => [n.k, n])]) {
         if (!x.r || !(x.d > 0)) continue;
@@ -243,7 +243,7 @@ export async function rebajasDeLigas({ datos, sincro, ligas, leerLista, previas 
     const g = [...new Set(hs.flatMap(h => [].concat(h.gender || [])))];
     const colores = cs.map(c => { const normal = red.normal(c.antes * f), tallas = {}; c.tallas.filter(x => x.ok).forEach(x => { tallas[x.t] = 0; });
       let precio = red.abajo(normal * (1 - pct / 100));
-      if (piso.dolar > 0 && piso.porPieza >= 0) precio = Math.max(precio, red.arriba(c.usd * piso.dolar + piso.porPieza)); // ganancia mínima
+      if (piso.dolar > 0 && piso.porPieza > 0) precio = Math.max(precio, red.arriba(c.usd * piso.dolar + piso.porPieza)); // ganancia mínima (apagada con 0)
       return { k: 'r-' + norm(c.nombre), nombre: c.nombre, link: c.link, tallas, fotos: c.fotos, precio, antes: normal, usd: c.usd }; }).filter(c => c.precio < c.antes);
     if (!colores.length) { if (antes.has(id) || !previas.length) rep.sinGanancia.push(`Rebajas por liga · ${titulo}: no deja tu ganancia mínima`); continue; }
     if (colores.some(c => !(c.precio > 0) || !(c.antes > c.precio))) { rep.errores.push(`Rebajas por liga · ${titulo}: precio en cero`); continue; }
