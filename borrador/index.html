@@ -618,7 +618,7 @@ const TIENDA={
   // marcas que no se muestran (sus datos siguen en el Catálogo)
   marcasOcultas:['AYBL'],
   // orden por marca: primero estos grupos, en este orden (por nombre o colección; lo nuevo entra solo a su grupo)
-  diasLiquidar:7, // días para liquidar desde que avisas que llegó (sale en el mensaje del pedido)
+  diasLiquidar:28, // 4 semanas para liquidar desde el día del pedido (sale en el mensaje del pedido)
   gruposOrden:{youngla:[/immortal/i,/gold['’]?s\b/i],gymshark:[/vengeance|sam.?sulek/i]},
   // esas colecciones van arriba solo frente a lo que ya estaba; lo que subas desde esta fecha sale arriba de ellas, por fecha
   gruposHasta:{youngla:Date.parse('2026-11-03T12:00:00-06:00'),gymshark:Date.parse('2026-11-01T00:00:00-06:00')},
@@ -1443,8 +1443,8 @@ function msgLink(){ const t=totales();
     bolsa.map(x=>'• '+[x.nombre,x.color,x.talla?'Talla '+x.talla:'',money(x.precio)].filter(Boolean).join(' · ')).join('\n')+
     '\n\nTotal: '+money(t.tot)+(t.env?' (con envío)':' (envío gratis)')+
     '\n*Se aparta con: '+money(t.hoy)+'*'+
-    // vigencia: el cliente sabe desde el primer mensaje que hay plazo para liquidar
-    '\n\nEl resto lo liquidas cuando tu pedido llegue a Monterrey: te avisamos por aquí y tienes *'+TIENDA.diasLiquidar+' días* para liquidar. Si no se liquida en ese plazo, el pedido vence y la prenda se pone a la venta.'+
+    // vigencia (solo con prendas sobre pedido): 4 semanas desde hoy para liquidar; si no, la prenda se pone a la venta
+    (bolsa.some(x=>x.sobrePedido)?'\n\nTienes *4 semanas* para liquidar, hasta el *'+new Date(Date.now()+TIENDA.diasLiquidar*864e5).toLocaleDateString('es-MX',{day:'numeric',month:'long'})+'*. Por lo regular tu pedido llega a Monterrey en unas 2 semanas y te avisamos por aquí. Si no se liquida en ese plazo, el pedido vence y la prenda se pone a la venta.':'')+
     '\n\nVer pedido con fotos:\n'+linkPedido(); }
 function copiar(t){ if(!(navigator.clipboard&&navigator.clipboard.writeText)){ copiarViejo(t); return; }
   try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
