@@ -141,7 +141,9 @@ export async function sincronizar({ datos, previo, lector, eventos = {}, piso = 
       const enRebaja = r.antes > r.usd && r.usd > 0;
       if (!r.fotos.length || !r.tallas.some(x => x.ok) || !(tallasOk(r.tallas) || (enRebaja && tallasReb(r.tallas)))) continue;
       const tallas = {}; r.tallas.filter(x => x.ok).forEach(x => { tallas[x.t] = 0; }); // también 2XL y 3XL: la tienda los enseña solo en Rebajas
-      e.nuevos.push({ k: 'n-' + norm(r.nombre), nombre: r.nombre, link: r.link, tallas, fotos: r.fotos, agotado: false, r, n: Math.max(r.usd, r.antes), d: 0 });
+      // desde: cuándo lo vio el robot por primera vez (la tienda pone primero el color más nuevo)
+      const k = 'n-' + norm(r.nombre), ya = ((previa || {}).nuevos || []).find(x => x.k === k);
+      e.nuevos.push({ k, nombre: r.nombre, link: r.link, tallas, fotos: r.fotos, agotado: false, r, n: Math.max(r.usd, r.antes), d: 0, desde: (ya && ya.desde) || ahora });
     }
     // descuentos: cada color el suyo; Gymshark un solo descuento por modelo, el más bajo entre sus colores con alguna talla de XS a XL
     const todos = [...Object.values(e.colores), ...e.nuevos].filter(x => x.r);

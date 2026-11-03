@@ -718,8 +718,10 @@ function precioMxn(x,mk){ const {m,r}=modoRed(mk), v=Math.round((+x||0)*100)/100
 function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; const s=(SINCRO.prendas||{})[p.id]; if(!s) return; p.colores=p.colores||[];
   // colores nuevos que encontró el robot en la marca: no están en tu Catálogo, así que nunca salen en Rebajas (van a precio normal)
   // y solo si tienen al menos 3 tallas de XS a XL (los restos de 1 o 2 tallas no salen)
-  (s.nuevos||[]).forEach(n=>{ const t3=Object.keys(n.tallas||{}).filter(t=>['XS','S','M','L','XL'].includes(String(t).toUpperCase())).length>=3;
-    if(t3&&!n.agotado&&!p.colores.some(c=>normC(c.nombre)===normC(n.nombre))) p.colores.push(Object.assign({},n,{d:0,nuevo:true})); });
+  // y salen primero (el más nuevo hasta adelante): el que estaba primero se recorre
+  const nv=[]; (s.nuevos||[]).forEach(n=>{ const t3=Object.keys(n.tallas||{}).filter(t=>['XS','S','M','L','XL'].includes(String(t).toUpperCase())).length>=3;
+    if(t3&&!n.agotado&&!p.colores.some(c=>normC(c.nombre)===normC(n.nombre))&&!nv.some(c=>normC(c.nombre)===normC(n.nombre))) nv.push(Object.assign({},n,{d:0,nuevo:true})); });
+  if(nv.length) p.colores=nv.sort((a,b)=>String(b.desde||'').localeCompare(String(a.desde||''))).concat(p.colores);
   p.colores.forEach(c=>{ const f=(s.fotos||{})[c.k]; if(f&&f.length) c.fotos=f.slice(); });
   // tu precio normal se mueve igual que el de la marca: precio × (dólares de la marca hoy ÷ dólares con los que hiciste tu precio)
   const base=+p.precioNormal||+p.precioBase||0, u=+p.usd>0?+p.usd:(s.b===+p.precioBase?+s.u:0); if(!(u>0)||!base) return;
