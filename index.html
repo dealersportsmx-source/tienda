@@ -875,7 +875,9 @@ function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:
 function tagsHTML(p){ const t=etiqueta(p); return '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(enRebaja(p)?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span>'; } // solo en modo administrador
 const AVISO_REB='Sujeto a confirmación de disponibilidad';
-function precioCardHTML(p){ const reb=enRebaja(p), antes=precioAntes(p), tl=reb?[...tallasConStock(p)].sort((a,b)=>{ const i=ORDEN_T.indexOf(a), j=ORDEN_T.indexOf(b); return (i<0?99:i)-(j<0?99:j); }):[];
+// en Rebajas la tarjeta dice sus tallas; los accesorios sin talla (mochilas, botellas, gorras…) no dicen nada
+const tallasTarjeta=p=>{ const s=new Set(); (p.colores||[]).forEach(c=>{ if(!sinTalla(p,c)) Object.keys(c.tallas||{}).forEach(t=>{ if(hay(p,c,t)) s.add(t); }); }); return s; };
+function precioCardHTML(p){ const reb=enRebaja(p), antes=precioAntes(p), tl=reb?[...tallasTarjeta(p)].sort((a,b)=>{ const i=ORDEN_T.indexOf(a), j=ORDEN_T.indexOf(b); return (i<0?99:i)-(j<0?99:j); }):[];
   return '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
     (reb&&esGym(p)?'<p class="tl">'+AVISO_REB+'</p>':'')+
