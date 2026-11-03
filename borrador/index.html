@@ -881,6 +881,9 @@ const tallasTarjeta=p=>{ const s=new Set(); (p.colores||[]).forEach(c=>{ if(!sin
 function precioCardHTML(p){ const reb=enRebaja(p), antes=precioAntes(p), tl=reb?[...tallasTarjeta(p)].sort((a,b)=>{ const i=ORDEN_T.indexOf(a), j=ORDEN_T.indexOf(b); return (i<0?99:i)-(j<0?99:j); }):[];
   return '<p class="pr">'+(p.desc?'<span class="rd">'+money(p.precio)+'</span><s>'+money(p.desc.antes)+'</s>':money(p.precio)+(reb?'<s>'+money(antes)+'</s>':''))+'</p>'+
     (reb?'<p class="aho">Ahorras '+money(antes-p.precio)+'</p>'+(tl.length?'<p class="tl">Talla '+esc(tl.join(', '))+'</p>':''):'')+
+    // el color de la tarjeta va a precio normal pero otros colores están en rebaja: que se vea desde la lista
+    (()=>{ if(reb||p.desc) return ''; const rc=(p.colores||[]).filter(c=>c.antes>c.precio); if(!rc.length) return '';
+      return '<p class="aho">'+(rc.length===1?esc(rc[0].nombre)+' en rebaja: ':rc.length+' colores en rebaja desde ')+money(Math.min(...rc.map(c=>c.precio)))+'</p>'; })()+
     (reb&&esGym(p)?'<p class="tl">'+AVISO_REB+'</p>':'')+
     (sobrePedido(p)?'<p class="apt">Aparta con '+money(anticipoDe(p.precio))+'</p>':''); }
 function cardHTML(p){ usarColor(p,(p.colores||[])[0]);
