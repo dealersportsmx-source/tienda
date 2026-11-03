@@ -811,9 +811,10 @@ function filtrar(sinTipo){
   else if(vista==='acc') r=r.filter(esAcc);
   else if(vista==='rebajas') r=r.filter(enRebaja);
   else if(vista==='masvendido') r=r.filter(p=>p.masVendido||p.masPedido);
-  // los accesorios solo salen en ACCESORIOS o si los eliges en "Filtrar y ordenar" (no revueltos con la ropa)
-  const soloAcc=vista==='acc'||cat==='Accesorios';
-  if(!soloAcc&&fEstado!=='acc'&&!fPre&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
+  // los accesorios solo salen en ACCESORIOS o si los eliges en "Filtrar y ordenar" (no revueltos con la ropa);
+  // en REBAJAS sí salen junto con la ropa
+  const soloAcc=vista==='acc'||cat==='Accesorios', enReb=vista==='rebajas'||fEstado==='rebaja';
+  if(!soloAcc&&!enReb&&fEstado!=='acc'&&!fPre&&vista!=='favs'&&vista!=='masvendido') r=r.filter(p=>!esAcc(p));
   if(linea&&!soloAcc) r=r.filter(p=>!p.linea||p.linea===linea||p.linea==='unisex');
   if(cat&&!sinTipo) r=r.filter(p=>enCat(p,cat));
   if(fMarca) r=r.filter(p=>sinAcento(p.marca)===sinAcento(fMarca));
