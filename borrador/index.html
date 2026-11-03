@@ -718,11 +718,16 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
   p.colores.forEach(c=>{ const f=(s.fotos||{})[c.k]; if(f&&f.length) c.fotos=f.slice(); });
   // tu precio normal se mueve igual que el de la marca: precio × (dólares de la marca hoy ÷ dólares con los que hiciste tu precio)
   const base=+p.precioNormal||+p.precioBase||0, u=+p.usd>0?+p.usd:(s.b===+p.precioBase?+s.u:0); if(!(u>0)||!base) return;
-  const mano=p.precioFijo?+p.precio||0:0; // tu "Precio a mano" manda: el robot nunca lo cambia; si el color está en rebaja en la marca, sale en Rebajas con tu precio
-  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=precioMxn(base*x.n/u);
-    if(mano){ c.precio=mano; c.antes=+x.d>0&&normal>mano?normal:0; return; }
-    // en rebaja: nunca abajo de tu ganancia mínima (x.m, la calcula el robot); si no llega, a precio normal
-    const venta=+x.d>0?Math.max(redondearAbajo(normal*(1-x.d/100)),+x.m||0):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+  // tu "Precio a mano" es tu precio normal: el robot nunca lo cambia. Tu "Precio de oferta" es tu precio en rebaja.
+  const mano=p.precioFijo?+p.precioBase||0:0, ofer=p.oferta&&+p.precio>0?+p.precio:0;
+  // rebajas automáticas apagadas en esa marca (Gymshark, de inicio): solo sale en Rebajas si tú la escogiste en el Catálogo
+  const reb=rebajaAuto(p.marca)||!!p.rebMarca||ofer>0;
+  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=mano||precioMxn(base*x.n/u), d=reb?+x.d||0:0;
+    // solo los colores que la marca tiene en rebaja; con tu precio de oferta si lo pusiste,
+    // si no, con el descuento de la marca sin bajar de tu ganancia mínima (x.m, la calcula el robot)
+    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+// marcas con rebajas automáticas: el Catálogo manda cuáles apagaste (Gymshark viene apagada)
+const rebajaAuto=m=>{ const k=String(m||'').toLowerCase().trim(); return k in TIENDA.rebAuto?!!TIENDA.rebAuto[k]:true; };
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
 function juntarRepetidas(){ const vistos=new Map(), clave=(p,c)=>{ const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1]; return h?h+'|'+normC(c.nombre)+'|'+(p.estado==='disponible'):''; };
   PT=PT.filter(p=>{ const ks=(p.colores||[]).map(c=>clave(p,c)).filter(Boolean), o=ks.map(k=>vistos.get(k)).find(Boolean);
@@ -1541,7 +1546,8 @@ fetch(ARRIBA+'datos.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{productos:[
     ((d.inicio||{}).banners||[]).forEach(b=>{ b.img=f(b.img); b.imgPc=f(b.imgPc); b.video=f(b.video); b.videoPc=f(b.videoPc); });
     const mz=(d.inicio||{}).mosaico; if(mz) Object.keys(mz).forEach(k=>{ mz[k]=f(mz[k]); }); }
   PT=(d.productos||[]).filter(p=>p&&p.id&&p.nombre);
-  // las rebajas por liga están apagadas (2026-11-02): Rebajas solo enseña tus prendas del Catálogo
+  // rebajas automáticas por marca (Catálogo › Ajustes); si todavía no lo publicas, Gymshark va apagada
+  TIENDA.rebAuto=d.rebajasAuto&&typeof d.rebajasAuto==='object'?d.rebajasAuto:{gymshark:false};
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
   if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
   juntarRepetidas();
