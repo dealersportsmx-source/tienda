@@ -711,7 +711,10 @@ function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ const cs=(p.colores||[]
    El precio sale del precio en dólares de la marca × el factor de la prenda (multiplicador × tu tipo de cambio).
    Entrega inmediata y precios a mano nunca se tocan. */
 const normC=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=String(TIENDA.redondeo||''); if(m==='90') return redondearAbajo(v); if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return redondear(v); }
+// cada marca puede tener su propio redondeo (Historias › Ajustes); sin el suyo, el general
+const PASO_RED={'90':10,'10a':10,'50a':50,'50c':50,'100a':100,'1':1};
+function modoRed(mk){ const m=mk&&(TIENDA.redMarca||{})[sinAcento(mk)]; return m&&PASO_RED[m]?{m,r:PASO_RED[m]}:{m:String(TIENDA.redondeo||''),r:+TIENDA.red||1}; }
+function precioMxn(x,mk){ const {m,r}=modoRed(mk), v=Math.round((+x||0)*100)/100; if(m==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return Math.floor(v/r+0.5+1e-9)*r; }
 function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; const s=(SINCRO.prendas||{})[p.id]; if(!s) return; p.colores=p.colores||[];
   // colores nuevos que encontró el robot en la marca: no están en tu Catálogo, así que nunca salen en Rebajas (van a precio normal)
   // y solo si tienen al menos 3 tallas de XS a XL (los restos de 1 o 2 tallas no salen)
@@ -724,10 +727,10 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
   const mano=p.precioFijo?+p.precioBase||0:0, ofer=p.oferta&&+p.precio>0?+p.precio:0;
   // rebajas automáticas apagadas en esa marca (Gymshark, de inicio): solo sale en Rebajas si tú la escogiste en el Catálogo
   const reb=rebajaAuto(p.marca)||!!p.rebMarca||ofer>0;
-  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=mano||precioMxn(base*x.n/u), d=reb?+x.d||0:0;
+  p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=mano||precioMxn(base*x.n/u,p.marca), d=reb?+x.d||0:0;
     // solo los colores que la marca tiene en rebaja; con tu precio de oferta si lo pusiste,
     // si no, con el descuento de la marca sin bajar de tu ganancia mínima (x.m, la calcula el robot)
-    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100),p.marca),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
 // marcas con rebajas automáticas: el Catálogo manda cuáles apagaste (Gymshark viene apagada)
 const rebajaAuto=m=>{ const k=String(m||'').toLowerCase().trim(); return k in TIENDA.rebAuto?!!TIENDA.rebAuto[k]:true; };
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
@@ -852,7 +855,7 @@ function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach
    Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
    No se suma a las prendas que ya están en Rebajas. */
 // hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
-function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
+function redondearAbajo(x,mk){ const v=Math.round((+x||0)*100)/100, {m,r}=modoRed(mk); if(m==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
@@ -866,7 +869,7 @@ function aplicarDescuentos(ds){
     const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
     if(x.fin&&new Date(x.fin)<=new Date()) return;
     if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
-    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=redondearAbajo(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
+    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=redondearAbajo(c.precio*(1-pct/100),p.marca); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
@@ -1434,11 +1437,15 @@ const baseURL=()=>location.origin+location.pathname;
 function linkPedido(){ const n=(($('#bNombre')||{}).value||nombre||'').trim();
   return baseURL()+'#pedido='+[folioPedido(),entrega==='mty'?'m':'n',pago==='oxxo'?'o':'t',enc(n)].join('~')+'!'+bolsa.map(x=>[x.id,enc(x.color||''),enc(x.talla||''),Math.round(+x.precio||0)].join('~')).join(','); }
 // el mensaje: número de pedido, una línea por prenda, total, anticipo (en negritas en WhatsApp) y el link con fotos al final
+// fecha límite para liquidar: el mismo día del mes siguiente (3 nov → 3 dic); si ese mes no tiene ese día, el último del mes (31 ene → 28 feb)
+function fechaLimite(hoy){ const d=hoy||new Date(), f=new Date(d.getFullYear(),d.getMonth()+1,1), ult=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(); f.setDate(Math.min(d.getDate(),ult)); return f; }
 function msgLink(){ const t=totales();
   return 'Hola, quiero hacer mi pedido *'+folioPedido()+'*\n\n'+
     bolsa.map(x=>'• '+[x.nombre,x.color,x.talla?'Talla '+x.talla:'',money(x.precio)].filter(Boolean).join(' · ')).join('\n')+
     '\n\nTotal: '+money(t.tot)+(t.env?' (con envío)':' (envío gratis)')+
     '\n*Se aparta con: '+money(t.hoy)+'*'+
+    // vigencia (solo con prendas sobre pedido): 1 mes desde hoy para liquidar; si no, la prenda se pone a la venta
+    (bolsa.some(x=>x.sobrePedido)?'\n\nTienes *1 mes* para liquidar, hasta el *'+fechaLimite().toLocaleDateString('es-MX',{day:'numeric',month:'long'})+'*. Por lo regular tu pedido llega a Monterrey en unas 2 semanas y te avisamos por aquí. Si no se liquida en ese plazo, el pedido vence y la prenda se pone a la venta.':'')+
     '\n\nVer pedido con fotos:\n'+linkPedido(); }
 function copiar(t){ if(!(navigator.clipboard&&navigator.clipboard.writeText)){ copiarViejo(t); return; }
   try{ navigator.clipboard.writeText(t).then(()=>toast('Pedido copiado: pégalo en el chat de Instagram'),()=>copiarViejo(t)); }catch(err){ copiarViejo(t); } }
@@ -1552,7 +1559,7 @@ fetch(ARRIBA+'datos.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{productos:[
   // rebajas automáticas por marca (Catálogo › Ajustes); si todavía no lo publicas, Gymshark va apagada
   TIENDA.rebAuto=d.rebajasAuto&&typeof d.rebajasAuto==='object'?d.rebajasAuto:{gymshark:false};
   // anticipo, redondeo y envíos que mandó el Catálogo (vienen de Cotizador › Ajustes)
-  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); }
+  if(d.ajustes){ const a=d.ajustes; ['anticipo','red','gratisMas'].forEach(k=>{ if(+a[k]>0) TIENDA[k]=+a[k]; }); if(+a.envioMty>0&&!(BORRADOR&&+a.envioMty===80)) TIENDA.envioMty=+a.envioMty; /* el borrador ya muestra los $100 nuevos aunque el Catálogo todavía no los haya publicado */ if(+a.envioNac>0) TIENDA.envioNacional=+a.envioNac; if(a.redondeo) TIENDA.redondeo=String(a.redondeo); TIENDA.redMarca=a.redondeoMarca&&typeof a.redondeoMarca==='object'?a.redondeoMarca:{}; }
   juntarRepetidas();
   aplicarSincro();
   quitarTallasGrandes();
