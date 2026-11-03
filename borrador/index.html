@@ -619,6 +619,8 @@ const TIENDA={
   marcasOcultas:['AYBL'],
   // orden por marca: primero estos grupos, en este orden (por nombre o colección; lo nuevo entra solo a su grupo)
   gruposOrden:{youngla:[/immortal/i,/gold['’]?s\b/i],gymshark:[/vengeance|sam.?sulek/i]},
+  // esas colecciones van arriba solo frente a lo que ya estaba; lo que subas desde esta fecha sale arriba de ellas, por fecha
+  gruposHasta:{youngla:Date.parse('2026-11-03T12:00:00-06:00'),gymshark:Date.parse('2026-11-01T00:00:00-06:00')},
   // encuadre de las fotos de marcas [izquierda-derecha, arriba-abajo] en %; en el Catálogo lo cambias foto por foto
   mosaicoPos:{'Breathedivinity':[50,4],'Darc Sport':[50,0],'DFYNE':[50,6]},
   // lista de MARCAS en el menú (siempre se ve, aunque no haya productos).
@@ -830,7 +832,8 @@ function filtrar(sinTipo){
     const rango=p=>p.fijo?0:p.destacado?1:2;
     // con una marca elegida: sus colecciones primero (TIENDA.gruposOrden). Gymshark, el resto como se subió, sin fecha de la marca
     const mk=sinAcento(fMarca), gs=fMarca&&TIENDA.gruposOrden[mk], fec=mk==='gymshark'?p=>+p.creado||0:fechaDe;
-    const grupo=p=>{ if(!gs) return 0; const s=p.nombre+' '+(p.coleccion||''), i=gs.findIndex(re=>re.test(s)); return i<0?gs.length:i; };
+    const hasta=TIENDA.gruposHasta[mk]||0;
+    const grupo=p=>{ if(!gs) return 0; if(hasta&&fec(p)>=hasta) return -1; const s=p.nombre+' '+(p.coleccion||''), i=gs.findIndex(re=>re.test(s)); return i<0?gs.length:i; };
     const cmp=(a,b)=>rango(a)-rango(b)||(a.fijo&&b.fijo?(+a.orden||0)-(+b.orden||0):0)||grupo(a)-grupo(b)||fec(b)-fec(a);
     // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido
     const g=p=>fEstado?0:p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||cmp(a,b)); }
