@@ -836,7 +836,8 @@ function filtrar(sinTipo){
     // con una marca elegida: sus colecciones primero (TIENDA.gruposOrden). Gymshark, el resto como se subió, sin fecha de la marca
     const mk=sinAcento(fMarca), gs=fMarca&&TIENDA.gruposOrden[mk], fec=mk==='gymshark'?p=>+p.creado||0:fechaDe;
     const hasta=TIENDA.gruposHasta[mk]||0;
-    const grupo=p=>{ if(!gs) return 0; if(hasta&&fec(p)>=hasta) return -1; const s=p.nombre+' '+(p.coleccion||''), i=gs.findIndex(re=>re.test(s)); return i<0?gs.length:i; };
+    // "lo nuevo" = lo que tú subiste después de esa fecha (no la fecha en que la marca lo lanzó)
+    const grupo=p=>{ if(!gs) return 0; if(hasta&&(+p.creado||0)>=hasta) return -1; const s=p.nombre+' '+(p.coleccion||''), i=gs.findIndex(re=>re.test(s)); return i<0?gs.length:i; };
     const cmp=(a,b)=>rango(a)-rango(b)||(a.fijo&&b.fijo?(+a.orden||0)-(+b.orden||0):0)||grupo(a)-grupo(b)||fec(b)-fec(a);
     // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido
     const g=p=>fEstado?0:p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||cmp(a,b)); }
