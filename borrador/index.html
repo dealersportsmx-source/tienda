@@ -1169,7 +1169,9 @@ function renderBanners(){
     return '<button class="bn-i im'+(sinpc?' sinpc':'')+(txt?' ft':'')+'"'+(b.ir?' data-ir="'+esc(b.ir)+'"':'')+'>'+
       (sinpc?'<img class="bg" src="'+esc(b.img)+'" alt="" aria-hidden="true">':'')+
       (vid?'<video class="fg" src="'+esc(vid)+'"'+(poster?' poster="'+esc(poster)+'"':'')+' muted loop playsinline preload="'+(i?'metadata':'auto')+'"'+(i?'':' autoplay')+' aria-label="'+esc(b.titulo||'Video')+'"></video>'
-        :'<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+'></picture>')+
+        :'<picture>'+(b.imgPc?'<source media="(min-width:900px)" srcset="'+esc(b.imgPc)+'">':'')+'<img class="fg" src="'+esc(b.img)+'" alt="'+esc(b.titulo||'Banner')+'"'+lazy+
+          // una sola foto y es ancha (de PC): en la computadora llena todo el ancho, sin orillas difuminadas
+          (sinpc?' onload="if(this.naturalWidth/this.naturalHeight>=1.9)this.closest(\'.bn-i\').classList.remove(\'sinpc\')"':'')+'></picture>')+
       (txt?'<span class="bn-t">'+(b.titulo?'<b>'+esc(b.titulo)+'</b>':'')+(cd?'<span class="bn-cd" data-bncd="'+cd.getTime()+'">Cierra en '+cuenta(cd)+'</span>':'')+(b.boton?'<span class="bn-btn">'+esc(b.boton)+'</span>':'')+'</span>':'')+'</button>'; }).join('');
   $('#bnD').innerHTML=bs.length>1?bs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
   // pasan solos: 5 segundos cada banner; si tiene video, lo que dura el video
