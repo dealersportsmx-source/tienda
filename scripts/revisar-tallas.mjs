@@ -101,7 +101,7 @@ async function cuadritosYoungLA(handle) {
       if (!r.ok) { await dormir(5000 * (i + 1)); continue; }
       const html = await r.text(), o = {};
       for (const m of html.matchAll(/<label[^>]*class="[^"]*color-swatch[^"]*"[^>]*>/g)) {
-        const s = m[0].replace(/&amp;/g, '&'), n = (/data-tooltip="([^"]+)"/.exec(s) || [])[1];
+        const s = m[0].replace(/&amp;/g, '&').replace(/&#0*39;|&#x27;/gi, "'"), n = (/data-tooltip="([^"]+)"/.exec(s) || [])[1];
         if (!n || o[n.toLowerCase().trim()]) continue;
         const img = (/background-image:\s*url\(([^)]+)\)/.exec(s) || [])[1], col = (/background-color:\s*([^;"]+)/.exec(s) || [])[1];
         if (img) o[n.toLowerCase().trim()] = img.replace(/^\/\//, 'https://').replace(/width=\d+/, 'width=96');
