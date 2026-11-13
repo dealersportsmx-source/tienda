@@ -729,7 +729,8 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
   p.colores.forEach(c=>{ const x=(s.colores||{})[c.k]||(c.n?c:null); if(!x||!(+x.n>0)) return; const normal=mano||precioMxn(base*x.n/u), d=reb?+x.d||0:0;
     // solo los colores que la marca tiene en rebaja; con tu precio de oferta si lo pusiste,
     // si no, con el descuento de la marca sin bajar de tu ganancia mínima (x.m, la calcula el robot)
-    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+    // en Preventa tu precio de oferta es tu propio descuento: sale siempre, aunque la marca ya no tenga rebaja
+    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):(p.estado==='early'&&ofer?ofer:normal); if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
 // marcas con rebajas automáticas: el Catálogo manda cuáles apagaste (Gymshark viene apagada)
 const rebajaAuto=m=>{ const k=String(m||'').toLowerCase().trim(); return k in TIENDA.rebAuto?!!TIENDA.rebAuto[k]:true; };
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
