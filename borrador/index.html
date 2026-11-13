@@ -852,24 +852,36 @@ function anticipoDe(prendas){ return redondear((+prendas||0)*(+TIENDA.anticipo||
 // llena los números de Términos con los de TIENDA (los que mandan tus Ajustes)
 function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach(el=>{ const v=TIENDA[el.dataset.t]; if(v!=null) el.textContent=typeof v==='number'?v.toLocaleString('en-US'):v; }); }
 /* Descuentos por sección (Cotizador › Ajustes; llegan a la tienda al dar "Publicar tienda").
-   Uno para Sobre pedido, otro para Preventa y otro para Entrega inmediata, cada uno para todas las marcas o una sola.
+   Uno para Sobre pedido, otro para Preventa y otro para Entrega inmediata, cada uno para todas las marcas o una sola,
+   y dentro de cada sección algunas marcas pueden llevar su propio % (porMarca: {Gymshark:20, YoungLA:30}), que gana sobre el general.
    Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
-   No se suma a las prendas que ya están en Rebajas. */
+   No se suma a las prendas que ya están en Rebajas, y la prenda se queda en su sección (no pasa a Rebajas). */
 // hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
 function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
-  // solo en el borrador, para probar sin publicar: ?descuento=pedido-20 (o preventa-15-YoungLA)
-  const q=BORRADOR&&new URLSearchParams(location.search).get('descuento');
-  if(q){ const [s,pct,...m]=q.split('-'); ds[s]={on:true,pct:+pct,marca:m.join('-')}; }
+  // solo en el borrador, para probar sin publicar: ?descuento=pedido-20 (o preventa-15-YoungLA);
+  // varias marcas con su %: ?descuento=inmediata-20-Gymshark&descuento=inmediata-30-YoungLA
+  const qs=BORRADOR?new URLSearchParams(location.search).getAll('descuento'):[];
+  qs.forEach(q=>{ const [s,pct,...m]=q.split('-'), mm=m.join('-');
+    if(qs.length>1&&mm){ const x=ds[s]=Object.assign({on:true,pct:0,marca:''},ds[s]); x.on=true; x.porMarca=Object.assign({},x.porMarca,{[mm]:+pct}); }
+    else ds[s]={on:true,pct:+pct,marca:mm}; });
   return ds;
+}
+const sinEsp=s=>sinAcento(s).replace(/[^a-z0-9]/g,''); // "Breathedivinity" = "Breathe Divinity"
+// el % que le toca a la prenda: el de su marca (porMarca) o el general de la sección (todas o una marca)
+function pctDe(x,p){
+  const pm=x.porMarca||{}, k=Object.keys(pm).find(m=>sinEsp(m)===sinEsp(p.marca));
+  if(k) return +pm[k]||0;
+  if(x.marca&&sinEsp(x.marca)!==sinEsp(p.marca)) return 0;
+  return +x.pct||0;
 }
 function aplicarDescuentos(ds){
   PT.forEach(p=>{ (p.colores||[]).forEach(c=>delete c.desc); delete p.desc;
-    const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
+    const x=ds[seccionDesc(p)]; if(!x||!x.on) return;
     if(x.fin&&new Date(x.fin)<=new Date()) return;
-    if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
+    const pct=pctDe(x,p); if(!(pct>0&&pct<100)) return;
     (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=redondearAbajo(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
