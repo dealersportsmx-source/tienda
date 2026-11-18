@@ -733,7 +733,7 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
     // solo los colores que la marca tiene en rebaja; con tu precio de oferta si lo pusiste,
     // si no, con el descuento de la marca sin bajar de tu ganancia mínima (x.m, la calcula el robot)
     // en Preventa tu precio de oferta es tu propio descuento: sale siempre, aunque la marca ya no tenga rebaja
-    const venta=d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):(p.estado==='early'&&ofer?ofer:normal); if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+    const venta=d>0?(ofer||Math.max(precioRebaja(normal*(1-d/100)),+x.m||0)):(p.estado==='early'&&ofer?ofer:normal); if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
 // marcas con rebajas automáticas: el Catálogo manda cuáles apagaste (Gymshark viene apagada)
 const rebajaAuto=m=>{ const k=String(m||'').toLowerCase().trim(); return k in TIENDA.rebAuto?!!TIENDA.rebAuto[k]:true; };
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
@@ -863,6 +863,8 @@ function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach
 function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); if(TIENDA.redondeo==='5090') return a5090(Math.floor(v/50+1e-9)*50); return Math.floor(v/r+1e-9)*r; }
 // "50 o 90": si queda en 00 baja a 90 ($1,400 → $1,390); si termina en 50 se queda
 function a5090(k){ const r=Math.max(50,k); return r%100===0?r-10:r; }
+// precio con descuento: con "50 o 90" usa ese mismo redondeo ($1,424 → $1,390 · $1,426 → $1,450 · $1,476 → $1,490); con los demás, hacia abajo
+function precioRebaja(x){ return String(TIENDA.redondeo)==='5090'?precioMxn(x):redondearAbajo(x); }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
@@ -876,7 +878,7 @@ function aplicarDescuentos(ds){
     const x=ds[seccionDesc(p)], pct=x&&x.on?+x.pct||0:0; if(!(pct>0&&pct<100)) return;
     if(x.fin&&new Date(x.fin)<=new Date()) return;
     if(x.marca&&sinAcento(x.marca)!==sinAcento(p.marca)) return;
-    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=redondearAbajo(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
+    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=precioRebaja(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */

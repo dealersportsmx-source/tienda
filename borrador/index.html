@@ -711,7 +711,10 @@ function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ const cs=(p.colores||[]
    El precio sale del precio en dólares de la marca × el factor de la prenda (multiplicador × tu tipo de cambio).
    Entrega inmediata y precios a mano nunca se tocan. */
 const normC=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=String(TIENDA.redondeo||''); if(m==='90') return redondearAbajo(v); if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return redondear(v); }
+function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=String(TIENDA.redondeo||''); if(m==='90') return redondearAbajo(v);
+  // "50 o 90": al $50 más cercano (a la mitad, hacia abajo) y 00 → 90
+  if(m==='5090') return a5090(Math.ceil(v/50-0.5-1e-9)*50);
+  if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return redondear(v); }
 function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; const s=(SINCRO.prendas||{})[p.id]; if(!s) return; p.colores=p.colores||[];
   // colores nuevos que encontró el robot en la marca: no están en tu Catálogo, así que nunca salen en Rebajas (van a precio normal)
   // y solo si tienen al menos 3 tallas de XS a XL (los restos de 1 o 2 tallas no salen)
@@ -731,7 +734,7 @@ function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; co
     // si no, con el descuento de la marca sin bajar de tu ganancia mínima (x.m, la calcula el robot).
     // Preventa (Drop / Early Access) con tu Precio de oferta: ese precio se respeta en todos los colores,
     // aunque la marca quite su descuento (YoungLA lo quitó el 12 nov y la preventa del 24 volvió a precio normal).
-    const venta=p.estado==='early'&&ofer>0?ofer:d>0?(ofer||Math.max(redondearAbajo(normal*(1-d/100)),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
+    const venta=p.estado==='early'&&ofer>0?ofer:d>0?(ofer||Math.max(precioRebaja(normal*(1-d/100)),+x.m||0)):normal; if(venta<normal){ c.antes=normal; c.precio=venta; } else { c.precio=normal; c.antes=0; } }); }); }
 // marcas con rebajas automáticas: el Catálogo manda cuáles apagaste (Gymshark viene apagada)
 const rebajaAuto=m=>{ const k=String(m||'').toLowerCase().trim(); return k in TIENDA.rebAuto?!!TIENDA.rebAuto[k]:true; };
 /* La misma prenda subida dos veces (misma liga y color de la marca, en el mismo tipo de venta): sale en una sola tarjeta */
@@ -859,7 +862,11 @@ function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach
    Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
    No se suma a las prendas que ya están en Rebajas, y la prenda se queda en su sección (no pasa a Rebajas). */
 // hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
-function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
+function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); if(TIENDA.redondeo==='5090') return a5090(Math.floor(v/50+1e-9)*50); return Math.floor(v/r+1e-9)*r; }
+// "50 o 90": si queda en 00 baja a 90 ($1,400 → $1,390); si termina en 50 se queda
+function a5090(k){ const r=Math.max(50,k); return r%100===0?r-10:r; }
+// precio con descuento: con "50 o 90" usa ese mismo redondeo ($1,424 → $1,390 · $1,426 → $1,450 · $1,476 → $1,490); con los demás, hacia abajo
+function precioRebaja(x){ return String(TIENDA.redondeo)==='5090'?precioMxn(x):redondearAbajo(x); }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
@@ -884,7 +891,7 @@ function aplicarDescuentos(ds){
     const x=ds[seccionDesc(p)]; if(!x||!x.on) return;
     if(x.fin&&new Date(x.fin)<=new Date()) return;
     const pct=pctDe(x,p); if(!(pct>0&&pct<100)) return;
-    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=redondearAbajo(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
+    (p.colores||[]).forEach(c=>{ if(c.antes>c.precio) return; const nuevo=precioRebaja(c.precio*(1-pct/100)); if(nuevo>0&&nuevo<c.precio){ c.desc={pct,antes:+c.precio}; c.precio=nuevo; } }); });
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
