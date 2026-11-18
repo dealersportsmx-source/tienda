@@ -880,7 +880,7 @@ function aplicarDescuentos(ds){
 }
 function envioDe(prendas){ return (+prendas||0)>(+TIENDA.gratisMas||Infinity)?0:entrega==='mty'?TIENDA.envioMty:TIENDA.envioNacional; }
 /* tarjeta de producto: igual en toda la tienda */
-function tagsHTML(p){ const t=etiqueta(p); return '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(enRebaja(p)?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">-'+p.desc.pct+'%</span>':'')+
+function tagsHTML(p){ const t=etiqueta(p); return '<span class="tags"><span class="tag t-'+t[0]+'">'+esc(t[1])+'</span>'+(p.masVendido?'<span class="tag t-mv">Más vendido</span>':'')+(enRebaja(p)?'<span class="tag t-reb">Rebaja</span>':'')+(p.desc?'<span class="tag t-desc">Rebaja</span>':'')+
     (ADMIN&&revisarTipo(p)?'<span class="tag t-rev">Revisar tipo</span>':'')+'</span>'; } // solo en modo administrador
 const AVISO_REB='Sujeto a confirmación de disponibilidad';
 // en Rebajas la tarjeta dice sus tallas; los accesorios sin talla (mochilas, botellas, gorras…) no dicen nada
@@ -1320,7 +1320,7 @@ function pintarProducto(){
   const p=cur, c=curColor||{fotos:[],tallas:{}}; usarColor(p,c);
   // precio de antes tachado: descuento de sección o la oferta que pusiste en el Catálogo
   const base=p.desc?p.desc.antes:(p.oferta&&p.precioBase>p.precio?+p.precioBase:0), of=base>p.precio;
-  $('#pvDescPct').hidden=!p.desc; if(p.desc) $('#pvDescPct').textContent='-'+p.desc.pct+'%';
+  $('#pvDescPct').hidden=!p.desc; if(p.desc) $('#pvDescPct').textContent='Rebaja';
   const fs=(c.fotos&&c.fotos.length?c.fotos:[foto1(p)]).filter(Boolean);
   $('#gal').innerHTML=fs.map((f,i)=>'<img src="'+esc(f)+'" alt="'+esc(p.nombre)+' foto '+(i+1)+'"'+(i?' loading="lazy"':'')+'>').join('')||'<img alt="">';
   $('#dots').innerHTML=fs.length>1?fs.map((_,i)=>'<i'+(i?'':' class="on"')+'></i>').join(''):'';
