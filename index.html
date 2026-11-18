@@ -1005,7 +1005,9 @@ const esYla=p=>sinAcento(p.marca)==='youngla';
 function cuadritoYla(p,c){
   const h=(/\/products\/([^/?#]+)/.exec(c.link||p.link||'')||[])[1], v=h&&(CUADRITOS[h]||{})[String(c.nombre||'').toLowerCase().trim()];
   if(!v) return '';
-  return /^https:\/\//.test(v)?'background-image:url(&quot;'+esc(v)+'&quot;);background-size:cover;background-position:center':/^[#a-z0-9(),.\s%-]+$/i.test(v)?'background:'+v:'';
+  if(/^https:\/\//.test(v)) return 'background-image:url(&quot;'+esc(v)+'&quot;);background-size:cover;background-position:center';
+  // a veces YoungLA no tiene cuadrito y pone un nombre que no es color ("kakashivskakuzu"): entonces, un acercamiento a la foto de ese color
+  return /^[#a-z0-9(),.\s%-]+$/i.test(v)&&(!window.CSS||CSS.supports('color',v))?'background:'+v:fondoSwatch(c);
 }
 function swatchesHTML(p){
   const disp=(p.colores||[]).filter(c=>c.nombre), agot=(p.coloresAgot||[]).filter(c=>c.nombre), todos=disp.concat(agot), yla=esYla(p), gym=esGym(p), df=esDf(p);
