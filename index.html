@@ -711,7 +711,10 @@ function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ const cs=(p.colores||[]
    El precio sale del precio en dólares de la marca × el factor de la prenda (multiplicador × tu tipo de cambio).
    Entrega inmediata y precios a mano nunca se tocan. */
 const normC=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=String(TIENDA.redondeo||''); if(m==='90') return redondearAbajo(v); if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return redondear(v); }
+function precioMxn(x){ const r=+TIENDA.red||1, v=Math.round((+x||0)*100)/100, m=String(TIENDA.redondeo||''); if(m==='90') return redondearAbajo(v);
+  // "50 o 90": al $50 más cercano (a la mitad, hacia abajo) y 00 → 90
+  if(m==='5090') return a5090(Math.ceil(v/50-0.5-1e-9)*50);
+  if(/a$/.test(m)) return Math.ceil(v/r-1e-9)*r; return redondear(v); }
 function aplicarSincro(){ PT.forEach(p=>{ if(p.estado==='disponible') return; const s=(SINCRO.prendas||{})[p.id]; if(!s) return; p.colores=p.colores||[];
   // colores nuevos que encontró el robot en la marca: no están en tu Catálogo, así que nunca salen en Rebajas (van a precio normal)
   // y solo si tienen al menos 3 tallas de XS a XL (los restos de 1 o 2 tallas no salen)
@@ -857,7 +860,9 @@ function pintarTerminos(){ document.querySelectorAll('#ovTerm [data-t]').forEach
    Se aplica al precio de venta y se redondea siempre hacia abajo; se apaga solo en su fecha de fin.
    No se suma a las prendas que ya están en Rebajas. */
 // hacia abajo: "termina en 90" baja al anterior que termina en 90; si no, al múltiplo de abajo ($1,480 → $1,450)
-function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); return Math.floor(v/r+1e-9)*r; }
+function redondearAbajo(x){ const v=Math.round((+x||0)*100)/100, r=+TIENDA.red||1; if(TIENDA.redondeo==='90') return Math.max(90,Math.floor((v+10)/100)*100-10); if(TIENDA.redondeo==='5090') return a5090(Math.floor(v/50+1e-9)*50); return Math.floor(v/r+1e-9)*r; }
+// "50 o 90": si queda en 00 baja a 90 ($1,400 → $1,390); si termina en 50 se queda
+function a5090(k){ const r=Math.max(50,k); return r%100===0?r-10:r; }
 const seccionDesc=p=>p.estado==='early'?'preventa':p.estado==='disponible'?'inmediata':'pedido';
 function descuentosDe(a){
   const ds=Object.assign({},(a&&a.descuentos)||{});
