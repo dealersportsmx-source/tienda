@@ -843,7 +843,9 @@ function filtrar(sinTipo){
     const hasta=TIENDA.gruposHasta[mk]||0;
     // "lo nuevo" = lo que tú subiste después de esa fecha (no la fecha en que la marca lo lanzó)
     const grupo=p=>{ if(!gs) return 0; if(hasta&&(+p.creado||0)>=hasta) return -1; const s=p.nombre+' '+(p.coleccion||''), i=gs.findIndex(re=>re.test(s)); return i<0?gs.length:i; };
-    const cmp=(a,b)=>rango(a)-rango(b)||(a.fijo&&b.fijo?(+a.orden||0)-(+b.orden||0):0)||grupo(a)-grupo(b)||fec(b)-fec(a);
+    // Entrega inmediata: primero el orden que le diste en el Catálogo (Ordenar › Entrega inmediata, todas las marcas juntas)
+    const ei=(a,b)=>a.estado==='disponible'&&b.estado==='disponible'?((b.fijoEI?1:0)-(a.fijoEI?1:0))||(a.fijoEI&&b.fijoEI?(+a.ordenEI||0)-(+b.ordenEI||0):0):0;
+    const cmp=(a,b)=>ei(a,b)||rango(a)-rango(b)||(a.fijo&&b.fijo?(+a.orden||0)-(+b.orden||0):0)||grupo(a)-grupo(b)||fec(b)-fec(a);
     // sin pestaña marcada se ve todo: entrega inmediata primero, luego preventa y luego sobre pedido
     const g=p=>fEstado?0:p.estado==='disponible'?0:p.estado==='early'?1:2; r.sort((a,b)=>g(a)-g(b)||cmp(a,b)); }
   return r;
