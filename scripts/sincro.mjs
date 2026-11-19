@@ -69,6 +69,11 @@ export function modeloShopify(q, origen) {
 
 function redondeador(aj) {
   const r = +(aj || {}).red || 50, m = String((aj || {}).redondeo || '');
+  if (m === '5090') { // "Que termine en 50 o en 90": igual que la tienda (precioMxn / redondearAbajo); el mínimo sube al siguiente 50 o 90
+    const a5090 = k => { k = Math.max(50, k); return k % 100 === 0 ? k - 10 : k; };
+    return { normal: x => a5090(Math.ceil(x / 50 - 0.5 - 1e-9) * 50), abajo: x => a5090(Math.floor(x / 50 + 1e-9) * 50),
+      arriba: x => { const h = Math.floor(x / 100) * 100; return [h - 10, h + 50, h + 90, h + 150].find(v => v >= x - 1e-9); } };
+  }
   const abajo = x => m === '90' ? Math.max(90, Math.floor((x + 10) / 100) * 100 - 10) : Math.floor(x / r + 1e-9) * r;
   const normal = x => m === '90' ? abajo(x) : /a$/.test(m) ? Math.ceil(x / r - 1e-9) * r : Math.floor(x / r + 0.5 + 1e-9) * r;
   const arriba = x => m === '90' ? Math.ceil((x + 10) / 100 - 1e-9) * 100 - 10 : Math.ceil(x / r - 1e-9) * r;
