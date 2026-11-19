@@ -705,7 +705,8 @@ function tallasRebOk(p,c){ if(sinTalla(p,c)) return true; const ts=c.tallasTodas
 /* Rebajas: cada prenda con colores en rebaja sale aparte, solo con esos colores y con TODAS sus tallas (también 2XL y 3XL);
    en Sobre pedido se queda con todos sus colores. Se esconde cuando ya no queda ninguna talla de XS a XL.
    Gymshark: el color en rebaja que ya no tiene tallas de XS a XL se vende a precio normal. */
-function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ const cs=(p.colores||[]).filter(c=>{ if(!(c.antes>c.precio)) return false; if(tallasRebOk(p,c)) return true; if(esGym(p)){ c.precio=c.antes; c.antes=0; } return false; });
+// Entrega inmediata con Precio de oferta: sale con "Rebaja" y tachado en su sección, pero no se repite en Rebajas (regla del dueño)
+function armarRebajas(lista){ REB=[]; lista.forEach(p=>{ if(p.estado==='disponible'){ usarColor(p,(p.colores||[])[0]); return; } const cs=(p.colores||[]).filter(c=>{ if(!(c.antes>c.precio)) return false; if(tallasRebOk(p,c)) return true; if(esGym(p)){ c.precio=c.antes; c.antes=0; } return false; });
   usarColor(p,(p.colores||[])[0]); if(!cs.length) return; const r=Object.create(p); Object.assign(r,{id:p.id+'~r',base:p,colores:cs.map(c=>Object.assign({},c,{tallas:c.tallasTodas||c.tallas})),coloresAgot:[]}); usarColor(r,r.colores[0]); REB.push(r); }); }
 /* Sincronía con la marca (sincro.json, lo pone el robot; publicar en el Catálogo no lo borra): colores nuevos, fotos que faltaban y precio de cada color.
    El precio sale del precio en dólares de la marca × el factor de la prenda (multiplicador × tu tipo de cambio).
